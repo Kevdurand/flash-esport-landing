@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Page introuvable — Flash eSport</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A0A0A">
+
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  /* Quelques ajustements propres à cette page, le reste vient de style.css */
+  .stage{ justify-content:center; }
+  .code{
+    font-family:var(--font-display);
+    font-weight:var(--font-display-weight);
+    font-size:clamp(4.5rem, 22vw, 8rem);
+    line-height:.95;
+    letter-spacing:-.01em;
+    color:var(--accent);
+    text-shadow:0 0 60px rgba(255,46,46,.45);
+    margin:0 0 20px;
+  }
+  .stage h1{ font-size:clamp(1.9rem, 8.5vw, 2.9rem); }
+</style>
+</head>
+
+<body>
+<main>
+  <section class="stage">
+    <div class="ambient" aria-hidden="true"></div>
+    <div class="laser laser--a" aria-hidden="true"></div>
+    <div class="laser laser--b" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <div class="content">
+      <div class="mark reveal" aria-hidden="true">
+        <span class="mark__halo"></span>
+        <span class="mark__bolt"></span>
+        <span class="mark__shine"></span>
+      </div>
+
+      <p class="code reveal">404</p>
+
+      <h1 class="reveal">Cette page n'existe pas.</h1>
+
+      <p class="sub reveal">
+        Le lien est peut-être cassé, ou la page a été déplacée.
+        Retourne à l'accueil pour rejoindre la liste d'attente.
+      </p>
+
+      <div class="reveal" style="width:100%;display:flex;justify-content:center">
+        <a class="btn" href="/" style="max-width:300px">
+          <span>Retour à l'accueil</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2.5 8h10M9 4.5 12.5 8 9 11.5" stroke="currentColor" stroke-width="1.9"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>🇫🇷 Développée en France</span><span class="sep">·</span><span>En développement</span>
+  </footer>
+</main>
+</body>
+</html>

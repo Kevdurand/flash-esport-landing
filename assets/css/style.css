@@ -1,0 +1,768 @@
+/* ==========================================================================
+   Flash eSport — feuille de style
+   Une seule feuille : la page tient sur un écran, la découper serait
+   plus compliqué à suivre qu'à maintenir.
+   ========================================================================== */
+
+/* ============================================================
+   FLASH ESPORT — Landing page liste d'attente
+   Fichier autonome : HTML + CSS + JS, aucune dépendance externe
+   (hors Google Fonts). Prêt à héberger tel quel.
+   ============================================================ */
+
+:root{
+  /* --- Charte --- */
+  --bg:            #0A0A0A;
+  --accent:        #FF2E2E;
+  --accent-hi:     #FF5A5A;
+  --accent-deep:   #C4161C;
+  --text:          #F2F3F5;
+  --muted:         #8C919B;
+  --line:          rgba(255,255,255,.10);
+  --surface:       rgba(255,255,255,.035);
+
+  /* Éclair (data URI — le fichier reste autonome) */
+  --bolt: url("../img/bolt.png");
+
+  --ease: cubic-bezier(.16,.84,.44,1);
+
+  /* ------------------------------------------------------------------
+     POLICE D'AFFICHAGE — pilote les grands titres (H1 du hero, H2 de
+     la section). Le corps de texte reste en Exo 2, et le logo est une
+     image : sa typo est celle du fichier de marque, rien à faire ici.
+
+     Anton n'existe qu'en une seule graisse : --font-display-weight
+     doit rester à 400, sinon le navigateur fabrique un faux gras qui
+     abîme les lettres.
+
+     >>> Changer de police d'affichage :
+         1. ajoute-la au lien Google Fonts dans le <head>
+         2. remplace les deux valeurs ci-dessous
+         Alternatives testées, toutes sur Google Fonts :
+           'Saira Condensed' (900) — condensée, sportive
+           'Big Shoulders Display' (900) — très condensée, scoreboard
+           'Archivo Black' (400) — large et massive
+     ------------------------------------------------------------------ */
+  --font-display: 'Anton', 'Exo 2', ui-sans-serif, system-ui, sans-serif;
+  --font-display-weight: 400;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+
+html,body{
+  margin:0; padding:0;
+  background:var(--bg);
+  overflow-x:hidden;           /* jamais de scroll horizontal */
+}
+html{ scroll-behavior:smooth; }
+
+body{
+  font-family:'Exo 2', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+  min-height:100vh;
+  min-height:100dvh;
+}
+
+/* ------------------------------------------------------------
+   SCÈNE — fond, halos, ambiance
+   ------------------------------------------------------------ */
+.stage{
+  position:relative;
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  isolation:isolate;
+  padding:
+    max(28px, env(safe-area-inset-top)) 22px
+    max(20px, env(safe-area-inset-bottom)) 22px;
+  overflow:hidden;
+}
+
+/* Halos rouges */
+.ambient{
+  position:absolute; inset:-20% -10%;
+  z-index:-3; pointer-events:none;
+  background:
+    radial-gradient(58% 42% at 50% 16%, rgba(255,46,46,.20) 0%, rgba(255,46,46,.07) 38%, transparent 68%),
+    radial-gradient(90% 46% at 50% 104%, rgba(255,46,46,.13) 0%, transparent 62%),
+    radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.85) 100%);
+}
+
+/* Deux traits « laser » diagonaux, très discrets */
+.laser{
+  position:absolute; z-index:-2; pointer-events:none;
+  height:1px; width:70vw; max-width:900px;
+  background:linear-gradient(90deg, transparent, rgba(255,46,46,.55), transparent);
+  filter:blur(.4px);
+  opacity:.42;
+}
+.laser--a{ top:8%;  left:-14vw;  transform:rotate(-14deg); }
+.laser--b{ top:92%; right:-14vw; transform:rotate(-14deg); }
+
+/* Sol : ligne d'horizon lumineuse */
+.floor{
+  position:absolute; z-index:-2; left:50%; bottom:11%;
+  width:min(560px, 84vw); height:1px;
+  transform:translateX(-50%);
+  background:linear-gradient(90deg, transparent, rgba(255,46,46,.75), transparent);
+  box-shadow:0 0 26px 3px rgba(255,46,46,.30);
+  opacity:.55;
+  animation:breathe 6s var(--ease) infinite alternate;
+}
+
+/* Grain — texture premium */
+.grain{
+  position:absolute; inset:0; z-index:-1; pointer-events:none;
+  opacity:.035; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------------------
+   CONTENU
+   ------------------------------------------------------------ */
+.content{
+  flex:1;
+  width:100%;
+  max-width:560px;
+  margin-inline:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:0;
+  padding-block:14px;
+}
+
+/* --- Éclair --- */
+.mark{
+  position:relative;
+  width:auto;
+  height:clamp(78px, 15vh, 118px);
+  aspect-ratio:222 / 400;
+  margin-bottom:22px;
+}
+
+.mark__halo{
+  position:absolute; left:50%; top:52%;
+  width:340%; height:190%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(closest-side, rgba(255,46,46,.42), rgba(255,46,46,.10) 55%, transparent 72%);
+  filter:blur(14px);
+  animation:halo 5.2s var(--ease) infinite alternate;
+  pointer-events:none;
+}
+
+.mark__bolt{
+  position:absolute; inset:0;
+  background-image:var(--bolt);
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+  filter:drop-shadow(0 6px 26px rgba(255,46,46,.42));
+}
+
+/* Reflet qui balaie l'éclair, masqué à sa silhouette exacte */
+.mark__shine{
+  position:absolute; inset:0;
+  -webkit-mask-image:var(--bolt); mask-image:var(--bolt);
+  -webkit-mask-size:contain;      mask-size:contain;
+  -webkit-mask-repeat:no-repeat;  mask-repeat:no-repeat;
+  -webkit-mask-position:center;   mask-position:center;
+  background:linear-gradient(102deg,
+    transparent 40%,
+    rgba(255,255,255,.10) 46%,
+    rgba(255,255,255,.80) 50%,
+    rgba(255,255,255,.10) 54%,
+    transparent 60%);
+  background-size:260% 100%;
+  background-repeat:no-repeat;
+  animation:sweep 7s var(--ease) infinite;
+  pointer-events:none;
+}
+
+/* --- Logo (éclair + lettrage, un seul fichier) --- */
+.wordmark{
+  display:block;
+  width:clamp(230px, 64vw, 330px);
+  height:auto;
+  margin-bottom:clamp(26px, 5.5vh, 44px);
+}
+
+/* --- Titre --- */
+h1{
+  margin:0 0 16px;
+  font-family:var(--font-display);
+  font-weight:var(--font-display-weight);
+  font-size:clamp(2.7rem, 12.5vw, 4.3rem);
+  line-height:1.0;
+  letter-spacing:-.008em;
+  text-wrap:balance;
+  background:linear-gradient(178deg, #FFFFFF 24%, #B9BDC4 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+/* --- Sous-titre --- */
+.sub{
+  margin:0 0 clamp(28px, 5vh, 40px);
+  max-width:37ch;
+  font-size:clamp(.94rem, 3.7vw, 1.05rem);
+  font-weight:400;
+  line-height:1.62;
+  color:var(--muted);
+  text-wrap:pretty;
+}
+.sub strong{ color:#C8CCD2; font-weight:600; }
+
+/* ------------------------------------------------------------
+   FORMULAIRE
+   ------------------------------------------------------------ */
+/* Aucun scroll-margin ici : le bouton du bas vise le haut du hero (#haut),
+   qui contient déjà le formulaire. Viser le formulaire lui-même faisait
+   remonter la page trop haut et sortait le logo de l'écran. */
+.signup{ width:100%; max-width:430px; }
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.input{
+  width:100%;
+  height:56px;
+  padding:0 18px;
+  font:inherit;
+  font-size:1rem;
+  color:var(--text);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:14px;
+  outline:none;
+  transition:border-color .22s var(--ease), background .22s var(--ease), box-shadow .22s var(--ease);
+  -webkit-appearance:none;
+  appearance:none;
+}
+.input::placeholder{ color:#666B74; }
+.input:hover{ border-color:rgba(255,255,255,.18); }
+.input:focus{
+  border-color:rgba(255,46,46,.62);
+  background:rgba(255,255,255,.055);
+  box-shadow:0 0 0 4px rgba(255,46,46,.13);
+}
+.input[aria-invalid="true"]{
+  border-color:rgba(255,46,46,.85);
+  box-shadow:0 0 0 4px rgba(255,46,46,.12);
+}
+/* Signal visuel quand on arrive depuis le bouton du bas de page.
+   On attire l'œil sans ouvrir le clavier : sur iOS, l'ouverture du clavier
+   repousse toute la page vers le haut et fait disparaître le logo. */
+.input.is-pointed{ animation:point 1.5s var(--ease) 1; }
+@keyframes point{
+  0%,100%{ border-color:var(--line);            box-shadow:0 0 0 0 rgba(255,46,46,0); }
+  25%,60%{ border-color:rgba(255,46,46,.75);    box-shadow:0 0 0 5px rgba(255,46,46,.14); }
+}
+
+.btn{
+  position:relative;
+  width:100%;
+  height:56px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  font:inherit;
+  font-size:1.02rem;
+  font-weight:700;
+  letter-spacing:.005em;
+  color:#fff;
+  cursor:pointer;
+  text-decoration:none;
+  border:0;
+  border-radius:14px;
+  background:linear-gradient(180deg, #FF4141 0%, var(--accent) 42%, #DC1414 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.28) inset,
+    0 0 0 1px rgba(255,46,46,.55),
+    0 10px 30px -8px rgba(255,46,46,.62);
+  overflow:hidden;
+  transition:transform .18s var(--ease), box-shadow .24s var(--ease), filter .24s var(--ease);
+  -webkit-tap-highlight-color:transparent;
+}
+.btn::after{                       /* reflet au survol */
+  content:"";
+  position:absolute; inset:0;
+  background:linear-gradient(100deg, transparent 38%, rgba(255,255,255,.30) 50%, transparent 62%);
+  background-size:250% 100%;
+  background-position:180% 0;
+  transition:background-position .7s var(--ease);
+}
+.btn:hover{
+  filter:brightness(1.06);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.32) inset,
+    0 0 0 1px rgba(255,46,46,.7),
+    0 14px 38px -8px rgba(255,46,46,.75);
+}
+.btn:hover::after{ background-position:-70% 0; }
+.btn:active{ transform:scale(.985); }
+.btn:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+.btn[disabled]{ opacity:.62; cursor:progress; }
+.btn svg{ flex:none; transition:transform .22s var(--ease); }
+.btn:hover svg{ transform:translateX(3px); }
+
+.note{
+  margin:14px 0 0;
+  font-size:.8rem;
+  line-height:1.5;
+  color:#6E737C;
+}
+
+/* Message d'erreur / statut */
+.msg{
+  margin:10px 0 0;
+  min-height:1.15em;
+  font-size:.83rem;
+  font-weight:500;
+  color:var(--accent-hi);
+}
+
+/* --- État de confirmation --- */
+.success{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  padding:26px 22px;
+  border:1px solid rgba(255,46,46,.28);
+  border-radius:18px;
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(255,46,46,.10), transparent 70%),
+    rgba(255,255,255,.03);
+  animation:rise .5s var(--ease) both;
+}
+.success.is-visible{ display:flex; }
+.signup.is-done{ display:none; }
+
+.success__icon{
+  width:52px; height:52px;
+  display:grid; place-items:center;
+  border-radius:50%;
+  background:linear-gradient(180deg, #FF4141, #DC1414);
+  box-shadow:0 0 34px -4px rgba(255,46,46,.75);
+}
+.success__icon svg{ width:26px; height:26px; }
+.success__icon path{
+  stroke-dasharray:32; stroke-dashoffset:32;
+  animation:draw .5s var(--ease) .18s forwards;
+}
+.success h2{
+  margin:0;
+  font-size:1.24rem; font-weight:700; letter-spacing:-.01em;
+}
+.success p{
+  margin:0; max-width:30ch;
+  font-size:.9rem; line-height:1.55; color:var(--muted);
+}
+
+/* ------------------------------------------------------------
+   INDICATEUR DE DÉFILEMENT (bas du hero)
+   ------------------------------------------------------------ */
+.scroll-cue{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  padding-top:26px;
+  color:#5A5F68;
+  font-size:.68rem;
+  font-weight:600;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  text-decoration:none;
+  transition:color .25s var(--ease);
+  opacity:0;
+  animation:rise .7s var(--ease) .75s forwards;
+}
+.scroll-cue:hover{ color:var(--accent); }
+.scroll-cue svg{ animation:nudge 2.4s var(--ease) infinite; }
+.scroll-cue:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:6px; }
+
+/* ------------------------------------------------------------
+   SECTION « SORTIE PROCHAINEMENT »
+   ------------------------------------------------------------ */
+.soon{
+  position:relative;
+  padding:clamp(72px, 11vh, 116px) 22px clamp(56px, 8vh, 88px);
+  isolation:isolate;
+  overflow:hidden;
+}
+.soon::before{                       /* halo rouge diffus, plus sobre que le hero */
+  content:"";
+  position:absolute; inset:0; z-index:-2;
+  background:
+    radial-gradient(70% 40% at 50% 0%, rgba(255,46,46,.13), transparent 62%),
+    radial-gradient(60% 34% at 50% 100%, rgba(255,46,46,.08), transparent 66%);
+}
+.soon::after{                        /* filet lumineux de séparation */
+  content:"";
+  position:absolute; top:0; left:50%;
+  width:min(620px, 88vw); height:1px;
+  transform:translateX(-50%);
+  background:linear-gradient(90deg, transparent, rgba(255,46,46,.65), transparent);
+}
+
+.soon__inner{
+  max-width:1000px;
+  margin-inline:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:0;
+}
+
+/* Étiquette « sortie prochainement » */
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  margin:0 0 20px;
+  padding:8px 16px 8px 13px;
+  border:1px solid rgba(255,46,46,.32);
+  border-radius:999px;
+  background:rgba(255,46,46,.07);
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:#FF7373;
+}
+.pulse{
+  width:7px; height:7px; flex:none;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 0 0 rgba(255,46,46,.65);
+  animation:ping 2.2s var(--ease) infinite;
+}
+
+.soon h2{
+  margin:0 0 18px;
+  font-family:var(--font-display);
+  font-weight:var(--font-display-weight);
+  font-size:clamp(2.2rem, 9.5vw, 3.5rem);
+  line-height:1.04;
+  letter-spacing:-.006em;
+  text-wrap:balance;
+  background:linear-gradient(178deg, #FFFFFF 30%, #B4B8BF 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.soon h2 em{
+  font-style:normal;
+  -webkit-text-fill-color:var(--accent);
+  color:var(--accent);
+}
+
+.lede{
+  margin:0 0 clamp(34px, 5vh, 52px);
+  max-width:52ch;
+  font-size:clamp(.95rem, 3.6vw, 1.06rem);
+  line-height:1.66;
+  color:var(--muted);
+  text-wrap:pretty;
+}
+.lede strong{ color:#D2D6DC; font-weight:600; }
+
+/* --- Trois promesses --- */
+.cards{
+  list-style:none;
+  margin:0 0 clamp(38px, 6vh, 60px);
+  padding:0;
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+.card{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:9px;
+  padding:20px 20px 22px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  transition:border-color .28s var(--ease), transform .28s var(--ease), background .28s var(--ease);
+}
+.card:hover{
+  border-color:rgba(255,46,46,.38);
+  background:linear-gradient(180deg, rgba(255,46,46,.07), rgba(255,255,255,.02));
+  transform:translateY(-3px);
+}
+.card__icon{
+  display:grid; place-items:center;
+  width:38px; height:38px;
+  margin-bottom:3px;
+  border-radius:11px;
+  border:1px solid rgba(255,46,46,.28);
+  background:rgba(255,46,46,.10);
+  color:var(--accent);
+}
+.card h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:700;
+  letter-spacing:-.005em;
+  color:var(--text);
+}
+.card p{
+  margin:0;
+  font-size:.875rem;
+  line-height:1.6;
+  color:var(--muted);
+}
+
+/* --- Où on en est : séquence réelle, donc numérotée --- */
+.status{
+  width:100%;
+  max-width:760px;
+  margin-bottom:clamp(34px, 5vh, 50px);
+  padding:24px 20px 26px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(255,255,255,.022);
+}
+.status__title{
+  margin:0 0 20px;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#6E737C;
+}
+.steps{
+  list-style:none;
+  margin:0; padding:0;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+  counter-reset:step;
+  text-align:left;
+}
+.step{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  counter-increment:step;
+}
+.step__num{
+  display:grid; place-items:center;
+  flex:none;
+  width:30px; height:30px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  font-size:.72rem;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  color:#6E737C;
+  background:rgba(255,255,255,.03);
+}
+.step__num::before{ content:"0" counter(step); }
+.step__label{
+  font-size:.94rem;
+  font-weight:600;
+  color:#8E939C;
+}
+.step__tag{
+  margin-left:auto;
+  font-size:.66rem;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#5F646D;
+  white-space:nowrap;
+}
+
+.step--done .step__num{
+  border-color:rgba(255,255,255,.2);
+  color:#B4B8BF;
+}
+.step--done .step__label{ color:#B4B8BF; }
+
+.step--now .step__num{
+  border-color:transparent;
+  color:#fff;
+  background:linear-gradient(180deg, #FF4141, #DC1414);
+  box-shadow:0 0 22px -3px rgba(255,46,46,.8);
+}
+.step--now .step__label{ color:var(--text); font-weight:700; }
+.step--now .step__tag{ color:#FF7373; }
+
+/* --- Appel à l'action secondaire --- */
+.soon .btn{ max-width:340px; }
+.soon .note{ margin-top:14px; max-width:40ch; }
+@media (min-width:600px){
+  .soon .btn{ height:54px; padding:0 34px; font-size:1.02rem; }
+}
+
+/* ------------------------------------------------------------
+   PIED DE PAGE
+   ------------------------------------------------------------ */
+.footer{
+  width:100%;
+  padding:22px 22px max(28px, env(safe-area-inset-bottom));
+  font-size:clamp(.68rem, 3vw, .78rem);
+  font-weight:500;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:#5F646D;
+  text-align:center;
+  text-wrap:balance;
+}
+.footer span{ display:inline-block; }   /* les segments ne se coupent jamais au milieu */
+.footer .sep{ color:#3A3E45; margin:0 .4em; }
+
+/* ------------------------------------------------------------
+   ANIMATIONS
+   ------------------------------------------------------------ */
+@keyframes halo{
+  from{ opacity:.62; transform:translate(-50%,-50%) scale(.94); }
+  to  { opacity:1;   transform:translate(-50%,-50%) scale(1.06); }
+}
+@keyframes sweep{
+  0%, 68%   { background-position:165% 0; }
+  85%, 100% { background-position:-65% 0; }
+}
+@keyframes breathe{
+  from{ opacity:.32; }
+  to  { opacity:.68; }
+}
+@keyframes rise{
+  from{ opacity:0; transform:translateY(14px); }
+  to  { opacity:1; transform:none; }
+}
+@keyframes draw{ to{ stroke-dashoffset:0; } }
+@keyframes ping{
+  0%       { box-shadow:0 0 0 0 rgba(255,46,46,.6); }
+  70%,100% { box-shadow:0 0 0 9px rgba(255,46,46,0); }
+}
+@keyframes nudge{
+  0%,100%{ transform:translateY(0); }
+  50%    { transform:translateY(4px); }
+}
+
+/* Entrée échelonnée */
+.reveal{ opacity:0; transform:translateY(16px); animation:rise .72s var(--ease) forwards; }
+.reveal:nth-child(1){ animation-delay:.05s; }
+.reveal:nth-child(2){ animation-delay:.15s; }
+.reveal:nth-child(3){ animation-delay:.25s; }
+.reveal:nth-child(4){ animation-delay:.34s; }
+.reveal:nth-child(5){ animation-delay:.43s; }
+.footer{ opacity:0; animation:rise .72s var(--ease) .55s forwards; }
+
+/* ------------------------------------------------------------
+   RESPONSIVE — au-delà du mobile, le formulaire devient une pilule
+   ------------------------------------------------------------ */
+@media (min-width:600px){
+  .field{
+    flex-direction:row;
+    align-items:center;
+    gap:8px;
+    padding:7px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:999px;
+    transition:border-color .22s var(--ease), box-shadow .22s var(--ease);
+  }
+  .field:focus-within{
+    border-color:rgba(255,46,46,.5);
+    box-shadow:0 0 0 4px rgba(255,46,46,.10);
+  }
+  .input{
+    flex:1;
+    height:50px;
+    background:transparent;
+    border:0;
+    border-radius:999px;
+    padding-left:20px;
+  }
+  .input:hover, .input:focus{ background:transparent; box-shadow:none; }
+  .input[aria-invalid="true"]{ box-shadow:none; }
+  .btn{
+    width:auto;
+    flex:none;
+    height:50px;
+    padding:0 26px;
+    border-radius:999px;
+    font-size:.98rem;
+  }
+  .signup{ max-width:470px; }
+}
+
+@media (min-width:760px){
+  .cards{ grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .steps{ grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .step{ flex-direction:column; align-items:flex-start; gap:10px; }
+  .step__tag{ margin-left:0; }
+  .step::after{                       /* trait de liaison entre les étapes */
+    content:"";
+    position:absolute; top:15px; left:38px; right:-14px;
+    height:1px;
+    background:linear-gradient(90deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+  }
+  .step:last-child::after{ display:none; }
+  .status{ padding:26px 26px 28px; }
+}
+
+@media (min-width:900px){
+  .content{ max-width:680px; }
+  .sub{ font-size:1.08rem; max-width:44ch; }
+  .soon{ padding-inline:32px; }
+  .card{ padding:24px 22px 26px; }
+}
+
+/* Écrans courts : on resserre pour éviter tout scroll */
+@media (max-height:740px){
+  .stage{ padding-top:max(20px, env(safe-area-inset-top)); }
+  .wordmark{ width:clamp(215px, 58vw, 300px); margin-bottom:22px; }
+  h1{ font-size:clamp(2.3rem, 10.5vw, 3.3rem); margin-bottom:13px; }
+  .sub{ margin-bottom:24px; line-height:1.55; }
+  .footer{ padding-top:16px; }
+}
+@media (max-height:660px){
+  .wordmark{ width:clamp(200px, 54vw, 268px); margin-bottom:16px; }
+  h1{ font-size:clamp(2.05rem, 9vw, 2.75rem); margin-bottom:11px; }
+  .sub{ margin-bottom:18px; font-size:.9rem; line-height:1.5; }
+  .input, .btn{ height:52px; }
+  .note{ margin-top:10px; font-size:.74rem; }
+  .footer{ padding-top:12px; }
+}
+
+/* Accessibilité : mouvement réduit */
+@media (prefers-reduced-motion:reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{
+    animation:none !important;
+    transition-duration:.01ms !important;
+  }
+  .scroll-cue{ opacity:1; }
+  .reveal,.footer{ opacity:1; transform:none; }
+  .success__icon path{ stroke-dashoffset:0; }
+}
+
+.sr-only{
+  position:absolute; width:1px; height:1px;
+  padding:0; margin:-1px; overflow:hidden;
+  clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}

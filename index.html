@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flash eSport — Tout l'eSport, au même endroit.</title>
+<meta name="description" content="Flash eSport réunit tout l'eSport dans une seule application : suis tes équipes favorites, leurs prochains matchs, les scores en direct et les compétitions pour CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Rejoins la liste d'attente.">
+<meta name="theme-color" content="#0A0A0A">
+
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+
+<!-- Partage social (Open Graph). Remplace l'URL et ajoute une image 1200x630 quand tu auras ton domaine. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Flash eSport — L'eSport mérite mieux.">
+<meta property="og:description" content="Tes équipes, tous tes jeux, un seul écran. Rejoins la liste d'attente.">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:image" content="assets/img/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/main.js" defer></script>
+</head>
+
+<body>
+<main>
+<section class="stage" id="haut">
+  <div class="ambient"    aria-hidden="true"></div>
+  <div class="laser laser--a" aria-hidden="true"></div>
+  <div class="laser laser--b" aria-hidden="true"></div>
+  <div class="floor"      aria-hidden="true"></div>
+  <div class="grain"      aria-hidden="true"></div>
+
+  <div class="content">
+
+    <!-- Logo Flash eSport -->
+    <img class="wordmark reveal" src="assets/img/logo.png" alt="Flash eSport" width="800" height="530" decoding="async">
+
+    <!-- 2. Titre -->
+    <h1 class="reveal">L'eSport mérite mieux.</h1>
+
+    <!-- 3. Sous-titre -->
+    <p class="sub reveal">
+      Tout l'eSport dans une seule application. Scores en direct, calendriers,
+      résultats et compétitions — pour <strong>CS2</strong>, <strong>LoL</strong>,
+      <strong>VALORANT</strong>, <strong>Dota&nbsp;2</strong>, <strong>R6</strong>
+      et <strong>Rocket League</strong>.
+    </p>
+
+    <!-- 4. Formulaire -->
+    <div class="reveal" style="width:100%;display:flex;flex-direction:column;align-items:center">
+
+      <form class="signup" id="waitlist-form" novalidate>
+        <label class="sr-only" for="email">Adresse email</label>
+        <div class="field">
+          <input
+            class="input"
+            id="email"
+            name="email"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            enterkeyhint="go"
+            placeholder="ton@email.com"
+            required>
+          <button class="btn" type="submit" id="submit-btn">
+            <span id="btn-label">Rejoins la liste</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2.5 8h10M9 4.5 12.5 8 9 11.5" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p class="msg" id="form-msg" role="alert" aria-live="polite"></p>
+        <p class="note">Sois prévenu au lancement. Un seul email, zéro spam.</p>
+      </form>
+
+      <!-- Confirmation -->
+      <div class="success" id="success" role="status">
+        <div class="success__icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4.5 12.5 10 18 19.5 6.5" stroke="#fff" stroke-width="2.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>Tu es sur la liste.</h2>
+        <p>On te prévient dès que Flash eSport ouvre. À très vite.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <a class="scroll-cue" href="#soon">
+    Découvrir
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M7 2v9M3.5 7.5 7 11l3.5-3.5" stroke="currentColor" stroke-width="1.7"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+</section>
+
+
+<!-- ============================================================
+     SORTIE PROCHAINEMENT
+     ============================================================ -->
+<section class="soon" id="soon">
+  <div class="soon__inner">
+
+    <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>Sortie prochainement</p>
+
+    <h2>Tes équipes. Tous tes jeux.<br><em>Un seul écran.</em></h2>
+
+    <p class="lede">
+      Fini de jongler entre dix sites pour savoir quand joue ton équipe.
+      Tu mets <strong>Vitality</strong>, <strong>Karmine Corp</strong> ou <strong>G2</strong>
+      en favori, et Flash eSport t'affiche leurs prochains matchs — tous jeux réunis,
+      en un coup d'œil.
+    </p>
+
+    <!-- Trois promesses -->
+    <ul class="cards">
+      <li class="card">
+        <span class="card__icon" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3.4l2.63 5.33 5.88.86-4.25 4.15 1 5.86L12 16.83l-5.26 2.77 1-5.86L3.5 9.59l5.88-.86z"
+                  stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <h3>Tes équipes en favoris</h3>
+        <p>Tu choisis qui tu suis. L'app ne te montre plus que ce qui te concerne, sur tous les jeux à la fois.</p>
+      </li>
+
+      <li class="card">
+        <span class="card__icon" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <rect x="3.2" y="5" width="17.6" height="15.8" rx="3" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M3.2 10h17.6M8 3.2v3.4M16 3.2v3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="12" cy="15.2" r="1.7" fill="currentColor"/>
+          </svg>
+        </span>
+        <h3>Le prochain match, tout de suite</h3>
+        <p>Date, heure, adversaire, compétition. Plus besoin de chercher : c'est la première chose que tu vois.</p>
+      </li>
+
+      <li class="card">
+        <span class="card__icon" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4"    width="5.6" height="5.6" rx="1.7" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="9.2" y="4"  width="5.6" height="5.6" rx="1.7" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="15.4" y="4" width="5.6" height="5.6" rx="1.7" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="3" y="14.4"    width="5.6" height="5.6" rx="1.7" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="9.2" y="14.4"  width="5.6" height="5.6" rx="1.7" stroke="currentColor" stroke-width="1.7"/>
+            <rect x="15.4" y="14.4" width="5.6" height="5.6" rx="1.7" stroke="currentColor" stroke-width="1.7"/>
+          </svg>
+        </span>
+        <h3>Six jeux, une seule app</h3>
+        <p>CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Un seul endroit, une seule façon de lire les résultats.</p>
+      </li>
+    </ul>
+
+    <!-- Statut : séquence réelle -->
+    <div class="status">
+      <p class="status__title">Où on en est</p>
+      <ol class="steps">
+        <li class="step step--done">
+          <span class="step__num" aria-hidden="true"></span>
+          <span class="step__label">Développement</span>
+          <span class="step__tag">Actif</span>
+        </li>
+        <li class="step step--now">
+          <span class="step__num" aria-hidden="true"></span>
+          <span class="step__label">Test privé</span>
+          <span class="step__tag">En cours</span>
+        </li>
+        <li class="step">
+          <span class="step__num" aria-hidden="true"></span>
+          <span class="step__label">Lancement public</span>
+          <span class="step__tag">Prochainement</span>
+        </li>
+      </ol>
+    </div>
+
+    <a class="btn" href="#haut" id="cta-bottom">
+      <span>Rejoins la liste</span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M2.5 8h10M9 4.5 12.5 8 9 11.5" stroke="currentColor" stroke-width="1.9"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <p class="note">
+      Les inscrits sont prévenus en premier et entrent dans les premiers utilisateurs de l'app.
+    </p>
+
+  </div>
+</section>
+
+  <!-- Mention -->
+  <footer class="footer">
+    <span>🇫🇷 Développée en France</span><span class="sep">·</span><span>En développement</span>
+  </footer>
+</main>
+
+</body>
+</html>

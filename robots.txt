@@ -1,0 +1,7 @@
+# Flash eSport — robots.txt
+
+User-agent: *
+Allow: /
+
+# Quand le domaine sera en ligne, ajoute la ligne suivante :
+# Sitemap: https://flashesport.gg/sitemap.xml
