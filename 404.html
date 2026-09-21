@@ -1,77 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-qOhFsq0QMV2REqNwk5hGH5bZE9SkX6gt6yeyKdYPv+U='; style-src 'self'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Page introuvable — Flash eSport</title>
+<title>Page introuvable, Flash eSport</title>
+<meta name="description" content="Cette page n'existe pas.">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#0A0A0A">
-
-<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="assets/img/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="assets/css/style.css">
-<style>
-  /* Quelques ajustements propres à cette page, le reste vient de style.css */
-  .stage{ justify-content:center; }
-  .code{
-    font-family:var(--font-display);
-    font-weight:var(--font-display-weight);
-    font-size:clamp(4.5rem, 22vw, 8rem);
-    line-height:.95;
-    letter-spacing:-.01em;
-    color:var(--accent);
-    text-shadow:0 0 60px rgba(255,46,46,.45);
-    margin:0 0 20px;
-  }
-  .stage h1{ font-size:clamp(1.9rem, 8.5vw, 2.9rem); }
-</style>
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Flash eSport">
+<meta property="og:title" content="Page introuvable, Flash eSport">
+<meta property="og:description" content="Cette page n'existe pas.">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/exo2-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script>document.documentElement.classList.add("js")</script>
 </head>
-
 <body>
-<main>
-  <section class="stage">
-    <div class="ambient" aria-hidden="true"></div>
-    <div class="laser laser--a" aria-hidden="true"></div>
-    <div class="laser laser--b" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
+<a class="lien-evitement" href="#contenu">Aller au contenu</a>
+<header class="barre-haut">
+  <div class="conteneur">
+    <a class="logo" href="/index.html" aria-label="Flash eSport, accueil"><svg viewBox="0 0 24 36" aria-hidden="true"><path fill="#B00000" d="M15 0 2 20h9L8 36l14-22h-9z"/></svg><span>FLASH <em>ESPORT</em></span></a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="navigation" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
+    <nav class="nav" id="navigation" aria-label="Navigation principale"><ul><li><a href="/index.html">Accueil</a></li><li><a href="/telechargement.html">Téléchargement</a></li><li><a href="/contact.html">Contact</a></li></ul></nav>
+  </div>
+</header>
+<main id="contenu">
 
-    <div class="content">
-      <div class="mark reveal" aria-hidden="true">
-        <span class="mark__halo"></span>
-        <span class="mark__bolt"></span>
-        <span class="mark__shine"></span>
+<section class="entete-page centre page-404">
+  <div class="conteneur">
+    <h1 class="titre-xxl">404</h1>
+    <p class="chapo">Cette page n'existe pas ou a été déplacée.</p>
+    <div class="boutons"><a class="btn btn-principal" href="/">Revenir à l'accueil</a></div>
+  </div>
+</section>
+</main>
+<footer class="barre-bas">
+  <div class="conteneur">
+    <div class="bas-grille">
+      <div class="bas-marque">
+        <a class="logo" href="/index.html" aria-label="Flash eSport, accueil"><svg viewBox="0 0 24 36" aria-hidden="true"><path fill="#B00000" d="M15 0 2 20h9L8 36l14-22h-9z"/></svg><span>FLASH <em>ESPORT</em></span></a>
+        <p>Scores en direct, calendriers et résultats de tes équipes eSport, dans une seule app.</p>
       </div>
-
-      <p class="code reveal">404</p>
-
-      <h1 class="reveal">Cette page n'existe pas.</h1>
-
-      <p class="sub reveal">
-        Le lien est peut-être cassé, ou la page a été déplacée.
-        Retourne à l'accueil pour rejoindre la liste d'attente.
-      </p>
-
-      <div class="reveal" style="width:100%;display:flex;justify-content:center">
-        <a class="btn" href="/" style="max-width:300px">
-          <span>Retour à l'accueil</span>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M2.5 8h10M9 4.5 12.5 8 9 11.5" stroke="currentColor" stroke-width="1.9"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
+      <div class="bas-col">
+        <h2>Flash eSport</h2>
+        <ul>
+          <li><a href="/index.html">Accueil</a></li>
+          <li><a href="/telechargement.html">Téléchargement</a></li>
+        </ul>
+      </div>
+      <div class="bas-col">
+        <h2>Aide</h2>
+        <ul>
+          <li><a href="/contact.html">Contact</a></li>
+          <li><a href="/contact.html#faq">Questions fréquentes</a></li>
+          <li><a href="mailto:flashesport.app@gmail.com">flashesport.app@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="bas-col">
+        <h2>Informations légales</h2>
+        <ul>
+          <li><a href="/mentions-legales.html">Mentions légales</a></li>
+          <li><a href="/privacy.html">Politique de confidentialité</a></li>
+          <li><a href="/cgu.html">Conditions d'utilisation</a></li>
+        </ul>
       </div>
     </div>
-  </section>
-
-  <footer class="footer">
-    <span>🇫🇷 Développée en France</span><span class="sep">·</span><span>En développement</span>
-  </footer>
-</main>
+    <div class="bas-mentions">
+      <p>Les noms d'équipes, de joueurs, de tournois et de jeux, ainsi que leurs logos, appartiennent à leurs détenteurs respectifs. Flash eSport n'est ni affiliée, ni sponsorisée, ni approuvée par ces équipes, organisateurs ou éditeurs.</p>
+      <p>Ce site n'utilise aucun cookie et aucun outil de mesure d'audience.</p>
+      <div class="bas-ligne">
+        <p>© <span data-annee>2026</span> Flash eSport. Tous droits réservés.</p>
+        <p>Conçu en France.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+<script src="/assets/js/main.js" defer></script>
 </body>
 </html>

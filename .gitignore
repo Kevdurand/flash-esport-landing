@@ -1,15 +1,4 @@
-# Système
 .DS_Store
-Thumbs.db
-desktop.ini
-
-# Éditeurs
 .vscode/
 .idea/
-*.swp
-
-# Dépendances (si tu ajoutes des outils plus tard)
-node_modules/
-
-# Logs
 *.log
