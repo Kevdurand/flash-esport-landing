@@ -164,7 +164,7 @@ function createGlassEnvironment() {
     const studio = new THREE.Scene();
     studio.background = new THREE.Color('#0a0606');
     const panels = [
-        [2.8, 8, -4, 2, 3, '#e8493c', 1.15],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
+        [2.8, 8, -4, 2, 3, '#b81a12', 0.85],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
         [0.45, 7, 3, 1, 2, '#ffe6e0', 3.2],      // bandes fines blanches : elles dessinent les arêtes
         [5, 0.7, 0, 5, -1, '#ffb4a6', 1.9],
         [0.5, 6, -2, 0, -4, '#e01818', 3.4],
@@ -319,7 +319,7 @@ function makeIconPrism(bevelSize, bevelThickness, holeScale) {
     }
     const geometry = new THREE.ExtrudeGeometry(shape, {
         depth: ICON_DEPTH, steps: 1, bevelEnabled: true, bevelSize, bevelThickness,
-        bevelSegments: 6, curveSegments: 24
+        bevelSegments: bevelSize < 0.016 ? 1 : 6, curveSegments: 24
     });
     geometry.translate(0, 0, -ICON_DEPTH / 2);
     return geometry;
@@ -329,7 +329,7 @@ function makeIconPrism(bevelSize, bevelThickness, holeScale) {
 function makePrism(points, depth, bevelSize, bevelThickness) {
     const geometry = new THREE.ExtrudeGeometry(new THREE.Shape(points), {
         depth, steps: 1, bevelEnabled: true, bevelSize, bevelThickness,
-        bevelSegments: 6, curveSegments: 24
+        bevelSegments: bevelSize < 0.016 ? 1 : 6, curveSegments: 24
     });
     geometry.translate(0, 0, -depth / 2);
     return geometry;
@@ -846,8 +846,11 @@ function updateLogoPieces(scroll, time) {
     const separation = getLogoSeparation(scroll);
     const morph = smoothScrollRange(scroll, T.join[0], T.join[1]);
     const orbit = getOrbit(scroll);
-    const complete = morph >= 1;
-    const assembled = separation <= 0 && morph <= 0;
+    // Quand les éclats sont quasi jointifs (à quelques pixels de leur place), c'est le prisme entier qui
+    // est affiché : des faces de verre presque collées produisent des points blancs parasites aux jointures.
+    const NEAR = 0.035;
+    const complete = morph >= 1 || (morph > 0.5 && separation < NEAR);
+    const assembled = separation < NEAR && morph <= 0;
     // Éclatement sans à-coup, miroir exact de la recomposition : le prisme entier resserre ses biseaux,
     // laisse la place aux éclats (jointifs, biseau minimal), dont les biseaux grandissent en s'écartant.
     const closing = assembled ? smoothScrollRange(scroll, T.open[0], T.open[1]) : 0;
@@ -1271,11 +1274,15 @@ function animate(now = performance.now()) {
     // L'éclair suit légèrement la souris, respire doucement, et fait un tour sur lui-même
     // en rejoignant le chapitre final.
     if (modelPivot) {
-        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + Math.sin(final * Math.PI) * 0.45;
+        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + Math.sin(final * Math.PI) * 0.18;
         modelPivot.rotation.x = mouseY * 0.15 + Math.sin(time * 0.27) * 0.025;
         modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.035 * (1 - separation);
             }
-    if (glass) glass.envMapIntensity = 1.0 + final * 0.4;
+    // Pendant la recomposition la caméra voit la grande face de l'éclair sous un angle rasant : le studio
+    // de lumière s'y reflète en nappe pâle. On baisse les reflets sur cette plage (le verre reste rouge
+    // profond), puis on les remonte au chapitre final.
+    const grazing = smoothScrollRange(currentScroll, 0.64, 0.74) * (1 - smoothScrollRange(currentScroll, 0.90, 0.99));
+    if (glass) glass.envMapIntensity = 1.0 - 0.48 * grazing * (1 - final) + smoothScrollRange(final, 0.55, 1) * 0.4;
     if (simpleGlass) simpleGlass.envMapIntensity = 0.32 + final * 0.12;
 
     // Poussière de verre, agitée par le scroll rapide.
@@ -1506,7 +1513,7 @@ async function init() {
 
     scene.add(new THREE.AmbientLight('#ffffff', 0.1));
     // Lumière principale : blanche, en haut à droite.
-    const keyLight = new THREE.SpotLight('#ffffff', 18.0);
+    const keyLight = new THREE.SpotLight('#ffe9e2', 9.0);
     keyLight.position.set(4, 6, 3);
     keyLight.angle = Math.PI / 4;
     keyLight.penumbra = 0.9;
