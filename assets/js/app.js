@@ -164,13 +164,13 @@ function createGlassEnvironment() {
     const studio = new THREE.Scene();
     studio.background = new THREE.Color('#0a0606');
     const panels = [
-        [2.8, 8, -4, 2, 3, '#ff9a8c', 1.5],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
-        [0.45, 7, 3, 1, 2, '#ffe6e0', 3.4],      // bandes fines blanches : elles dessinent les arêtes
-        [5, 0.7, 0, 5, -1, '#ffd2c8', 2.6],
+        [2.8, 8, -4, 2, 3, '#e8493c', 1.15],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
+        [0.45, 7, 3, 1, 2, '#ffe6e0', 3.2],      // bandes fines blanches : elles dessinent les arêtes
+        [5, 0.7, 0, 5, -1, '#ffb4a6', 1.9],
         [0.5, 6, -2, 0, -4, '#e01818', 3.4],
         [1.0, 5, 3, -1, -3, '#ff4a3a', 2.6],
         [4, 0.35, 0, -3, 3, '#ff2020', 3.0],
-        [0.16, 5, -3, 0, 2, '#ffffff', 5.0],
+        [0.16, 5, -3, 0, 2, '#ffffff', 4.5],
         [0.35, 4, 4, 0, -2, '#ff5a3c', 2.0]
     ];
     for (const [w, h, x, y, z, color, intensity] of panels) {
@@ -700,7 +700,7 @@ function getOrbit(scroll) {
 function chapterWeights(scroll) {
     // Chaque changement de cadrage est centré sur le seuil du chapitre : l'éclair croise la colonne de
     // texte au moment où l'ancien texte s'efface et avant que le nouveau n'apparaisse.
-    const a = smoothScrollRange(scroll, 0.05, 0.13);
+    const a = layout.portrait ? smoothScrollRange(scroll, 0.08, 0.12) : smoothScrollRange(scroll, 0.065, 0.135);
     const b = smoothScrollRange(scroll, 0.30, 0.37);
     const c = smoothScrollRange(scroll, 0.62, 0.72);
     return [1 - a, a - b, b - c, c];
@@ -759,7 +759,7 @@ function smoothZones(amount) {
 function orbitAngle(scroll) {
     // L'avance atteint 0,145 tour à 80 % (l'éclair reformé est alors presque de face), puis se résorbe
     // linéairement jusqu'à la fin : la rotation reste toujours dans le même sens.
-    const lead = 0.145 * (scroll <= 0.80 ? smoothScrollRange(scroll, 0.60, 0.80) : 1 - (scroll - 0.80) / 0.20);
+    const lead = 0.145 * (scroll <= 0.80 ? smoothScrollRange(scroll, 0.56, 0.76) : 1 - (scroll - 0.80) / 0.20);
     return (scroll + lead) * Math.PI * 2.0;
 }
 
@@ -1420,7 +1420,8 @@ function updateFinal() {
         finalPinned = over;
         // Le bloc remonte juste ce qu'il faut pour que ses boutons restent visibles au-dessus du pied de
         // page, sans jamais passer sous l'en-tête.
-        const top = contactCardElement.offsetTop, bottom = top + contactCardElement.offsetHeight;
+        const sectionTop = window.innerHeight - contactSection.offsetHeight;      // haut de la section quand elle est épinglée
+        const top = sectionTop + contactCardElement.offsetTop, bottom = top + contactCardElement.offsetHeight;
         const header = layout.portrait ? 62 : 70;
         const lift = clamp(bottom + 28 - (window.innerHeight - over), 0, Math.max(0, top - header - 18));
         contactSection.style.transform = over > 0 ? `translate3d(0, ${over - lift}px, 0)` : '';
