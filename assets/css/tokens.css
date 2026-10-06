@@ -22,6 +22,7 @@
   --trait-fort: rgba(255, 255, 255, 0.18);
   --verre: rgba(8, 8, 8, 0.62);                  /* verre sombre (avec flou d'arrière-plan) */
   --verre-dense: rgba(4, 4, 4, 0.86);
+  --verre-entete: rgba(3, 3, 3, 0.80);
   --voile: rgba(0, 0, 0, 0.55);
   --voile-fort: rgba(0, 0, 0, 0.82);
   --reflet: rgba(255, 255, 255, 0.10);

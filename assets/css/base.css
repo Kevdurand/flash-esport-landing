@@ -112,7 +112,7 @@ button { font: inherit; color: inherit; }
 /* Verre sombre : sur un pseudo-élément, pour ne pas enfermer le menu plein écran. */
 .entete::before {
   content: ""; position: absolute; inset: 0; z-index: -1;
-  background: var(--verre);
+  background: var(--verre-entete);   /* assez dense pour rester lisible même sans flou d'arrière-plan */
   -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
   opacity: 0; transition: opacity 0.45s ease;
 }

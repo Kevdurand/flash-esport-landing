@@ -32,7 +32,7 @@ const T = {
 };
 // Position de l'éclair à l'écran par chapitre (fraction de la largeur / de la hauteur), puis au final.
 const FRAME = {
-    landscape: { fx: [0.72, 0.27, 0.66, 0.57], fy: [0.5, 0.5, 0.5, 0.5], final: [0.27, 0.5] },
+    landscape: { fx: [0.72, 0.27, 0.675, 0.57], fy: [0.5, 0.5, 0.5, 0.5], final: [0.27, 0.5] },
     portrait: { fx: [0.5, 0.5, 0.5, 0.5], fy: [0.685, 0.30, 0.46, 0.505], final: [0.5, 0.25] }
 };
 
@@ -703,6 +703,44 @@ function chapterWeights(scroll) {
 // Cadrage. La caméra orbite autour de l'éclair ; elle vise un point décalé pour placer l'éclair
 // à une fraction donnée de l'écran : à côté du texte sur ordinateur, au-dessus ou en dessous
 // sur téléphone (même alternance que la mise en page empilée du CSS).
+// Composition empilée (téléphone) : l'éclair se loge dans la zone laissée libre par le texte de chaque
+// chapitre, mesurée dans la page. Il reste entier à l'écran quelle que soit la taille du téléphone,
+// barre d'adresse de Safari visible ou non. Valeurs lissées : aucun saut quand la barre se replie.
+const OBJECT_HEIGHT = 3.3, CLOUD_HEIGHT = 5.5;      // éclair assemblé / nuage d'éclats, unités monde
+const zones = { ready: false, fy: [0.7, 0.3, 0.46, 0.5, 0.25], radius: [9, 11, 10.6, 10, 10], targetFy: [], targetRadius: [] };
+function measureZones() {
+    if (!layout.portrait) { zones.ready = false; return; }
+    const height = sizes.height, visible = Math.min(window.innerHeight, height);
+    const box = selector => { const element = document.querySelector(selector); return element ? element.getBoundingClientRect() : null; };
+    const header = box('.entete'), hero = box('#accueil .slide-corps'), games = box('#jeux .slide-corps');
+    const phone = box('.tuto-etape .telephone'), live = box('#direct .slide-corps'), panel = box('.panneau');
+    if (!header || !hero || !games || !phone || !live || !panel) return;
+    const finalTop = contactSection ? parseFloat(getComputedStyle(contactSection).paddingTop) || visible * 0.42 : visible * 0.42;
+    const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    // [haut, bas] de la zone libre en px, hauteur de l'objet en unités monde, rayon mini / maxi
+    const list = [
+        [hero.bottom + 14, visible - 10, OBJECT_HEIGHT, 7.4, 15],
+        [header.bottom + 10, games.top - 12, CLOUD_HEIGHT, 9.5, 16],
+        [phone.top, phone.bottom, 0, 10.6, 10.6],
+        [live.bottom + 4, panel.top + 34, OBJECT_HEIGHT, 8.6, 16],
+        [header.bottom + 14, finalTop - 4, OBJECT_HEIGHT, 8.6, 16]
+    ];
+    list.forEach(([top, bottom, objectHeight, minRadius, maxRadius], index) => {
+        const span = Math.max(60, bottom - top);
+        zones.targetFy[index] = ((top + bottom) / 2 - span * 0.035) / height;   // la perspective grossit le bas de l'objet
+        zones.targetRadius[index] = clamp(objectHeight * height / (span * 0.9 * 2 * tanHalf), minRadius, maxRadius);   // 10 % de marge (perspective)
+        if (!zones.ready) { zones.fy[index] = zones.targetFy[index]; zones.radius[index] = zones.targetRadius[index]; }
+    });
+    zones.ready = true;
+}
+function smoothZones(amount) {
+    if (!zones.ready) return;
+    for (let i = 0; i < zones.fy.length; i++) {
+        zones.fy[i] += (zones.targetFy[i] - zones.fy[i]) * amount;
+        zones.radius[i] += (zones.targetRadius[i] - zones.radius[i]) * amount;
+    }
+}
+
 let debugFrame = null;   // cadrage imposé par les crochets de test (image fixe, image de partage)
 function cameraFrame(scroll, contact = 0) {
     const portrait = layout.portrait;
@@ -718,6 +756,12 @@ function cameraFrame(scroll, contact = 0) {
     for (let i = 0; i < 4; i++) { fx += weights[i] * frame.fx[i]; fy += weights[i] * frame.fy[i]; }
     fx = lerp(fx, frame.final[0], final);
     fy = lerp(fy, frame.final[1], final);
+    if (portrait && zones.ready) {
+        fy = 0; radius = 0;
+        for (let i = 0; i < 4; i++) { fy += weights[i] * zones.fy[i]; radius += weights[i] * zones.radius[i]; }
+        fy = lerp(fy, zones.fy[4], final);
+        radius = lerp(radius, zones.radius[4], final);
+    }
     if (debugFrame) { fx = debugFrame.fx; fy = debugFrame.fy; radius = debugFrame.radius || radius; }
     const visibleHeight = 2 * radius * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const visibleWidth = visibleHeight * sizes.width / sizes.height;
@@ -796,7 +840,7 @@ function updateLogoPieces(scroll, time) {
             }
         }
     }
-    const ringRadius = layout.portrait ? 1.95 : 2.75;
+    const ringRadius = layout.portrait ? 1.95 : 2.5;
     const ringHeight = layout.portrait ? 3.6 : 3.0;
     for (const piece of logoPieces) {
         const { mesh, home, targetHome, offset, twist, phase } = piece;
@@ -1102,6 +1146,7 @@ function animate(now = performance.now()) {
     mouseX += (targetMouseX - mouseX) * damping(0.05);
     mouseY += (targetMouseY - mouseY) * damping(0.05);
     updateCursor(damping);
+    smoothZones(damping(0.09));
 
     const separation = getLogoSeparation(currentScroll);
     const final = smoothScrollRange(currentContact, 0, 0.85);
@@ -1289,6 +1334,7 @@ function installDebugHooks() {
         setTier,
         frame(fx, fy, radius) { debugFrame = fx === undefined ? null : { fx, fy, radius }; snapCamera(); },
         get tier() { return tier; },
+        get zones() { return zones; },
         get scroll() { return currentScroll; },
         get contact() { return currentContact; },
         get pieces() { return logoPieces.map(p => ({ name: p.name, points: p.correspondence.length })); },
@@ -1333,6 +1379,7 @@ function init() {
     tier = initialTier();
     applyTier();
     fitTitles();
+    measureZones();
 
     // Compile aussi le shader de la dalle maintenant, pas à l'arrivée sur le chapitre final.
     if (glassCard) {
@@ -1363,6 +1410,7 @@ function init() {
         if (!running) return;
         if (resizeRenderer()) { headerState.chapter = -1; }
         fitTitles();
+        measureZones();
     });
     canvas.addEventListener('webglcontextlost', (event) => {
         event.preventDefault();
@@ -1406,6 +1454,6 @@ export async function demarrer(etatInitial, repliStatique) {
     init();
 
     // Première image rendue, shaders compilés : on lève le préchargeur une fois les polices prêtes.
-    const release = () => { if (running) fitTitles(); etat.loader.done(); };
+    const release = () => { if (running) { fitTitles(); measureZones(); } etat.loader.done(); };
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(release, release); else release();
 }

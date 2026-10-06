@@ -52,6 +52,18 @@
     if (petit) petit.textContent = "Télécharger sur";
   });
 
+  // Sommaire des pages légales : ouvert sur ordinateur, replié sur téléphone
+  var sommaire = document.querySelector("details[data-sommaire]");
+  if (sommaire) {
+    var large = window.matchMedia("(min-width: 901px)");
+    var majSommaire = function () { sommaire.open = large.matches; };
+    majSommaire();
+    large.addEventListener("change", majSommaire);
+    sommaire.addEventListener("click", function (e) {
+      if (!large.matches && e.target instanceof Element && e.target.closest("a")) sommaire.open = false;
+    });
+  }
+
   // Apparition douce des blocs (pages secondaires)
   var blocs = document.querySelectorAll(".apparait");
   if (blocs.length) {

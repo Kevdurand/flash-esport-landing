@@ -157,11 +157,8 @@ html:not(.mode-3d) .final-bloc {
 }
 .mode-3d .scroll-stage { display: block; height: 1100vh; pointer-events: none; }
 .mode-3d .scene { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
-.mode-3d .slide {
-  position: absolute; top: var(--entete-h); right: var(--marge); bottom: 0; left: var(--marge);
-  visibility: hidden; transition: visibility 0s linear 1s;
-}
-.mode-3d .slide.active { visibility: visible; transition-delay: 0s; }
+/* Les chapitres inactifs sont transparents (et non masqués) : les lecteurs d'écran lisent tout le contenu. */
+.mode-3d .slide { position: absolute; top: var(--entete-h); right: var(--marge); bottom: 0; left: var(--marge); }
 .mode-3d .slide.active a, .mode-3d .slide.active .panneau { pointer-events: auto; }
 .mode-3d .slide-corps { position: absolute; }
 .mode-3d .affiche { display: none; }
@@ -186,7 +183,7 @@ html:not(.mode-3d) .final-bloc {
 .mode-3d #app .slide-title { font-size: clamp(2.5rem, 4.8vw, 4.75rem); margin-bottom: 0; }
 .mode-3d .tuto-etape { opacity: 1; transform: none; filter: none; }
 .mode-3d .telephone {
-  position: absolute; left: 66%; top: 49%; height: min(76%, 46rem); z-index: 1;
+  position: absolute; left: 67.5%; top: 49%; height: min(76%, 46rem); z-index: 1;
   transform: translate(-50%, -50%) scale(0.985); opacity: 0;
   transition: opacity 0.7s ease 0.7s, transform 1.2s var(--courbe);
 }
@@ -194,12 +191,12 @@ html:not(.mode-3d) .final-bloc {
 .mode-3d .slide:not(.active) .telephone { transition: opacity 0.6s ease, transform 1.2s var(--courbe); }
 .mode-3d .tuto-texte {
   position: absolute; left: 0; top: 54%; width: min(40vw, 30rem);
-  opacity: 0; transform: translateY(18px); filter: blur(8px); visibility: hidden;
-  transition: opacity 0.45s ease, transform 0.6s var(--courbe), filter 0.5s var(--courbe), visibility 0s linear 0.6s;
+  opacity: 0; transform: translateY(18px); filter: blur(8px);
+  transition: opacity 0.45s ease, transform 0.6s var(--courbe), filter 0.5s var(--courbe);
 }
 .mode-3d .slide.active .tuto-etape.est-active .tuto-texte {
-  opacity: 1; transform: none; filter: none; visibility: visible;
-  transition: opacity 0.7s ease 0.25s, transform 1s var(--courbe) 0.25s, filter 0.8s var(--courbe) 0.25s, visibility 0s;
+  opacity: 1; transform: none; filter: none;
+  transition: opacity 0.7s ease 0.25s, transform 1s var(--courbe) 0.25s, filter 0.8s var(--courbe) 0.25s;
 }
 .mode-3d .tuto-points { display: flex; gap: 0.5rem; position: absolute; left: 0; bottom: 2.5rem; opacity: 0; transition: opacity 0.6s ease; }
 .mode-3d .slide.active .tuto-points { opacity: 1; }
