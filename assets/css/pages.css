@@ -41,12 +41,16 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 }
 .carte-rouge { background: var(--rouge-fond); border-color: var(--rouge-contour); }
 
-.apparait { opacity: 0; transform: translateY(18px); filter: blur(6px); transition: opacity 0.8s ease, transform 1s var(--courbe), filter 0.9s var(--courbe); }
+.apparait { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.75s var(--courbe-nette); }
 .apparait.est-visible, html:not(.js) .apparait { opacity: 1; transform: none; filter: none; }
 
 /* ---- Contact ---- */
-.contact-bloc { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-3); }
-.contact-bloc .carte:first-child { grid-row: span 2; display: flex; flex-direction: column; align-items: flex-start; }
+/* Carte e-mail en bandeau sur toute la largeur (texte à gauche, bouton à droite), les deux autres dessous. */
+.contact-bloc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e-3); }
+.contact-bloc .carte:first-child { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--e-4); align-items: center; }
+.contact-bloc .carte:first-child > * { grid-column: 1; justify-self: start; }
+.contact-bloc .carte:first-child .btn { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+.contact-bloc .carte:first-child p { margin-bottom: 0; }
 .contact-mail {
   display: inline-block; margin: 0.75rem 0 1.25rem;
   font-family: var(--police-texte); font-weight: 600; font-size: clamp(1.25rem, 4.4vw, 2.125rem); line-height: 1.2; letter-spacing: 0;
@@ -57,8 +61,7 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 .contact-mail:hover { background-size: 100% 4px; }
 .carte h2 { margin-bottom: 0.75rem; }
 .carte .surtitre { display: flex; }
-.contact-bloc .carte:first-child .btn { margin-top: auto; }
-.contact-bloc .carte:first-child p { margin-bottom: 1.5rem; }
+
 .carte p { color: var(--texte-doux); }
 .carte p + p { margin-top: 0.75rem; }
 .carte .btn { margin-top: 1.25rem; }
@@ -170,7 +173,8 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 
 @media (max-width: 900px) {
   .page-tete-duo, .contact-bloc { grid-template-columns: 1fr; }
-  .contact-bloc .carte:first-child { grid-row: auto; }
+  .contact-bloc .carte:first-child { grid-template-columns: 1fr; }
+  .contact-bloc .carte:first-child .btn { grid-column: 1; grid-row: auto; margin-top: 1.25rem; }
   .page-tete-duo { gap: var(--e-2); }
   .page-tete-duo .eclair-fixe { order: -1; width: min(56vw, 15rem); justify-self: center; margin: -1.5rem 0 -1rem; }
   .legal-grille { grid-template-columns: minmax(0, 1fr); gap: var(--e-3); }

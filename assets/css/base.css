@@ -162,13 +162,24 @@ html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
 .nav-separateur { width: 1px; height: 14px; background: var(--trait-fort); }
 .nav .nav-mobile { display: none; }
 
-.compteur {
-  display: inline-flex; align-items: center; gap: 0.5rem; margin-right: 0.5rem;
-  font-size: var(--t-mini); font-weight: 500; letter-spacing: 0.12em;
-  color: var(--texte-faible); font-variant-numeric: tabular-nums;
+/* Numéro de chapitre façon tableau de score : le chiffre bascule au changement de chapitre. */
+.score {
+  display: inline-flex; align-items: center; gap: 0.45rem; margin-right: 0.6rem;
+  font-family: var(--police-titre); font-size: 0.9375rem; line-height: 1; letter-spacing: 0.06em; color: var(--texte-faible);
 }
-.compteur b { font-weight: 600; color: var(--blanc); }
-.compteur i { width: 14px; height: 1px; background: var(--trait-fort); }
+.score-case {
+  position: relative; display: inline-grid; place-items: center; min-width: 2.1em; height: 1.8em; padding: 0.1em 0.3em 0;
+  overflow: hidden; border: 1px solid var(--neutre-contour); border-radius: 4px;
+  background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut));
+  perspective: 90px;
+}
+.score-case::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--noir); opacity: 0.28; }
+.score-case b { display: block; font-weight: 400; color: var(--blanc); }
+.score-case b.sort { animation: score-sort 0.15s ease-in both; }
+.score-case b.entre { animation: score-entre 0.36s var(--courbe) both; }
+@keyframes score-sort { to { transform: rotateX(-86deg); opacity: 0.3; } }
+@keyframes score-entre { from { transform: rotateX(86deg); opacity: 0.3; } }
+.score i { width: 10px; height: 1px; background: var(--trait-fort); }
 
 .menu-btn {
   display: none; position: relative; width: 44px; height: 44px; margin-right: -10px;
@@ -327,7 +338,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   .entete { grid-template-columns: auto 1fr; gap: 0.75rem; }
   .entete-actions { gap: 0.25rem; }
   .menu-btn { display: block; }
-  .compteur { display: none; }
+  .score { display: none; }
   .logo-texte { font-size: 1.1875rem; }
 
   /* Menu plein écran sobre */
@@ -386,3 +397,20 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.2s !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
 }
+
+/* ---- Grain de pellicule : texture fixe très légère sur toute la page (aucune animation) ---- */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 45; pointer-events: none;
+  background: url("../img/grain.png") 0 0 / 128px 128px;
+  opacity: var(--grain);
+}
+html[data-qualite="1"] body::after, html[data-qualite="2"] body::after { display: none; }
+
+/* ---- Passage d'une page à l'autre : fondu court (navigateurs récents ; sans effet ailleurs) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root) { animation: 0.16s ease-in both page-sortie; }
+  ::view-transition-new(root) { animation: 0.34s ease-out 0.04s both page-entree; }
+}
+@keyframes page-sortie { to { opacity: 0; } }
+@keyframes page-entree { from { opacity: 0; } }

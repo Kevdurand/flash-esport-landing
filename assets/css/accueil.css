@@ -62,20 +62,24 @@
 .final-titre { font-size: clamp(2.5rem, 5.4vw, 4.75rem); }
 .final .badges { margin: 1.75rem 0 1.4rem; }
 
-/* Apparition : fondu flou. Actif seulement avec JavaScript (classe .js posée par demarrage.js). */
+/* Apparition des textes (avec JavaScript seulement) : chaque ligne de titre monte depuis un masque, une ligne
+   après l'autre, vite et net ; les autres blocs suivent d'une courte montée. Aucun flou. */
 .js .revele, .js .jeux li, .js .tuto-etape, .js .affiche {
-  opacity: 0; transform: translateY(16px); filter: blur(10px);
-  transition: opacity 0.9s ease, transform 1.1s var(--courbe), filter 1s var(--courbe);
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 0.4s ease, transform 0.65s var(--courbe-nette);
 }
 .js .slide.active .revele, .js .slide.active .jeux li, .js .slide.active .tuto-etape, .js .slide.active .affiche,
-.js .final.active .revele { opacity: 1; transform: none; filter: none; }
-.js .line { overflow: hidden; padding: 0.08em 0 0.1em; margin: -0.08em 0 -0.1em; white-space: nowrap; }
+.js .final.active .revele { opacity: 1; transform: none; }
+.js .line { overflow: hidden; padding: 0.1em 0 0.1em; margin: -0.1em 0 -0.1em; white-space: nowrap; }
 .js .line-inner {
-  display: block; transform: translateY(105%); opacity: 0; filter: blur(12px);
-  transition: transform 1.15s var(--courbe), opacity 0.7s ease-out, filter 1.05s var(--courbe);
+  display: block; transform: translateY(112%); opacity: 0;
+  transition: transform 0.4s ease-in, opacity 0.01s linear 0.4s;      /* sortie : la ligne redescend derrière son masque */
 }
-.js .line.rouge .line-inner { transition-delay: 0.09s; }
-.js .slide.active .line-inner, .js .final.active .line-inner { transform: none; opacity: 1; filter: blur(0); }
+.js .slide.active .line-inner, .js .final.active .line-inner {
+  transform: none; opacity: 1;
+  transition: transform 0.75s var(--courbe-nette), opacity 0.01s linear;
+}
+.js .slide.active .line.rouge .line-inner, .js .final.active .line.rouge .line-inner { transition-delay: 0.09s, 0.09s; }
 .js .slide.active .d2 { transition-delay: 0.22s; }
 .js .slide.active .d3 { transition-delay: 0.34s; }
 .js .slide.active .jeux li:nth-child(1) { transition-delay: 0.20s; }
@@ -198,16 +202,16 @@ html:not(.mode-3d) .final-bloc {
 /* Chapitre 3 — le tutoriel : titre et étape à gauche, téléphone au premier plan */
 .mode-3d #app .slide-corps { left: 0; bottom: 53%; width: min(46vw, 40rem); }
 .mode-3d #app .slide-title { font-size: clamp(2.5rem, 4.8vw, 4.75rem); margin-bottom: 0; }
-.mode-3d .tuto-etape { opacity: 1; transform: none; filter: none; }
+.mode-3d .tuto-etape { opacity: 1; transform: none; }
 
 
 .mode-3d .tuto-texte {
   position: absolute; left: 0; top: 54%; width: min(40vw, 30rem);
-  opacity: 0; transform: translateY(18px); filter: blur(8px);
-  transition: opacity 0.45s ease, transform 0.6s var(--courbe), filter 0.5s var(--courbe);
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 0.35s ease, transform 0.6s var(--courbe-nette);
 }
 .mode-3d .slide.active .tuto-etape.est-active .tuto-texte {
-  opacity: 1; transform: none; filter: none;
+  opacity: 1; transform: none;
   transition: opacity 0.7s ease 0.25s, transform 1s var(--courbe) 0.25s, filter 0.8s var(--courbe) 0.25s;
 }
 .mode-3d .tuto-points { display: flex; gap: 0.5rem; position: absolute; left: 0; bottom: 2.5rem; opacity: 0; transition: opacity 0.6s ease; }
@@ -262,40 +266,25 @@ html:not(.mode-3d) .final-bloc {
 .story-dash-fill { width: 100%; height: 100%; background: var(--rouge-lumiere); border-radius: 2px; transform: scaleY(0); transform-origin: center top; }
 .mode-3d body.contact-open .story-progress { opacity: 0; }
 
-/* ---- Curseur réticule : ordinateur uniquement ---- */
+/* ---- Braise : une petite lumière rouge suit la souris avec inertie et s'ouvre en anneau sur ce qui se clique.
+   Ordinateur uniquement ; le pointeur du système reste visible. ---- */
+.braise { display: none; }
 @media (hover: hover) and (pointer: fine) {
-  .mode-3d body, .mode-3d body * { cursor: none !important; }
-  .mode-3d .cursor-inner {
-    display: block; position: fixed; top: 0; left: 0; width: 4px; height: 4px; background: var(--blanc); border-radius: 50%;
-    transform: translate(-50%, -50%); pointer-events: none; z-index: 9999; mix-blend-mode: difference;
-    transition: width 0.25s, height 0.25s, opacity 0.3s;
+  .mode-3d .braise {
+    display: block; position: fixed; top: 0; left: 0; z-index: 9998; pointer-events: none;
+    width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 1px solid transparent;
+    background: var(--rouge-lumiere);
+    box-shadow: inset 0 0 3px 1px var(--braise-coeur), 0 0 12px 2px var(--rouge-halo), 0 0 36px 10px var(--rouge-halo-doux);
+    transition: width 0.4s var(--courbe), height 0.4s var(--courbe), margin 0.4s var(--courbe), background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+    will-change: transform;
   }
-  .mode-3d .cursor-outer {
-    display: block; position: fixed; top: 0; left: 0; width: 36px; height: 36px;
-    border: 1px solid var(--texte-faible); border-radius: 50%;
-    transform: translate(-50%, -50%); pointer-events: none; z-index: 9998; mix-blend-mode: difference;
-    transition: width 0.35s var(--courbe-douce), height 0.35s var(--courbe-douce), border-color 0.35s, opacity 0.3s;
+  body.cursor-hover .braise {
+    width: 46px; height: 46px; margin: -23px 0 0 -23px;
+    background: var(--rouge-fond); border-color: var(--rouge-lumiere);
+    box-shadow: 0 0 24px 2px var(--rouge-halo-doux);
   }
-  .cursor-ticks { position: absolute; inset: -7px; animation: cursor-spin 16s linear infinite; }
-  .cursor-ticks span { position: absolute; background: var(--blanc); }
-  .cursor-ticks span:nth-child(1) { left: 50%; top: 0; width: 1px; height: 6px; margin-left: -0.5px; }
-  .cursor-ticks span:nth-child(2) { left: 50%; bottom: 0; width: 1px; height: 6px; margin-left: -0.5px; }
-  .cursor-ticks span:nth-child(3) { top: 50%; left: 0; width: 6px; height: 1px; margin-top: -0.5px; }
-  .cursor-ticks span:nth-child(4) { top: 50%; right: 0; width: 6px; height: 1px; margin-top: -0.5px; }
-  .mode-3d .cursor-label {
-    display: block; position: fixed; top: 0; left: 0; transform: translate(26px, 14px);
-    font: 500 9px/1 var(--police-texte); letter-spacing: 2px; white-space: nowrap; color: var(--texte-faible);
-    pointer-events: none; z-index: 9997; mix-blend-mode: difference; transition: opacity 0.3s;
-  }
-  body.cursor-hover .cursor-outer { width: 58px; height: 58px; border-color: var(--blanc); }
-  body.cursor-hover .cursor-ticks { animation-duration: 3s; }
-  body.cursor-hover .cursor-inner { opacity: 0; }
-  /* Au survol d'un lien : un simple anneau fin, rien qui recouvre le texte. */
-  body.cursor-hover .cursor-ticks, body.cursor-hover .cursor-label { opacity: 0; }
-  .cursor-ticks { transition: opacity 0.25s; }
-  body.cursor-hidden .cursor-inner, body.cursor-hidden .cursor-outer, body.cursor-hidden .cursor-label { opacity: 0; }
+  body.cursor-hidden .braise { opacity: 0; }
 }
-@keyframes cursor-spin { to { transform: rotate(360deg); } }
 
 /* ---- Indicateur de chargement de la scène : à l'emplacement de l'éclair, sans masquer la page ---- */
 .loader {
@@ -304,13 +293,16 @@ html:not(.mode-3d) .final-bloc {
   transition: opacity 0.6s ease, visibility 0s linear 0.6s;
 }
 .loader.is-done { opacity: 0; visibility: hidden; }
-.loader-inner { display: grid; justify-items: center; text-align: center; gap: 0.9rem; width: 8.5rem; }
-.loader-eclair { width: 22px; height: 33px; fill: var(--rouge-lumiere); filter: drop-shadow(0 0 14px var(--rouge-halo)); animation: loader-pouls 1.5s ease-in-out infinite; }
+.loader-inner { display: grid; justify-items: center; text-align: center; gap: 0.7rem; width: 8.5rem; }
+.loader-label { font-size: 0.625rem; font-weight: 600; line-height: 1; letter-spacing: 0.32em; text-transform: uppercase; color: var(--texte-faible); animation: loader-pouls 1.5s ease-in-out infinite; }
 @keyframes loader-pouls { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 .loader-value {
-  font-family: var(--police-titre); font-size: 2rem; line-height: 1; letter-spacing: 0.04em;
-  color: var(--blanc); font-variant-numeric: tabular-nums;
+  position: relative; display: inline-flex; align-items: baseline; justify-content: center; min-width: 3.1em; padding: 0.2em 0.35em 0.12em;
+  border: 1px solid var(--neutre-contour); border-radius: 6px;
+  background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut));
+  font-family: var(--police-titre); font-size: 2.5rem; line-height: 1; letter-spacing: 0.04em; color: var(--blanc);
 }
+.loader-value::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--noir); opacity: 0.4; }
 .loader-unit { font-size: 0.35em; margin-left: 0.12em; color: var(--texte-faible); }
 .loader-bar { width: 100%; height: 2px; background: var(--trait); overflow: hidden; border-radius: 2px; }
 .loader-bar span { display: block; width: 100%; height: 100%; background: var(--rouge-lumiere); box-shadow: 0 0 12px var(--rouge-halo); transform: scaleX(0); transform-origin: left center; }
@@ -365,7 +357,7 @@ html:not(.mode-3d) .final-bloc {
   .slide.active .panneau-verre { animation: none; }
 }
 
-html:not(.mode-3d) .compteur { display: none; }
+html:not(.mode-3d) .score { display: none; }
 
 /* Image de secours si le contexte WebGL est perdu pour de bon : même place et même taille que l'éclair, en fondu. */
 .affiche-secours {

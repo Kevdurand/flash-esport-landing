@@ -14,9 +14,9 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/exo2-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-1429">
-<link rel="stylesheet" href="assets/css/base.css?v=20261006-1429">
-<link rel="stylesheet" href="assets/css/accueil.css?v=20261006-1429">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-1451">
+<link rel="stylesheet" href="assets/css/base.css?v=20261006-1451">
+<link rel="stylesheet" href="assets/css/accueil.css?v=20261006-1451">
 <!-- /gabarit:tete -->
 <title>Flash eSport — L'app des résultats eSport en direct</title>
 <meta name="description" content="Flash eSport, l'application française des résultats eSport : scores en direct, calendrier et tournois de tes équipes sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League.">
@@ -101,12 +101,12 @@
 <body class="accueil">
 <div class="loader" id="loader" aria-hidden="true" hidden>
   <div class="loader-inner">
-    <svg class="loader-eclair" viewBox="0 0 24 36" aria-hidden="true"><path d="M15 0 2 20h9L8 36l14-22h-9z"/></svg>
+    <span class="loader-label">Chargement</span>
     <span class="loader-value"><span id="loader-count">00</span><span class="loader-unit">%</span></span>
     <span class="loader-bar"><span id="loader-fill"></span></span>
   </div>
 </div>
-<script src="assets/js/demarrage.js?v=20261006-1429"></script>
+<script src="assets/js/demarrage.js?v=20261006-1451"></script>
 <!-- gabarit:entete -->
 <a class="lien-evitement" href="#contenu">Aller au contenu</a>
 <header class="entete">
@@ -123,7 +123,7 @@
     <span class="nav-reseaux"><a href="https://www.instagram.com/flashesport.gg/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://x.com/flashesportfr" target="_blank" rel="noopener noreferrer">X</a></span>
   </nav>
   <div class="entete-actions">
-    <span class="compteur" aria-hidden="true"><b id="compteur-chapitre">01</b><i></i>05</span>
+    <span class="score" aria-hidden="true"><span class="score-case"><b id="compteur-chapitre">01</b></span><i></i>05</span>
     <a class="btn btn-rouge btn-compact" href="#telecharger" data-chapitre="4">Télécharger</a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="navigation" aria-label="Ouvrir le menu"><span></span><span></span></button>
   </div>
@@ -300,13 +300,11 @@
   <div class="story-dash"><div class="story-dash-fill" id="dash-fill-3"></div></div>
   <div class="story-dash"><div class="story-dash-fill" id="dash-fill-4"></div></div>
 </div>
-<div class="cursor-inner" aria-hidden="true"></div>
-<div class="cursor-outer" aria-hidden="true"><span class="cursor-ticks"><span></span><span></span><span></span><span></span></span></div>
-<div class="cursor-label" aria-hidden="true">000</div>
+<div class="braise" aria-hidden="true"></div>
 <canvas id="webgl" aria-hidden="true"></canvas>
 <!-- gabarit:scripts -->
-<script src="assets/js/site.js?v=20261006-1429" defer></script>
-<script type="module" src="assets/js/accueil.js?v=20261006-1429"></script>
+<script src="assets/js/site.js?v=20261006-1451" defer></script>
+<script type="module" src="assets/js/accueil.js?v=20261006-1451"></script>
 <!-- /gabarit:scripts -->
 </body>
 </html>

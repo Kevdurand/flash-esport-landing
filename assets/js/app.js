@@ -97,9 +97,21 @@ const shaderUniforms = {
     uGlowSpread: { value: 1.0 }
 };
 
-let sparkParticles;
-const sparkCount = 420;
-const sparkData = [];
+// Lucioles rouges : nombre affiché selon le palier de qualité (indice = palier, 1 à 5).
+let fireflies = null;
+const FIREFLY_MAX = 400;
+const FIREFLY_TIERS = [60, 60, 120, 220, 320, 400];
+let fireflyDrift = 0, fireflyTick = 0;
+const fireflyZoneA = new THREE.Vector4(3, 3, 3, 3), fireflyZoneB = new THREE.Vector4(3, 3, 3, 3);   // hors écran = aucune zone
+const fireflyUniforms = {
+    uTime: { value: 0 }, uCenter: { value: new THREE.Vector3(0, -0.3, 0) },
+    uBurst: { value: 0 }, uGather: { value: 0 }, uAura: { value: 0 }, uDrift: { value: 0 },
+    uMouse: { value: new THREE.Vector2(9, 9) }, uAspect: { value: 1 }, uScale: { value: 600 }, uOpacity: { value: 0 },
+    uFocus: { value: 5 }, uBoost: { value: 1 },
+    uTextA: { value: new THREE.Vector4(3, 3, 3, 3) }, uTextB: { value: new THREE.Vector4(3, 3, 3, 3) }
+};
+// Balancement de l'éclair : il suit la souris avec de l'inertie (ressort légèrement sous-amorti).
+const sway = { x: 0, y: 0, vx: 0, vy: 0 };
 
 const sizes = { width: window.innerWidth, height: window.innerHeight };
 
@@ -108,55 +120,144 @@ const cross2 = (a, b) => a.x * b.y - a.y * b.x;
 const lerp = THREE.MathUtils.lerp;
 const clamp = THREE.MathUtils.clamp;
 
-function createSparkTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 16; canvas.height = 16;
-    const ctx = canvas.getContext('2d');
-    const gradient = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.85)');
-    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.3)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 16, 16);
-    return new THREE.CanvasTexture(canvas);
+// Lucioles rouges : de petites lumières en suspension dans toute la scène, comme dans un film fantastique.
+// Tout le mouvement est calculé par la carte graphique (aucun calcul par luciole dans la boucle de rendu) :
+//  - dérive lente sur des trajectoires douces, propres à chaque luciole (sommes de sinusoïdes déphasées, sans
+//    période commune : jamais de boucle visible) ; chacune respire à son rythme ;
+//  - profondeur : les proches sont plus grosses et un peu floues, les lointaines minuscules et nettes ;
+//  - plus denses et plus lumineuses autour de l'éclair ; une gerbe s'échappe des cassures à l'éclatement ;
+//    elles convergent vers l'éclair pendant la recomposition et l'entourent au chapitre final ;
+//  - elles s'écartent du curseur, glissent légèrement avec le défilement, et s'effacent derrière les textes.
+// Rouges de la charte, quelques cœurs orangés ; aucun bleu, aucun vert.
+function createFireflies() {
+    const count = FIREFLY_MAX;
+    const home = new Float32Array(count * 3), seed = new Float32Array(count * 4), look = new Float32Array(count * 3);
+    let state = 20261006;
+    const random = () => { state = (state * 1664525 + 1013904223) >>> 0; return state / 4294967296; };
+    for (let i = 0; i < count; i++) {
+        const burst = i % 7 === 3;                               // une luciole sur sept appartient à la gerbe de l'éclatement
+        const theta = random() * Math.PI * 2, cosPhi = random() * 2 - 1, sinPhi = Math.sqrt(1 - cosPhi * cosPhi);
+        const dx = sinPhi * Math.cos(theta), dy = cosPhi, dz = sinPhi * Math.sin(theta);
+        let x, y, z;
+        if (burst) {
+            const r = 0.2 + random() * 0.35;
+            x = dx * r; y = -0.3 + dy * r * 1.4; z = dz * r;
+        } else if (random() < 0.52) {                            // autour de l'éclair
+            const r = 0.95 + Math.pow(random(), 1.5) * 2.3;
+            x = dx * r; y = -0.3 + dy * r * 0.85; z = dz * r;
+        } else {                                                 // dans tout l'espace de la scène
+            x = (random() - 0.5) * 13; y = -0.3 + (random() - 0.5) * 7.4; z = (random() - 0.5) * 13;
+        }
+        home[i * 3] = x; home[i * 3 + 1] = y; home[i * 3 + 2] = z;
+        for (let k = 0; k < 4; k++) seed[i * 4 + k] = random();
+        look[i * 3] = 0.030 + Math.pow(random(), 3.0) * 0.085;   // taille (unités monde) : beaucoup de petites, quelques grosses
+        look[i * 3 + 1] = random() < 0.2 ? 1 : 0;                // cœur plus chaud (orangé très léger)
+        look[i * 3 + 2] = burst ? 1 : 0;
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(home, 3));
+    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seed, 4));
+    geometry.setAttribute('aLook', new THREE.BufferAttribute(look, 3));
+    const material = new THREE.ShaderMaterial({
+        uniforms: fireflyUniforms,
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        vertexShader: `
+            attribute vec4 aSeed;
+            attribute vec3 aLook;
+            uniform float uTime, uBurst, uGather, uAura, uDrift, uAspect, uScale, uOpacity, uFocus, uBoost;
+            uniform vec3 uCenter;
+            uniform vec2 uMouse;
+            uniform vec4 uTextA, uTextB;
+            varying float vAlpha;
+            varying float vSoft;
+            varying float vWarm;
+            float inside(vec2 p, vec4 r) {
+                vec2 d = max(r.xy - p, p - r.zw);
+                return 1.0 - smoothstep(-0.03, 0.16, max(d.x, d.y));
+            }
+            void main() {
+                float burst = aLook.z;
+                float t = uTime * (0.5 + aSeed.x * 0.7);
+                vec3 p = position;
+                vec3 wander = vec3(
+                    sin(t * 0.31 + p.y * 1.7 + aSeed.w * 6.283) + 0.6 * sin(t * 0.173 + p.z * 2.3 + aSeed.y * 6.283),
+                    cos(t * 0.27 + p.z * 1.3 + aSeed.x * 6.283) + 0.6 * sin(t * 0.141 + p.x * 1.9 + aSeed.z * 6.283),
+                    sin(t * 0.23 + p.x * 1.5 + aSeed.y * 6.283) + 0.6 * cos(t * 0.197 + p.y * 2.1 + aSeed.w * 6.283));
+                vec3 q = p + wander * (0.22 + aSeed.y * 0.36);
+                q.y += uDrift * (0.25 + aSeed.z * 0.6);
+                vec3 away = q - uCenter;
+                float dist = length(away);
+                vec3 dir = away / max(dist, 0.001);
+                float free = 1.0 - burst;
+                // Recomposition : elles convergent vers l'éclair.
+                q -= dir * uGather * min(dist * 0.55, 1.9) * (0.4 + aSeed.z * 0.6) * free;
+                // Chapitre final : elles se rangent en aura autour de l'éclair.
+                float ring = 1.25 + aSeed.y * 1.3;
+                q = mix(q, uCenter + dir * ring, uAura * 0.62 * (1.0 - smoothstep(3.2, 5.6, dist)) * free);
+                // Éclatement : la gerbe part du cœur de l'éclair, s'ouvre et retombe légèrement.
+                vec3 own = normalize(position - vec3(0.0, -0.3, 0.0) + vec3(0.0001));
+                vec3 spray = uCenter + own * (0.25 + uBurst * (1.1 + aSeed.x * 2.7)) + wander * 0.14 * uBurst
+                    - vec3(0.0, 0.55 * uBurst * uBurst * aSeed.z, 0.0);
+                q = mix(q, spray, burst);
+                dist = length(q - uCenter);
+
+                vec4 mv = modelViewMatrix * vec4(q, 1.0);
+                vec4 clip = projectionMatrix * mv;
+                vec2 ndc = clip.xy / max(clip.w, 0.001);
+                // Elles s'écartent doucement autour du curseur.
+                vec2 toMouse = ndc - uMouse;
+                toMouse.x *= uAspect;
+                float reach = length(toMouse);
+                vec2 push = toMouse / max(reach, 0.001) * (1.0 - smoothstep(0.0, 0.4, reach)) * 0.09;
+                push.x /= uAspect;
+                clip.xy += push * clip.w;
+                ndc += push;
+                gl_Position = clip;
+
+                float depth = max(-mv.z, 0.25);
+                vSoft = 1.0 - smoothstep(0.34 * uFocus, 1.08 * uFocus, depth);       // plus proche que l'éclair : grosse et floue
+                float size = aLook.x * uBoost * uScale / depth * (1.0 + vSoft * 1.5);
+                gl_PointSize = clamp(size, 1.0, 84.0);
+
+                float breath = smoothstep(-0.55, 0.9,
+                    0.6 * sin(uTime * (0.6 + aSeed.y * 1.7) + aSeed.x * 37.0) + 0.6 * sin(uTime * (0.19 + aSeed.z * 0.43) + aSeed.w * 23.0));
+                float near = 1.0 - smoothstep(0.8, 3.8, dist);
+                float alpha = breath * (0.28 + 0.72 * near) * (1.0 - 0.5 * vSoft);
+                alpha = mix(alpha, pow(max(sin(3.14159 * uBurst), 0.0), 0.8) * (0.55 + 0.6 * breath), burst);
+                alpha *= 1.0 - 0.9 * max(inside(ndc, uTextA), inside(ndc, uTextB));
+                alpha *= smoothstep(0.8, 2.2, size);            // les points trop petits s'effacent au lieu de scintiller
+                vAlpha = alpha * uOpacity;
+                vWarm = aLook.y;
+            }`,
+        fragmentShader: `
+            varying float vAlpha;
+            varying float vSoft;
+            varying float vWarm;
+            void main() {
+                float r = length(gl_PointCoord * 2.0 - 1.0);
+                if (r > 1.0 || vAlpha < 0.004) discard;
+                float core = 1.0 - smoothstep(0.0, mix(0.24, 0.72, vSoft), r);
+                float halo = pow(1.0 - r, 2.4);
+                vec3 color = mix(vec3(0.69, 0.0, 0.0), vec3(0.878, 0.094, 0.094), core);                 // #B00000 → #E01818
+                color = mix(color, vec3(1.0, 0.478, 0.322), core * core * (0.22 + 0.62 * vWarm));       // cœur chaud
+                gl_FragColor = vec4(color, (core * 0.95 + halo * 0.4) * vAlpha);
+            }`
+    });
+    fireflies = new THREE.Points(geometry, material);
+    fireflies.frustumCulled = false;
+    fireflies.renderOrder = 4;
+    scene.add(fireflies);
 }
 
-// Poussière de verre : blanc chaud et braises rouges (aucun bleu, aucun violet).
-function createSparks() {
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(sparkCount * 3);
-    const colors = new Float32Array(sparkCount * 3);
-    for (let i = 0; i < sparkCount; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 6.5;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 5.0 - 0.5;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 6.5;
-        if (Math.random() < 0.55) {
-            colors[i * 3] = 1.0;
-            colors[i * 3 + 1] = 0.86 + Math.random() * 0.10;
-            colors[i * 3 + 2] = 0.80 + Math.random() * 0.12;
-        } else {
-            colors[i * 3] = 1.0;
-            colors[i * 3 + 1] = 0.10 + Math.random() * 0.16;
-            colors[i * 3 + 2] = 0.08 + Math.random() * 0.10;
-        }
-        sparkData.push({
-            speedX: (Math.random() - 0.5) * 0.4,
-            speedY: 0.15 + Math.random() * 0.3,
-            speedZ: (Math.random() - 0.5) * 0.4,
-            swaySpeed: 0.5 + Math.random() * 1.5,
-            swayRadius: 0.05 + Math.random() * 0.15,
-            phase: Math.random() * Math.PI * 2
-        });
-    }
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const material = new THREE.PointsMaterial({
-        size: 0.026, vertexColors: true, transparent: true, opacity: 0.42,
-        blending: THREE.AdditiveBlending, depthWrite: false, map: createSparkTexture()
-    });
-    sparkParticles = new THREE.Points(geometry, material);
-    scene.add(sparkParticles);
+// Zones de texte (en coordonnées d'écran normalisées) : les lucioles s'y effacent pour ne jamais gêner la lecture.
+function measureFireflyZones(chapter) {
+    const rect = (element, target) => {
+        const box = element ? element.getBoundingClientRect() : null;
+        if (!box || box.width < 2 || box.height < 2) { target.set(3, 3, 3, 3); return; }
+        target.set(box.left / sizes.width * 2 - 1, 1 - box.bottom / sizes.height * 2, box.right / sizes.width * 2 - 1, 1 - box.top / sizes.height * 2);
+    };
+    rect(chapter >= 4 ? contactCardElement : slides[chapter] && slides[chapter].querySelector('.slide-corps'), fireflyZoneA);
+    rect(chapter === 2 ? document.querySelector('.tuto-etape.est-active .tuto-texte') : null, fireflyZoneB);
 }
 
 // Studio d'environnement : de longues boîtes à lumière donnent des reflets nets.
@@ -780,6 +881,8 @@ function cameraFrame(scroll, contact = 0) {
     for (let i = 0; i < 4; i++) { fx += weights[i] * frame.fx[i]; fy += weights[i] * frame.fy[i]; }
     fx = lerp(fx, frame.final[0], final);
     fy = lerp(fy, frame.final[1], final);
+    // Entre deux chapitres l'éclair ne glisse pas en ligne droite : il décrit un arc, tantôt par le haut, tantôt par le bas.
+    if (!portrait) fy += (weights[0] * weights[1] - weights[1] * weights[2] + weights[2] * weights[3]) * 4 * 0.05 * (1 - final);
     if (portrait && zones.ready) {
         fy = 0; radius = 0;
         for (let i = 0; i < 4; i++) { fy += weights[i] * zones.fy[i]; radius += weights[i] * zones.radius[i]; }
@@ -1067,7 +1170,7 @@ function applyTier() {
     slabEnabled = tier >= 3 && !!glassCard;
     document.body.classList.toggle('has-glass-card', slabEnabled);
     if (glassCard && !slabEnabled) glassCard.visible = false;
-    if (sparkParticles) sparkParticles.geometry.setDrawRange(0, tier <= 2 ? 160 : sparkCount);
+    if (fireflies) fireflies.geometry.setDrawRange(0, Math.round(FIREFLY_TIERS[tier] * (tactile ? 0.75 : 1)));
     resizeRenderer(true);
     document.documentElement.dataset.qualite = String(tier);
 }
@@ -1158,39 +1261,36 @@ function updatePoster(frame, separation) {
     lost.poster.style.opacity = String(1 - separation * 0.7);
 }
 
-// ---- Curseur réticule (ordinateur uniquement) ----------------------------------
-const cursorInner = document.querySelector('.cursor-inner');
-const cursorOuter = document.querySelector('.cursor-outer');
-const cursorLabel = document.querySelector('.cursor-label');
-let cursorLabelText = '';
+// ---- Braise : une petite lumière rouge suit la souris avec inertie (ordinateur uniquement) ----
+const ember = document.querySelector('.braise');
+let emberShown = false, emberAt = '';
 function setupPointer() {
-    document.body.classList.add('cursor-hidden');   // le réticule n'apparaît qu'au premier mouvement de souris
+    document.body.classList.add('cursor-hidden');   // la braise n'apparaît qu'au premier mouvement de souris
     window.addEventListener('pointermove', (event) => {
         if (event.pointerType === 'touch') return;
         cursorX = event.clientX;
         cursorY = event.clientY;
-        if (cursorInner) { cursorInner.style.left = `${cursorX}px`; cursorInner.style.top = `${cursorY}px`; }
         targetMouseX = (event.clientX / window.innerWidth) * 2 - 1;
         targetMouseY = (event.clientY / window.innerHeight) * 2 - 1;
-        document.body.classList.remove('cursor-hidden');
+        if (!emberShown) {
+            emberShown = true;
+            outerCursorX = cursorX; outerCursorY = cursorY;
+            document.body.classList.remove('cursor-hidden');
+        }
     }, { passive: true });
     if (!pointerFine) return;
     document.addEventListener('mouseover', (event) => {
         const target = event.target instanceof Element ? event.target : null;
-        document.body.classList.toggle('cursor-hover', Boolean(target && target.closest('a[href], button')));
+        document.body.classList.toggle('cursor-hover', Boolean(target && target.closest('a[href], button, summary')));
     });
-    document.addEventListener('mouseleave', () => document.body.classList.add('cursor-hidden'));
+    document.addEventListener('mouseleave', () => { emberShown = false; document.body.classList.add('cursor-hidden'); });
 }
 function updateCursor(damping) {
-    if (!pointerFine) return;
-    outerCursorX += (cursorX - outerCursorX) * damping(0.2);
-    outerCursorY += (cursorY - outerCursorY) * damping(0.2);
-    if (cursorOuter) { cursorOuter.style.left = `${outerCursorX}px`; cursorOuter.style.top = `${outerCursorY}px`; }
-    if (!cursorLabel) return;
-    cursorLabel.style.left = `${outerCursorX}px`;
-    cursorLabel.style.top = `${outerCursorY}px`;
-    const text = String(Math.round(currentScroll * 100)).padStart(3, '0');
-    if (text !== cursorLabelText) { cursorLabel.textContent = text; cursorLabelText = text; }
+    if (!pointerFine || !ember) return;
+    outerCursorX += (cursorX - outerCursorX) * damping(0.16);
+    outerCursorY += (cursorY - outerCursorY) * damping(0.16);
+    const at = `translate3d(${outerCursorX.toFixed(1)}px, ${outerCursorY.toFixed(1)}px, 0)`;
+    if (at !== emberAt) { ember.style.transform = at; emberAt = at; }
 }
 
 // Un titre tient sur deux lignes, jamais trois : une ligne trop large pour sa colonne
@@ -1283,9 +1383,18 @@ function animate(now = performance.now()) {
     // L'éclair suit légèrement la souris, respire doucement, et fait un tour sur lui-même
     // en rejoignant le chapitre final.
     if (modelPivot) {
-        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + Math.sin(final * Math.PI) * 0.06;
-        modelPivot.rotation.x = mouseY * 0.15 + Math.sin(time * 0.27) * 0.025;
-        modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.035 * (1 - separation);
+        // Ressort : l'éclair se tourne vers la souris, dépasse à peine sa cible puis se pose.
+        const step = Math.min(elapsed, 0.05);
+        sway.vy += ((targetMouseX * 0.40 - sway.y) * 26 - sway.vy * 6.5) * step;
+        sway.vx += ((targetMouseY * 0.22 - sway.x) * 26 - sway.vx * 6.5) * step;
+        sway.y += sway.vy * step;
+        sway.x += sway.vx * step;
+        const whole = 1 - separation;
+        modelPivot.rotation.y = sway.y + Math.sin(time * 0.35) * 0.07 + Math.sin(final * Math.PI) * 0.06;
+        modelPivot.rotation.x = sway.x + Math.sin(time * 0.27) * 0.03;
+        modelPivot.rotation.z = Math.sin(time * 0.21 + 1.3) * 0.02 * whole;
+        modelPivot.position.x = mouseX * 0.09 * (0.5 + 0.5 * whole);
+        modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.045 * whole;
             }
     // Pendant la recomposition la caméra voit la grande face de l'éclair sous un angle rasant : le studio
     // de lumière s'y reflète en nappe pâle. On baisse les reflets sur cette plage (le verre reste rouge
@@ -1294,29 +1403,27 @@ function animate(now = performance.now()) {
     if (glass) glass.envMapIntensity = 1.0 - 0.48 * grazing * (1 - final) + smoothScrollRange(final, 0.55, 1) * 0.4;
     if (simpleGlass) simpleGlass.envMapIntensity = 0.32 + final * 0.12;
 
-    // Poussière de verre, agitée par le scroll rapide.
-    if (sparkParticles) {
-        const positions = sparkParticles.geometry.attributes.position.array;
-        const scrollVelocity = Math.abs(targetScroll - currentScroll);
-        const speedMultiplier = 1.0 + scrollVelocity * 9.0;
-        const turbulence = scrollVelocity * 0.8;
-        const count = sparkParticles.geometry.drawRange.count === Infinity ? sparkCount : sparkParticles.geometry.drawRange.count;
-        for (let i = 0; i < count; i++) {
-            const idx = i * 3;
-            const data = sparkData[i];
-            positions[idx]     += data.speedX * deltaTime * speedMultiplier;
-            positions[idx + 1] += data.speedY * deltaTime * speedMultiplier;
-            positions[idx + 2] += data.speedZ * deltaTime * speedMultiplier;
-            const currentSway = data.swayRadius * (1.0 + turbulence * 4.0);
-            positions[idx]     += Math.sin(time * data.swaySpeed + data.phase) * currentSway * deltaTime;
-            positions[idx + 2] += Math.cos(time * data.swaySpeed + data.phase) * currentSway * deltaTime;
-            if (positions[idx + 1] > 3.0 || Math.abs(positions[idx]) > 3.5 || Math.abs(positions[idx + 2]) > 3.5) {
-                positions[idx + 1] = -2.5;
-                positions[idx]     = (Math.random() - 0.5) * 3.0;
-                positions[idx + 2] = (Math.random() - 0.5) * 3.0;
-            }
-        }
-        sparkParticles.geometry.attributes.position.needsUpdate = true;
+    // Lucioles : le récit et les interactions passent par quelques nombres, le reste se calcule dans la carte graphique.
+    if (fireflies) {
+        const u = fireflyUniforms;
+        u.uTime.value = time;
+        u.uCenter.value.set(modelPivot ? modelPivot.position.x : 0, -0.3, 0);
+        u.uBurst.value = clamp((currentScroll - T.burst[0]) / (0.31 - T.burst[0]), 0, 1);
+        u.uGather.value = smoothScrollRange(currentScroll, 0.60, 0.74) * (1 - smoothScrollRange(currentScroll, 0.80, 0.93));
+        u.uAura.value = final;
+        // Elles glissent légèrement avec le défilement (sur téléphone, c'est leur seule réaction au geste).
+        fireflyDrift += (clamp((targetScroll - currentScroll) * 26, -1, 1) - fireflyDrift) * damping(0.07);
+        u.uDrift.value = fireflyDrift * 0.85;
+        if (pointerFine && emberShown) u.uMouse.value.set(outerCursorX / sizes.width * 2 - 1, 1 - outerCursorY / sizes.height * 2);
+        else u.uMouse.value.set(9, 9);
+        u.uAspect.value = sizes.width / sizes.height;
+        u.uScale.value = sizes.height * renderer.getPixelRatio() / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+        u.uFocus.value = camera.position.length();
+        u.uBoost.value = layout.portrait ? 2.3 : 1;     // sur téléphone la caméra est deux fois plus loin : mêmes lucioles à l'écran
+        u.uOpacity.value += (1 - u.uOpacity.value) * damping(0.02);
+        if (fireflyTick++ % 20 === 0) measureFireflyZones(headerState.chapter);
+        u.uTextA.value.lerp(fireflyZoneA, damping(0.12));
+        u.uTextB.value.lerp(fireflyZoneB, damping(0.12));
     }
 
     // La caméra fait le tour de l'éclair au fil du scroll.
@@ -1358,6 +1465,19 @@ const headerState = { chapter: -1, progress: '' };
 const chapterLinks = [...document.querySelectorAll('.nav [data-chapitre]')];
 const chapterCounter = document.getElementById('compteur-chapitre');
 const progressFill = document.getElementById('entete-progression');
+// Le numéro de chapitre bascule comme sur un tableau de score : l'ancien chiffre se couche, le nouveau se relève.
+let counterTimer = 0;
+function flipCounter(text) {
+    if (!chapterCounter || chapterCounter.textContent === text) return;
+    clearTimeout(counterTimer);
+    chapterCounter.classList.remove('entre');
+    chapterCounter.classList.add('sort');
+    counterTimer = setTimeout(() => {
+        chapterCounter.textContent = text;
+        chapterCounter.classList.remove('sort');
+        chapterCounter.classList.add('entre');
+    }, 150);
+}
 function updateHeader(scroll) {
     const chapter = targetContact > 0.02 ? 4
         : scroll < T.chapters[0] ? 0 : scroll < T.chapters[1] ? 1 : scroll < T.chapters[2] ? 2 : 3;
@@ -1368,7 +1488,7 @@ function updateHeader(scroll) {
             link.classList.toggle('est-actif', current);
             if (current) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current');
         }
-        if (chapterCounter) chapterCounter.textContent = String(chapter + 1).padStart(2, '0');
+        flipCounter(String(chapter + 1).padStart(2, '0'));
     }
     if (progressFill) {
         const total = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -1537,7 +1657,7 @@ async function init() {
     fillLight.position.set(-2, -4, 2);
     scene.add(fillLight);
 
-    createSparks();
+    createFireflies();
     mark('fond');
     await pause();
     createGlassEnvironment();
