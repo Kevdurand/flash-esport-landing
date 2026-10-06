@@ -97,6 +97,9 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 }
 .faq .reponse { padding: 1.1rem 0 1.6rem; max-width: 62ch; color: var(--texte-doux); }
 .faq .reponse p + p { margin-top: 0.75rem; }
+/* La réponse se déplie en douceur (fondu et légère descente), une fois, à l'ouverture. */
+.faq details[open] .reponse, .sommaire-page[open] ol { animation: reponse-ouvre 0.5s var(--courbe) both; }
+@keyframes reponse-ouvre { from { opacity: 0; transform: translateY(-8px); } }
 
 /* ---- Pages légales : lecture confortable ---- */
 .sommaire-legal { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }

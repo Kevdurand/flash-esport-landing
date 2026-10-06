@@ -178,6 +178,9 @@ html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
   position: absolute; left: 11px; right: 11px; height: 2px; border-radius: 2px; background: var(--blanc);
   transition: transform 0.45s var(--courbe), top 0.45s var(--courbe);
 }
+/* Appui : légère compression, comme les boutons. */
+.menu-btn { transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.menu-btn:active { transform: scale(0.9); transition-duration: 0.09s; }
 .menu-btn span:nth-child(1) { top: 17px; }
 .menu-btn span:nth-child(2) { top: 25px; }
 .menu-ouvert .menu-btn span:nth-child(1) { top: 21px; transform: rotate(45deg); }
