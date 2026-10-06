@@ -38,20 +38,31 @@
     window.addEventListener("scroll", majEntete, { passive: true });
   }
 
-  // Boutons des stores : désactivés tant que data-store-url est vide.
-  // Pour les activer : renseigner data-store-url="https://…" dans le HTML, rien d'autre.
-  document.querySelectorAll("[data-store-url]").forEach(function (bouton) {
-    var url = bouton.getAttribute("data-store-url");
+  // Badges App Store / Google Play.
+  // Tant que le lien d'un store est vide, son badge est affiché non cliquable avec « Bientôt disponible ».
+  // POUR ACTIVER UN STORE SUR TOUT LE SITE : mettre son adresse ici (une seule valeur), rien d'autre.
+  //   App Store   : "https://apps.apple.com/app/id6800447821"
+  //   Google Play : "https://play.google.com/store/apps/details?id=com.flashesport.mobile"   [À CONFIRMER : identifiant Android]
+  var LIENS_STORES = {
+    "app-store": "",
+    "google-play": ""
+  };
+  document.querySelectorAll(".badge[data-store]").forEach(function (badge) {
+    var cible = badge.querySelector("[data-store-url]");
+    if (!cible) return;
+    var url = cible.getAttribute("data-store-url") || LIENS_STORES[badge.getAttribute("data-store")] || "";
     if (!url) return;
     var lien = document.createElement("a");
-    lien.className = bouton.className;
+    lien.className = cible.className;
     lien.href = url;
     lien.target = "_blank";
     lien.rel = "noopener noreferrer";
-    while (bouton.firstChild) lien.appendChild(bouton.firstChild);
-    var petit = lien.querySelector(".store-petit");
-    if (petit) petit.textContent = "Télécharger sur";
-    bouton.parentNode.replaceChild(lien, bouton);
+    lien.setAttribute("data-store-url", url);
+    while (cible.firstChild) lien.appendChild(cible.firstChild);
+    badge.replaceChild(lien, cible);
+    var mention = badge.querySelector(".badge-mention");
+    if (mention) badge.removeChild(mention);
+    badge.classList.add("est-actif");
   });
 
   // Sommaire des pages légales : ouvert sur ordinateur, replié sur téléphone

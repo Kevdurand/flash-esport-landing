@@ -75,17 +75,39 @@ button { font: inherit; color: inherit; }
 .titre-m { font-size: var(--t-m); line-height: 1.12; letter-spacing: 0.02em; }
 .titre .rouge, .rouge { color: var(--rouge-lumiere); }
 
+/* Rouge « matière » des grands titres : référence #B00000, travaillée comme le verre de l'éclair.
+   Dégradé vertical dans les lettres (arête claire en haut, #E01818 → #B00000 → #7A0000), halo léger
+   derrière, et un seul balayage de lumière à l'apparition. Aucun effet en boucle. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .titre .rouge, .line.rouge .line-inner, .logo-texte span {
+    background-image:
+      linear-gradient(104deg, transparent 45%, var(--titre-balayage) 50%, transparent 55%),
+      linear-gradient(180deg, var(--rouge-arete) 0%, var(--rouge-arete) 2.5%, var(--rouge-lumiere) 6%, var(--rouge) 54%, var(--rouge-profond) 100%);
+    background-size: 300% 100%, 100% 100%;
+    background-position: 100% 0, 0 0;      /* le balayage attend hors champ */
+    background-repeat: no-repeat;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .titre .rouge { display: inline-block; filter: drop-shadow(0 0 26px var(--titre-halo)); animation: titre-balayage 0.95s cubic-bezier(0.4, 0, 0.2, 1) 0.55s 1 both; }
+  .logo-texte span { background-image: linear-gradient(180deg, var(--rouge-lumiere) 20%, var(--rouge) 100%); background-size: 100% 100%; background-position: 0 0; }
+}
+@keyframes titre-balayage { from { background-position: 100% 0, 0 0; } to { background-position: 0% 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .titre .rouge, .line.rouge .line-inner { animation: none !important; }
+}
+
 .surtitre {
   display: inline-flex; align-items: center; gap: 0.85em;
   font-family: var(--police-texte);
   font-size: var(--t-mini); font-weight: 600; line-height: 1.2;
   letter-spacing: 0.3em; text-transform: uppercase;
-  color: var(--rouge-texte);
+  color: var(--texte-doux);          /* jamais de petit texte en rouge : le rouge est dans le trait */
 }
 .surtitre::before {
   content: ""; width: 1.75rem; height: 2px; border-radius: 2px;
-  background: var(--rouge-lumiere);
-  box-shadow: 0 0 12px 1px var(--rouge-halo);
+  background: var(--rouge);
+  box-shadow: 0 0 10px 1px var(--rouge-halo-doux);
 }
 .chapo { font-size: clamp(1.0625rem, 1.4vw, 1.25rem); line-height: 1.6; color: var(--texte-doux); }
 
@@ -100,7 +122,7 @@ button { font: inherit; color: inherit; }
   font-family: var(--police-titre); font-size: 1.3125rem; line-height: 1;
   letter-spacing: 0.035em; text-transform: uppercase; white-space: nowrap;
 }
-.logo-texte span { color: var(--rouge-texte); }   /* rouge éclairci : contraste AA à cette taille */
+.logo-texte span { color: var(--rouge-lumiere); }
 
 /* ---- En-tête ---- */
 .entete {
@@ -196,24 +218,33 @@ button { font: inherit; color: inherit; }
 }
 .btn:focus-visible::after { opacity: 1; transform: none; }
 
-/* Boutons des stores : verre sombre, deux lignes. Désactivés tant que data-store-url est vide. */
-.stores { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.btn-store {
-  flex-direction: column; align-items: flex-start; justify-content: center; gap: 0.2rem;
-  min-height: 60px; min-width: 11.5rem; padding: 0.6rem 1.25rem;
-  background: var(--verre); border-color: var(--trait-fort);
-  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
-  text-transform: none; letter-spacing: 0; text-align: left;
+/* Badges officiels App Store / Google Play (fichiers d'Apple et de Google, jamais modifiés).
+   Même hauteur visuelle pour les deux : le badge Google a une marge transparente intégrée (30 px sur
+   250), compensée par une marge négative. « Bientôt disponible » est écrit au-dessus, jamais sur le badge. */
+.badges { --badge-h: 50px; list-style: none; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem 1.25rem; }
+.badge { display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+.badge-mention {
+  display: inline-flex; align-items: center; gap: 0.55em;
+  font-size: 0.6875rem; font-weight: 600; line-height: 1; letter-spacing: 0.2em; text-transform: uppercase; color: var(--texte-faible);
 }
-.btn-store .store-petit {
-  font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--texte-doux);
+.badge-mention::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--rouge); box-shadow: 0 0 8px var(--rouge-halo); }
+.badge-lien { position: relative; display: block; height: var(--badge-h); border-radius: var(--rayon); }
+.badge-lien img { display: block; width: auto; max-width: none; height: var(--badge-h); }
+.badge[data-store="google-play"] .badge-lien img { height: calc(var(--badge-h) * 1.3158); margin: calc(var(--badge-h) * -0.1579) 0; }
+/* Survol (badge actif) : halo rouge autour et lame de lumière dessous, sans toucher au badge. */
+a.badge-lien { transition: filter 0.4s ease, transform 0.45s var(--courbe); }
+a.badge-lien::after {
+  content: ""; position: absolute; left: 20%; right: 20%; bottom: -8px; height: 2px; border-radius: 2px;
+  background: var(--rouge-lumiere); box-shadow: 0 0 16px 2px var(--rouge-halo);
+  opacity: 0; transform: scaleX(0.35); transition: opacity 0.35s ease, transform 0.55s var(--courbe);
 }
-.btn-store .store-nom {
-  font-family: var(--police-titre); font-size: 1.375rem; line-height: 1; letter-spacing: 0.03em; text-transform: uppercase;
+@media (hover: hover) {
+  a.badge-lien:hover { filter: drop-shadow(0 0 16px var(--rouge-halo-doux)); transform: translateY(-1px); }
+  a.badge-lien:hover::after { opacity: 1; transform: none; }
 }
-.btn-store[aria-disabled="true"] { cursor: default; }
-.btn-store[aria-disabled="true"] .store-nom { color: var(--texte); }
-.btn-store:not([aria-disabled="true"]) { background: var(--rouge-fond); border-color: var(--rouge-contour); }
+a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
+@media (max-width: 900px) { .badges { --badge-h: 44px; gap: 0.9rem 1rem; } }
+@media (max-width: 359px) { .badges { --badge-h: 40px; gap: 0.75rem; } }
 
 /* ---- Liens de texte ---- */
 .lien {
@@ -292,8 +323,7 @@ button { font: inherit; color: inherit; }
     transition: opacity 0.5s ease, transform 0.7s var(--courbe), color 0.3s ease;
   }
   .nav a::after { bottom: 4px; height: 3px; }
-  .nav a[aria-current] { color: var(--rouge-lumiere); }
-  .nav a[aria-current]::after, .nav a.est-actif::after { display: none; }
+  .nav a[aria-current]::after, .nav a.est-actif::after { left: 0; right: auto; width: 2.5rem; }
   .menu-ouvert .nav a { opacity: 1; transform: none; }
   .menu-ouvert .nav a:nth-child(2) { transition-delay: 0.05s; }
   .menu-ouvert .nav a:nth-child(3) { transition-delay: 0.1s; }

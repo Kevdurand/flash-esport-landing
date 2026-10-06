@@ -22,13 +22,14 @@ let openingSource = '', finalSource = '';
 const T = {
     open: [0.085, 0.10],      // juste avant d'éclater : les biseaux se resserrent (miroir de la fin)
     burst: [0.10, 0.24],      // l'éclair éclate
-    orbit: [0.29, 0.36, 0.60, 0.66],   // les éclats entrent en orbite autour du téléphone, puis en sortent
+    orbit: [0.30, 0.37, 0.61, 0.67],   // les éclats entrent en orbite autour du téléphone, puis en sortent
     join: [0.66, 0.79],       // les éclats reviennent à leur place
     bevel: [0.79, 0.81],      // prisme unique : les biseaux grandissent
     holes: [0.79, 0.85],
-    // Fenêtres d'affichage des textes. Les zones sans texte entre deux chapitres restent courtes (2 à 5 %).
-    slides: [[-0.10, 0.10], [0.135, 0.325], [0.345, 0.665], [0.715, 1.05]],
-    tuto: [0.365, 0.655],     // les 4 étapes du tutoriel se partagent cette plage
+    // Fenêtres d'affichage des textes : contiguës. Il y a toujours le texte d'un chapitre à l'écran, et il
+    // change exactement en même temps que le chapitre indiqué dans l'en-tête (mêmes seuils que `chapters`).
+    slides: [[-0.10, 0.118], [0.118, 0.335], [0.335, 0.69], [0.69, 1.05]],
+    tuto: [0.355, 0.675],     // les 4 étapes du tutoriel se partagent cette plage
     nav: [0, 0.23, 0.40, 0.90],
     chapters: [0.118, 0.335, 0.69]
 };
@@ -163,8 +164,8 @@ function createGlassEnvironment() {
     const studio = new THREE.Scene();
     studio.background = new THREE.Color('#0a0606');
     const panels = [
-        [2.8, 8, -4, 2, 3, '#ffffff', 2.6],
-        [0.65, 7, 3, 1, 2, '#ffe6e0', 4.0],
+        [2.8, 8, -4, 2, 3, '#ff9a8c', 1.5],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
+        [0.45, 7, 3, 1, 2, '#ffe6e0', 3.4],      // bandes fines blanches : elles dessinent les arêtes
         [5, 0.7, 0, 5, -1, '#ffffff', 3.5],
         [0.5, 6, -2, 0, -4, '#e01818', 3.4],
         [1.0, 5, 3, -1, -3, '#ff4a3a', 2.6],
@@ -207,7 +208,7 @@ function createGlassMaterial() {
         ior: 1.46,
         attenuationColor: new THREE.Color('#d01010'),
         attenuationDistance: 0.9,
-        clearcoat: 0.65,
+        clearcoat: 0.5,
         clearcoatRoughness: 0.018,
         iridescence: 0.12,
         iridescenceIOR: 1.3,
@@ -693,8 +694,10 @@ function getOrbit(scroll) {
 
 // Poids de chaque chapitre (leur somme vaut 1) : sert au cadrage.
 function chapterWeights(scroll) {
-    const a = smoothScrollRange(scroll, 0.08, 0.20);
-    const b = smoothScrollRange(scroll, 0.29, 0.37);
+    // Chaque changement de cadrage est centré sur le seuil du chapitre : l'éclair croise la colonne de
+    // texte au moment où l'ancien texte s'efface et avant que le nouveau n'apparaisse.
+    const a = smoothScrollRange(scroll, 0.065, 0.17);
+    const b = smoothScrollRange(scroll, 0.30, 0.37);
     const c = smoothScrollRange(scroll, 0.62, 0.72);
     return [1 - a, a - b, b - c, c];
 }
@@ -712,14 +715,14 @@ function measureZones() {
     const height = sizes.height, visible = Math.min(window.innerHeight, height);
     const box = selector => { const element = document.querySelector(selector); return element ? element.getBoundingClientRect() : null; };
     const header = box('.entete'), hero = box('#accueil .slide-corps'), games = box('#jeux .slide-corps');
-    const phone = box('.tuto-etape .telephone'), live = box('#direct .slide-corps'), panel = box('.panneau');
+    const phone = box('.telephone'), live = box('#direct .slide-corps'), panel = box('.panneau');
     if (!header || !hero || !games || !phone || !live || !panel) return;
     const mediaReady = phone.height > 10 && panel.height > 10;   // téléphone et panneau pas encore affichés : valeurs par défaut
     const finalTop = contactSection ? parseFloat(getComputedStyle(contactSection).paddingTop) || visible * 0.42 : visible * 0.42;
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     // [haut, bas] de la zone libre en px, hauteur de l'objet en unités monde, rayon mini / maxi
     const list = [
-        [hero.bottom + 14, visible - 10, OBJECT_HEIGHT, 7.4, 15],
+        [hero.bottom + 14, visible - 24, OBJECT_HEIGHT, 7.4, 15],
         [header.bottom + 10, games.top - 12, CLOUD_HEIGHT, 9.5, 16],
         [phone.top, phone.bottom, 0, 10.6, 10.6],
         [live.bottom + 4, panel.top + 34, OBJECT_HEIGHT, 8.6, 16],
@@ -746,6 +749,14 @@ function smoothZones(amount) {
     }
 }
 
+// Angle de la caméra autour de l'éclair : un tour complet sur tout le défilement. Le tour s'accélère
+// pendant la recomposition (62 → 80 %) pour que l'éclair reformé ne soit jamais vu de profil : la vue
+// de côté tombe pendant que les éclats sont encore en mouvement.
+function orbitAngle(scroll) {
+    const lead = 0.085 * (smoothScrollRange(scroll, 0.62, 0.80) - smoothScrollRange(scroll, 0.88, 1.0));
+    return (scroll + lead) * Math.PI * 2.0;
+}
+
 let debugFrame = null;   // cadrage imposé par les crochets de test (image fixe, image de partage)
 function cameraFrame(scroll, contact = 0) {
     const portrait = layout.portrait;
@@ -766,11 +777,14 @@ function cameraFrame(scroll, contact = 0) {
         for (let i = 0; i < 4; i++) { fy += weights[i] * zones.fy[i]; radius += weights[i] * zones.radius[i]; }
         fy = lerp(fy, zones.fy[4], final);
         radius = lerp(radius, zones.radius[4], final);
+        // Pendant la recomposition, la caméra recule : le nuage d'éclats tient dans la zone libre
+        // (il ne passe pas sur le texte), puis elle se rapproche à mesure que l'éclair se reforme.
+        radius *= 1 + 0.6 * separation * weights[3];
     }
     if (debugFrame) { fx = debugFrame.fx; fy = debugFrame.fy; radius = debugFrame.radius || radius; }
     const visibleHeight = 2 * radius * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const visibleWidth = visibleHeight * sizes.width / sizes.height;
-    const phi = scroll * Math.PI * 2.0;
+    const phi = orbitAngle(scroll);
     const right = new THREE.Vector3(Math.cos(phi), 0, -Math.sin(phi));
     const lookAt = new THREE.Vector3(0, -0.25 + (fy - 0.5) * visibleHeight, 0)
         .addScaledVector(right, -(fx - 0.5) * visibleWidth);
@@ -1019,8 +1033,8 @@ function initialTier() {
 function createSimpleGlassMaterial() {
     return new THREE.MeshPhysicalMaterial({
         color: '#4a0000', metalness: 0.0, roughness: 0.22,
-        clearcoat: 0.55, clearcoatRoughness: 0.2, specularIntensity: 0.55,
-        envMapIntensity: 0.5, emissive: new THREE.Color('#3c0000'),
+        clearcoat: 0.3, clearcoatRoughness: 0.25, specularIntensity: 0.4,
+        envMapIntensity: 0.32, emissive: new THREE.Color('#420000'),
         transparent: true, opacity: 0.88, side: THREE.FrontSide
     });
 }
@@ -1256,7 +1270,7 @@ function animate(now = performance.now()) {
         modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.035 * (1 - separation);
             }
     if (glass) glass.envMapIntensity = 1.10 + final * 0.45;
-    if (simpleGlass) simpleGlass.envMapIntensity = 0.5 + final * 0.2;
+    if (simpleGlass) simpleGlass.envMapIntensity = 0.32 + final * 0.12;
 
     // Poussière de verre, agitée par le scroll rapide.
     if (sparkParticles) {
@@ -1285,7 +1299,7 @@ function animate(now = performance.now()) {
 
     // La caméra fait le tour de l'éclair au fil du scroll.
     const frame = cameraFrame(currentScroll, currentContact);
-    const phi = currentScroll * Math.PI * 2.0;
+    const phi = orbitAngle(currentScroll);
     const y = 0.35 + Math.sin(currentScroll * Math.PI) * 0.8;
     _target.set(frame.radius * Math.sin(phi), y, frame.radius * Math.cos(phi));
     camera.position.lerp(_target, damping(0.035));
@@ -1421,7 +1435,7 @@ function setupNavigation() {
 
 function snapCamera() {
     const frame = cameraFrame(currentScroll, currentContact);
-    const phi = currentScroll * Math.PI * 2.0;
+    const phi = orbitAngle(currentScroll);
     camera.position.set(frame.radius * Math.sin(phi), 0.35 + Math.sin(currentScroll * Math.PI) * 0.8, frame.radius * Math.cos(phi));
     camera.lookAt(frame.lookAt);
 }

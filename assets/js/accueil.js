@@ -50,22 +50,26 @@ function panneauIncline() {
 
 panneauIncline();
 
-// Données structurées (JSON-LD SoftwareApplication) : lues dans un fichier puis ajoutées à la page,
-// pour garder une CSP sans aucun script inline dans le HTML.
-function donneesStructurees() {
-    fetch(new URL(`../data/application.json${version}`, import.meta.url))
-        .then(reponse => (reponse.ok ? reponse.text() : null))
-        .then(json => {
-            if (!json) return;
-            const bloc = document.createElement('script');
-            bloc.type = 'application/ld+json';
-            bloc.textContent = json;
-            document.head.appendChild(bloc);
-        })
-        .catch(() => {});
+// ---- Téléphone du tutoriel : très légère inclinaison qui suit la souris (aucune sur écran tactile) ----
+function telephoneIncline() {
+    const section = document.getElementById('app');
+    if (!section || etat.reduit || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    let cibleX = 0, cibleY = 0, x = 0, y = 0, boucle = 0;
+    const image = () => {
+        x += (cibleX - x) * 0.06;
+        y += (cibleY - y) * 0.06;
+        section.style.setProperty('--tel-ry', `${(x * 3.4).toFixed(2)}deg`);
+        section.style.setProperty('--tel-rx', `${(-y * 2.2).toFixed(2)}deg`);
+        boucle = Math.abs(cibleX - x) + Math.abs(cibleY - y) > 0.002 ? requestAnimationFrame(image) : 0;
+    };
+    window.addEventListener('pointermove', event => {
+        if (!section.classList.contains('active')) return;
+        cibleX = (event.clientX / window.innerWidth) * 2 - 1;
+        cibleY = (event.clientY / window.innerHeight) * 2 - 1;
+        if (!boucle) boucle = requestAnimationFrame(image);
+    }, { passive: true });
 }
-if (document.readyState === 'complete') donneesStructurees();
-else window.addEventListener('load', donneesStructurees, { once: true });
+telephoneIncline();
 
 // Un rendu WebGL logiciel (sans carte graphique) ne peut pas animer cette scène : image fixe d'emblée,
 // sans télécharger le moteur. Ignoré avec ?debug=1 (captures automatisées).

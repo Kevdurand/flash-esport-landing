@@ -49,7 +49,7 @@ body.page main { flex: 1; padding-top: var(--entete-h); }
   background: linear-gradient(var(--rouge-lumiere), var(--rouge-lumiere)) left bottom / 100% 2px no-repeat;
   padding-bottom: 0.3rem; transition: color 0.3s ease;
 }
-.contact-mail:hover { color: var(--rouge-texte); }
+.contact-mail:hover { background-size: 100% 4px; }
 .carte h2 { margin-bottom: 0.75rem; }
 .carte p { color: var(--texte-doux); }
 .carte p + p { margin-top: 0.75rem; }
@@ -58,6 +58,8 @@ body.page main { flex: 1; padding-top: var(--entete-h); }
 
 /* ---- Téléchargement ---- */
 .stores-page { margin-top: 2rem; }
+.page .badges { --badge-h: 52px; }
+@media (max-width: 900px) { .page .badges { --badge-h: 46px; } }
 .note { margin-top: 2rem; font-size: var(--t-petit); color: var(--texte-faible); }
 
 /* ---- FAQ ---- */
@@ -79,7 +81,7 @@ body.page main { flex: 1; padding-top: var(--entete-h); }
   transition: transform 0.45s var(--courbe);
 }
 .faq details[open] summary::after { transform: rotate(135deg); }
-.faq summary:hover { color: var(--rouge-texte); }
+.faq summary:hover::after { filter: drop-shadow(0 0 6px var(--rouge-halo)); }
 /* Lame de lumière sous la question ouverte */
 .faq details[open] summary::before {
   content: ""; position: absolute; left: 0; bottom: 0; width: 3.5rem; height: 2px; border-radius: 2px;

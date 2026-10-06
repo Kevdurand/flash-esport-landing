@@ -4,7 +4,10 @@
   --noir: #000000;
   --rouge: #B00000;                              /* textes, accents, traits, états actifs, live */
   --rouge-lumiere: #E01818;                      /* lames de lumière, halos, reflets, grands titres */
-  --rouge-texte: #F23535;                        /* petits textes rouges : même teinte, éclaircie pour un contraste AA sur noir */
+  --rouge-profond: #7A0000;                      /* bas du dégradé des grands titres */
+  --rouge-arete: #FF8672;                        /* arête claire en haut des lettres (comme les bords de l'éclair) */
+  --titre-halo: rgba(176, 0, 0, 0.34);           /* lumière derrière les grands titres rouges */
+  --titre-balayage: rgba(255, 226, 216, 0.92);   /* balayage de lumière, une seule fois à l'apparition */
   --rouge-fond: rgba(255, 0, 0, 0.188);          /* #30FF0000 : remplissage boutons / containers rouges */
   --rouge-contour: rgba(255, 0, 0, 0.251);       /* #40FF0000 */
   --rouge-fond-fort: rgba(255, 0, 0, 0.30);      /* survol */
@@ -28,6 +31,15 @@
   --reflet: rgba(255, 255, 255, 0.10);
   --reflet-fort: rgba(255, 255, 255, 0.28);
   --ecran-vide: #0A0A0A;
+  /* Cadre du téléphone : titane sombre (reflet clair en haut à gauche, plus sombre en bas) */
+  --titane-eclat: #B8B0A8;
+  --titane-clair: #6E6862;
+  --titane-moyen: #3A3633;
+  --titane-sombre: #1F1D1B;
+  --titane-ombre: #0C0B0A;
+  --titane-lisere: #4A4541;
+  --titane-bouton: #2B2826;
+  --titane-objectif: #111010;
 
   /* Typographies */
   --police-titre: "Anton", "Arial Narrow", Impact, sans-serif;

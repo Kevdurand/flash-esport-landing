@@ -14,19 +14,19 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/exo2-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-0956">
-<link rel="stylesheet" href="assets/css/base.css?v=20261006-0956">
-<link rel="stylesheet" href="assets/css/accueil.css?v=20261006-0956">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-1047">
+<link rel="stylesheet" href="assets/css/base.css?v=20261006-1047">
+<link rel="stylesheet" href="assets/css/accueil.css?v=20261006-1047">
 <!-- /gabarit:tete -->
-<title>Flash eSport — Tes équipes eSport, en direct</title>
-<meta name="description" content="Scores en direct, résultats, calendrier et tournois de tes équipes eSport sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Une app française, simple et rapide.">
+<title>Flash eSport — L'app des résultats eSport en direct</title>
+<meta name="description" content="Flash eSport, l'application française des résultats eSport : scores en direct, calendrier et tournois de tes équipes sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League.">
 <!-- gabarit:partage -->
 <link rel="canonical" href="https://flashesport.gg/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="Flash eSport">
-<meta property="og:title" content="Flash eSport — Tes équipes eSport, en direct">
-<meta property="og:description" content="Scores en direct, résultats, calendrier et tournois de tes équipes eSport sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Une app française, simple et rapide.">
+<meta property="og:title" content="Flash eSport — L'app des résultats eSport en direct">
+<meta property="og:description" content="Flash eSport, l'application française des résultats eSport : scores en direct, calendrier et tournois de tes équipes sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League.">
 <meta property="og:url" content="https://flashesport.gg/">
 <meta property="og:image" content="https://flashesport.gg/assets/img/og.jpg">
 <meta property="og:image:width" content="1200">
@@ -34,10 +34,69 @@
 <meta property="og:image:alt" content="Flash eSport : l'éclair en verre rouge et le nom de l'app.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@flashesportfr">
-<meta name="twitter:title" content="Flash eSport — Tes équipes eSport, en direct">
-<meta name="twitter:description" content="Scores en direct, résultats, calendrier et tournois de tes équipes eSport sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Une app française, simple et rapide.">
+<meta name="twitter:title" content="Flash eSport — L'app des résultats eSport en direct">
+<meta name="twitter:description" content="Flash eSport, l'application française des résultats eSport : scores en direct, calendrier et tournois de tes équipes sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League.">
 <meta name="twitter:image" content="https://flashesport.gg/assets/img/og.jpg">
 <!-- /gabarit:partage -->
+<!-- Données structurées : bloc de données (non exécuté), compatible avec la CSP sans script inline exécutable. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://flashesport.gg/#organisation",
+      "name": "Flash eSport",
+      "alternateName": [
+        "FlashEsport",
+        "Flash eSport App",
+        "flashesport.gg"
+      ],
+      "url": "https://flashesport.gg/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://flashesport.gg/assets/img/logo-512.png",
+        "width": 512,
+        "height": 512
+      },
+      "email": "flashesport.app@gmail.com",
+      "sameAs": [
+        "https://www.instagram.com/flashesport.gg/",
+        "https://x.com/flashesportfr"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://flashesport.gg/#site",
+      "name": "Flash eSport",
+      "url": "https://flashesport.gg/",
+      "inLanguage": "fr-FR",
+      "publisher": {
+        "@id": "https://flashesport.gg/#organisation"
+      }
+    },
+    {
+      "@type": "MobileApplication",
+      "@id": "https://flashesport.gg/#application",
+      "name": "Flash eSport",
+      "description": "Application française de résultats eSport : scores en direct, calendrier et tournois de tes équipes sur Counter-Strike 2, League of Legends, VALORANT, Dota 2, Rainbow Six Siege et Rocket League.",
+      "operatingSystem": "iOS, Android",
+      "applicationCategory": "SportsApplication",
+      "inLanguage": "fr",
+      "url": "https://flashesport.gg/",
+      "image": "https://flashesport.gg/assets/img/og.jpg",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "publisher": {
+        "@id": "https://flashesport.gg/#organisation"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body class="accueil">
 <div class="loader" id="loader" aria-hidden="true" hidden>
@@ -47,7 +106,7 @@
     <span class="loader-bar"><span id="loader-fill"></span></span>
   </div>
 </div>
-<script src="assets/js/demarrage.js?v=20261006-0956"></script>
+<script src="assets/js/demarrage.js?v=20261006-1047"></script>
 <!-- gabarit:entete -->
 <a class="lien-evitement" href="#contenu">Aller au contenu</a>
 <header class="entete">
@@ -76,13 +135,23 @@
 
   <section class="slide" id="accueil" data-slide="0">
     <div class="slide-corps">
-      <p class="surtitre revele">L'eSport en direct</p>
-      <h1 class="slide-title titre"><span class="line"><span class="line-inner">Tes équipes.</span></span><span class="line rouge"><span class="line-inner">Sans bruit.</span></span></h1>
-      <p class="slide-desc revele d2">Scores en direct, résultats, calendrier et tournois de tes équipes eSport. Six jeux, une seule app.</p>
-      <div class="stores revele d3">
-        <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></span>
-        <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></span>
-      </div>
+      <p class="surtitre revele">Flash eSport · L'eSport en direct</p>
+      <h1 class="slide-title titre"><span class="sr-only">Flash eSport, l'app de résultats eSport : </span><span class="line"><span class="line-inner">Tes équipes.</span></span><span class="line rouge"><span class="line-inner">Sans bruit.</span></span></h1>
+      <p class="slide-desc revele d2">Flash eSport : scores en direct, résultats, calendrier et tournois de tes équipes eSport. Six jeux, une seule app.</p>
+      <ul class="badges revele d3">
+        <li class="badge" data-store="app-store">
+          <span class="badge-mention">Bientôt disponible</span>
+          <span class="badge-lien" data-store-url=""><img src="assets/img/badges/app-store-fr.svg" alt="Télécharger dans l'App Store" width="127" height="40"></span>
+        </li>
+        <li class="badge" data-store="google-play">
+          <span class="badge-mention">Bientôt disponible</span>
+          <span class="badge-lien" data-store-url=""><img src="assets/img/badges/google-play-fr.png" alt="Disponible sur Google Play" width="646" height="250"></span>
+        </li>
+      </ul>
+      <!-- Liens prêts pour la sortie. Pour activer un store sur tout le site, une seule valeur à changer :
+           LIENS_STORES dans assets/js/site.js.
+           App Store   : https://apps.apple.com/app/id6800447821
+           Google Play : https://play.google.com/store/apps/details?id=com.flashesport.mobile  [À CONFIRMER : identifiant Android] -->
     </div>
     <img class="affiche" data-src="assets/img/eclair-poster.webp" alt="" width="960" height="1200" aria-hidden="true">
     <span class="defiler revele d3" aria-hidden="true">Défiler</span>
@@ -111,22 +180,44 @@
     </div>
     <ol class="tuto">
       <li class="tuto-etape est-active">
-        <figure class="telephone"><span class="telephone-ecran"><img src="assets/app/equipes.webp" alt="Écran de l'app : choix des équipes à suivre." width="900" height="1852" loading="lazy" decoding="async"></span></figure>
+        <span class="tuto-ecran"><img src="assets/app/equipes.webp" srcset="assets/app/equipes.webp 900w, assets/app/hd/equipes.webp 1170w" sizes="(max-width: 900px) 52vw, 340px" alt="Écran de choix des équipes dans l'application Flash eSport : les équipes les plus suivies sur CS2, LoL et VALORANT." width="900" height="1852" loading="lazy" decoding="async"></span>
         <div class="tuto-texte"><span class="tuto-num">01</span><h3 class="titre">Choisis tes équipes</h3><p>Ajoute tes équipes en un geste, sur tous tes jeux.</p></div>
       </li>
       <li class="tuto-etape">
-        <figure class="telephone"><span class="telephone-ecran"><img src="assets/app/accueil.webp" alt="Écran d'accueil de l'app : mes équipes, à ne pas manquer, dernier résultat." width="900" height="1852" loading="lazy" decoding="async"></span></figure>
+        <span class="tuto-ecran"><img src="assets/app/accueil.webp" srcset="assets/app/accueil.webp 900w, assets/app/hd/accueil.webp 1170w" sizes="(max-width: 900px) 52vw, 340px" alt="Écran d'accueil de l'application Flash eSport : mes équipes, les matchs à ne pas manquer et le dernier résultat." width="900" height="1852" loading="lazy" decoding="async"></span>
         <div class="tuto-texte"><span class="tuto-num">02</span><h3 class="titre">Ton fil se remplit</h3><p>Leurs prochains matchs et leurs derniers résultats arrivent sur ton accueil.</p></div>
       </li>
       <li class="tuto-etape">
-        <figure class="telephone"><span class="telephone-ecran"><img src="assets/app/match.webp" alt="Page d'un match dans l'app : score, cartes et compositions." width="900" height="1852" loading="lazy" decoding="async"></span></figure>
+        <span class="tuto-ecran"><img src="assets/app/match.webp" srcset="assets/app/match.webp 900w, assets/app/hd/match.webp 1170w" sizes="(max-width: 900px) 52vw, 340px" alt="Page d'un match dans l'application Flash eSport : score, cartes jouées et informations de la rencontre." width="900" height="1852" loading="lazy" decoding="async"></span>
         <div class="tuto-texte"><span class="tuto-num">03</span><h3 class="titre">Vis le match</h3><p>Score, cartes, compositions : toute la rencontre sur une page.</p></div>
       </li>
       <li class="tuto-etape">
-        <figure class="telephone"><span class="telephone-ecran"><img src="assets/app/tournoi.webp" alt="Page d'un tournoi dans l'app : matchs et tableau des playoffs." width="900" height="1852" loading="lazy" decoding="async"></span></figure>
+        <span class="tuto-ecran"><img src="assets/app/tournoi.webp" srcset="assets/app/tournoi.webp 900w, assets/app/hd/tournoi.webp 1170w" sizes="(max-width: 900px) 52vw, 340px" alt="Page d'un tournoi dans l'application Flash eSport : tableau des playoffs et résultats." width="900" height="1852" loading="lazy" decoding="async"></span>
         <div class="tuto-texte"><span class="tuto-num">04</span><h3 class="titre">Explore les tournois</h3><p>Tableaux, rondes suisses, classements : suis chaque compétition jusqu'au titre.</p></div>
       </li>
     </ol>
+    <!-- Cadre d'iPhone entièrement vectoriel (aucune image, aucun logo), posé par-dessus les écrans. -->
+    <div class="telephone" aria-hidden="true">
+      <svg class="telephone-cadre" viewBox="-8 0 1016 2076" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+        <defs>
+          <linearGradient id="tel-titane" x1="0" y1="0" x2="1" y2="1"><stop class="tel-t1" offset="0"/><stop class="tel-t2" offset="0.22"/><stop class="tel-t3" offset="0.62"/><stop class="tel-t4" offset="1"/></linearGradient>
+          <linearGradient id="tel-arete" x1="0" y1="0" x2="1" y2="1"><stop class="tel-a1" offset="0"/><stop class="tel-a2" offset="0.35"/><stop class="tel-a3" offset="1"/></linearGradient>
+          <linearGradient id="tel-reflet" x1="0" y1="0" x2="1" y2="0.62"><stop class="tel-r1" offset="0"/><stop class="tel-r2" offset="0.34"/><stop class="tel-r3" offset="0.5"/></linearGradient>
+          <clipPath id="tel-ecran"><path d="M40.0 170.0L40.4 121.9L41.5 104.3L43.4 91.4L46.0 81.1L49.5 72.4L53.8 65.1L58.9 58.9L65.1 53.8L72.4 49.5L81.1 46.0L91.4 43.4L104.3 41.5L121.9 40.4L170.0 40.0L830.0 40.0L878.1 40.4L895.7 41.5L908.6 43.4L918.9 46.0L927.6 49.5L934.9 53.8L941.1 58.9L946.2 65.1L950.5 72.4L954.0 81.1L956.6 91.4L958.5 104.3L959.6 121.9L960.0 170.0L960.0 1906.0L959.6 1954.1L958.5 1971.7L956.6 1984.6L954.0 1994.9L950.5 2003.6L946.2 2010.9L941.1 2017.1L934.9 2022.2L927.6 2026.5L918.9 2030.0L908.6 2032.6L895.7 2034.5L878.1 2035.6L830.0 2036.0L170.0 2036.0L121.9 2035.6L104.3 2034.5L91.4 2032.6L81.1 2030.0L72.4 2026.5L65.1 2022.2L58.9 2017.1L53.8 2010.9L49.5 2003.6L46.0 1994.9L43.4 1984.6L41.5 1971.7L40.4 1954.1L40.0 1906.0Z"/></clipPath>
+        </defs>
+        <g class="tel-boutons"><rect x="-7" y="318" width="12" height="74" rx="5"/><rect x="-7" y="470" width="12" height="128" rx="5"/><rect x="-7" y="630" width="12" height="128" rx="5"/><rect x="995" y="560" width="12" height="208" rx="5"/></g>
+        <path class="tel-boitier" fill-rule="evenodd" d="M0.0 170.0L0.5 107.2L2.0 84.1L4.4 67.3L7.9 53.7L12.4 42.4L18.0 32.9L24.8 24.8L32.9 18.0L42.4 12.4L53.7 7.9L67.3 4.4L84.1 2.0L107.2 0.5L170.0 0.0L830.0 0.0L892.8 0.5L915.9 2.0L932.7 4.4L946.3 7.9L957.6 12.4L967.1 18.0L975.2 24.8L982.0 32.9L987.6 42.4L992.1 53.7L995.6 67.3L998.0 84.1L999.5 107.2L1000.0 170.0L1000.0 1906.0L999.5 1968.8L998.0 1991.9L995.6 2008.7L992.1 2022.3L987.6 2033.6L982.0 2043.1L975.2 2051.2L967.1 2058.0L957.6 2063.6L946.3 2068.1L932.7 2071.6L915.9 2074.0L892.8 2075.5L830.0 2076.0L170.0 2076.0L107.2 2075.5L84.1 2074.0L67.3 2071.6L53.7 2068.1L42.4 2063.6L32.9 2058.0L24.8 2051.2L18.0 2043.1L12.4 2033.6L7.9 2022.3L4.4 2008.7L2.0 1991.9L0.5 1968.8L0.0 1906.0ZM40.0 152.0L960.0 152.0L960.0 1906.0L959.6 1954.1L958.5 1971.7L956.6 1984.6L954.0 1994.9L950.5 2003.6L946.2 2010.9L941.1 2017.1L934.9 2022.2L927.6 2026.5L918.9 2030.0L908.6 2032.6L895.7 2034.5L878.1 2035.6L830.0 2036.0L170.0 2036.0L121.9 2035.6L104.3 2034.5L91.4 2032.6L81.1 2030.0L72.4 2026.5L65.1 2022.2L58.9 2017.1L53.8 2010.9L49.5 2003.6L46.0 1994.9L43.4 1984.6L41.5 1971.7L40.4 1954.1L40.0 1906.0Z"/>
+        <path class="tel-arete" d="M0.0 170.0L0.5 107.2L2.0 84.1L4.4 67.3L7.9 53.7L12.4 42.4L18.0 32.9L24.8 24.8L32.9 18.0L42.4 12.4L53.7 7.9L67.3 4.4L84.1 2.0L107.2 0.5L170.0 0.0L830.0 0.0L892.8 0.5L915.9 2.0L932.7 4.4L946.3 7.9L957.6 12.4L967.1 18.0L975.2 24.8L982.0 32.9L987.6 42.4L992.1 53.7L995.6 67.3L998.0 84.1L999.5 107.2L1000.0 170.0L1000.0 1906.0L999.5 1968.8L998.0 1991.9L995.6 2008.7L992.1 2022.3L987.6 2033.6L982.0 2043.1L975.2 2051.2L967.1 2058.0L957.6 2063.6L946.3 2068.1L932.7 2071.6L915.9 2074.0L892.8 2075.5L830.0 2076.0L170.0 2076.0L107.2 2075.5L84.1 2074.0L67.3 2071.6L53.7 2068.1L42.4 2063.6L32.9 2058.0L24.8 2051.2L18.0 2043.1L12.4 2033.6L7.9 2022.3L4.4 2008.7L2.0 1991.9L0.5 1968.8L0.0 1906.0Z"/>
+        <path class="tel-lisere-sombre" d="M11.0 170.0L11.5 111.2L12.8 89.7L15.1 73.9L18.4 61.2L22.6 50.6L27.8 41.7L34.2 34.2L41.7 27.8L50.6 22.6L61.2 18.4L73.9 15.1L89.7 12.8L111.2 11.5L170.0 11.0L830.0 11.0L888.8 11.5L910.3 12.8L926.1 15.1L938.8 18.4L949.4 22.6L958.3 27.8L965.8 34.2L972.2 41.7L977.4 50.6L981.6 61.2L984.9 73.9L987.2 89.7L988.5 111.2L989.0 170.0L989.0 1906.0L988.5 1964.8L987.2 1986.3L984.9 2002.1L981.6 2014.8L977.4 2025.4L972.2 2034.3L965.8 2041.8L958.3 2048.2L949.4 2053.4L938.8 2057.6L926.1 2060.9L910.3 2063.2L888.8 2064.5L830.0 2065.0L170.0 2065.0L111.2 2064.5L89.7 2063.2L73.9 2060.9L61.2 2057.6L50.6 2053.4L41.7 2048.2L34.2 2041.8L27.8 2034.3L22.6 2025.4L18.4 2014.8L15.1 2002.1L12.8 1986.3L11.5 1964.8L11.0 1906.0Z"/>
+        <path class="tel-lisere-clair" d="M17.0 170.0L17.4 113.4L18.8 92.7L21.0 77.5L24.1 65.3L28.1 55.2L33.2 46.6L39.3 39.3L46.6 33.2L55.2 28.1L65.3 24.1L77.5 21.0L92.7 18.8L113.4 17.4L170.0 17.0L830.0 17.0L886.6 17.4L907.3 18.8L922.5 21.0L934.7 24.1L944.8 28.1L953.4 33.2L960.7 39.3L966.8 46.6L971.9 55.2L975.9 65.3L979.0 77.5L981.2 92.7L982.6 113.4L983.0 170.0L983.0 1906.0L982.6 1962.6L981.2 1983.3L979.0 1998.5L975.9 2010.7L971.9 2020.8L966.8 2029.4L960.7 2036.7L953.4 2042.8L944.8 2047.9L934.7 2051.9L922.5 2055.0L907.3 2057.2L886.6 2058.6L830.0 2059.0L170.0 2059.0L113.4 2058.6L92.7 2057.2L77.5 2055.0L65.3 2051.9L55.2 2047.9L46.6 2042.8L39.3 2036.7L33.2 2029.4L28.1 2020.8L24.1 2010.7L21.0 1998.5L18.8 1983.3L17.4 1962.6L17.0 1906.0Z"/>
+        <g class="tel-antennes"><rect x="0" y="262" width="11" height="7"/><rect x="989" y="262" width="11" height="7"/><rect x="0" y="1806" width="11" height="7"/><rect x="989" y="1806" width="11" height="7"/></g>
+        <path class="tel-bord" fill-rule="evenodd" d="M21.0 170.0L21.4 114.9L22.7 94.7L24.9 79.9L27.9 68.1L31.9 58.2L36.8 49.8L42.7 42.7L49.8 36.8L58.2 31.9L68.1 27.9L79.9 24.9L94.7 22.7L114.9 21.4L170.0 21.0L830.0 21.0L885.1 21.4L905.3 22.7L920.1 24.9L931.9 27.9L941.8 31.9L950.2 36.8L957.3 42.7L963.2 49.8L968.1 58.2L972.1 68.1L975.1 79.9L977.3 94.7L978.6 114.9L979.0 170.0L979.0 1906.0L978.6 1961.1L977.3 1981.3L975.1 1996.1L972.1 2007.9L968.1 2017.8L963.2 2026.2L957.3 2033.3L950.2 2039.2L941.8 2044.1L931.9 2048.1L920.1 2051.1L905.3 2053.3L885.1 2054.6L830.0 2055.0L170.0 2055.0L114.9 2054.6L94.7 2053.3L79.9 2051.1L68.1 2048.1L58.2 2044.1L49.8 2039.2L42.7 2033.3L36.8 2026.2L31.9 2017.8L27.9 2007.9L24.9 1996.1L22.7 1981.3L21.4 1961.1L21.0 1906.0ZM40.0 152.0L960.0 152.0L960.0 1906.0L959.6 1954.1L958.5 1971.7L956.6 1984.6L954.0 1994.9L950.5 2003.6L946.2 2010.9L941.1 2017.1L934.9 2022.2L927.6 2026.5L918.9 2030.0L908.6 2032.6L895.7 2034.5L878.1 2035.6L830.0 2036.0L170.0 2036.0L121.9 2035.6L104.3 2034.5L91.4 2032.6L81.1 2030.0L72.4 2026.5L65.1 2022.2L58.9 2017.1L53.8 2010.9L49.5 2003.6L46.0 1994.9L43.4 1984.6L41.5 1971.7L40.4 1954.1L40.0 1906.0Z"/>
+        <path class="tel-barre" d="M40.0 170.0L40.4 121.9L41.5 104.3L43.4 91.4L46.0 81.1L49.5 72.4L53.8 65.1L58.9 58.9L65.1 53.8L72.4 49.5L81.1 46.0L91.4 43.4L104.3 41.5L121.9 40.4L170.0 40.0L830.0 40.0L878.1 40.4L895.7 41.5L908.6 43.4L918.9 46.0L927.6 49.5L934.9 53.8L941.1 58.9L946.2 65.1L950.5 72.4L954.0 81.1L956.6 91.4L958.5 104.3L959.6 121.9L960.0 170.0L960.0 154.0L40.0 154.0Z"/>
+        <rect class="tel-ile" x="372" y="66" width="256" height="72" rx="36"/>
+        <circle class="tel-objectif" cx="588" cy="102" r="11"/>
+        <path class="tel-reflet" clip-path="url(#tel-ecran)" d="M40 40H960L389.6 2036H40Z"/>
+      </svg>
+    </div>
     <div class="tuto-points" aria-hidden="true"><span class="est-actif"></span><span></span><span></span><span></span></div>
   </section>
 
@@ -138,7 +229,7 @@
     </div>
     <div class="panneau revele d2" data-inclinaison>
       <div class="panneau-verre">
-        <img src="assets/app/carte-match.webp" alt="Carte d'un match en direct dans l'app : score, carte en cours et accès au direct." width="900" height="603" loading="lazy" decoding="async">
+        <img src="assets/app/carte-match.webp" srcset="assets/app/carte-match.webp 900w, assets/app/hd/carte-match.webp 1110w" sizes="(max-width: 900px) 92vw, 520px" alt="Carte d'un match en direct dans l'application Flash eSport : score, carte en cours et accès au direct." width="900" height="603" loading="lazy" decoding="async">
       </div>
     </div>
   </section>
@@ -150,11 +241,21 @@
   <div class="final-bloc">
     <p class="surtitre">Télécharger</p>
     <h2 class="final-titre titre" id="final-titre"><span class="line"><span class="line-inner">Ne rate plus</span></span><span class="line rouge"><span class="line-inner">aucun match.</span></span></h2>
-    <p class="final-texte">Gratuite, sans abonnement ni achat intégré. Utilisable sans compte.</p>
-    <div class="stores">
-      <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></span>
-      <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></span>
-    </div>
+    <p class="final-texte">Résultats eSport, scores en direct et calendrier de tes équipes : tout est dans l'application. Gratuite, sans abonnement ni achat intégré.</p>
+    <ul class="badges">
+        <li class="badge" data-store="app-store">
+          <span class="badge-mention">Bientôt disponible</span>
+          <span class="badge-lien" data-store-url=""><img src="assets/img/badges/app-store-fr.svg" alt="Télécharger dans l'App Store" width="127" height="40"></span>
+        </li>
+        <li class="badge" data-store="google-play">
+          <span class="badge-mention">Bientôt disponible</span>
+          <span class="badge-lien" data-store-url=""><img src="assets/img/badges/google-play-fr.png" alt="Disponible sur Google Play" width="646" height="250"></span>
+        </li>
+      </ul>
+      <!-- Liens prêts pour la sortie. Pour activer un store sur tout le site, une seule valeur à changer :
+           LIENS_STORES dans assets/js/site.js.
+           App Store   : https://apps.apple.com/app/id6800447821
+           Google Play : https://play.google.com/store/apps/details?id=com.flashesport.mobile  [À CONFIRMER : identifiant Android] -->
     <ul class="reseaux">
       <li><a href="https://www.instagram.com/flashesport.gg/" target="_blank" rel="noopener noreferrer"><b>Instagram</b> @flashesport.gg</a></li>
       <li><a href="https://x.com/flashesportfr" target="_blank" rel="noopener noreferrer"><b>X</b> @flashesportfr</a></li>
@@ -201,8 +302,8 @@
 <div class="cursor-label" aria-hidden="true">000</div>
 <canvas id="webgl" aria-hidden="true"></canvas>
 <!-- gabarit:scripts -->
-<script src="assets/js/site.js?v=20261006-0956" defer></script>
-<script type="module" src="assets/js/accueil.js?v=20261006-0956"></script>
+<script src="assets/js/site.js?v=20261006-1047" defer></script>
+<script type="module" src="assets/js/accueil.js?v=20261006-1047"></script>
 <!-- /gabarit:scripts -->
 </body>
 </html>

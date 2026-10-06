@@ -14,19 +14,19 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/exo2-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-0956">
-<link rel="stylesheet" href="assets/css/base.css?v=20261006-0956">
-<link rel="stylesheet" href="assets/css/pages.css?v=20261006-0956">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-1047">
+<link rel="stylesheet" href="assets/css/base.css?v=20261006-1047">
+<link rel="stylesheet" href="assets/css/pages.css?v=20261006-1047">
 <!-- /gabarit:tete -->
-<title>Télécharger Flash eSport — iPhone et Android</title>
-<meta name="description" content="Flash eSport arrive très bientôt sur iPhone, puis sur Android. Une app gratuite pour suivre tes équipes eSport.">
+<title>Téléchargement — Flash eSport</title>
+<meta name="description" content="Télécharger Flash eSport, l'application gratuite de résultats eSport : très bientôt sur iPhone (App Store), puis sur Android (Google Play).">
 <!-- gabarit:partage -->
 <link rel="canonical" href="https://flashesport.gg/telechargement.html">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="Flash eSport">
-<meta property="og:title" content="Télécharger Flash eSport — iPhone et Android">
-<meta property="og:description" content="Flash eSport arrive très bientôt sur iPhone, puis sur Android. Une app gratuite pour suivre tes équipes eSport.">
+<meta property="og:title" content="Téléchargement — Flash eSport">
+<meta property="og:description" content="Télécharger Flash eSport, l'application gratuite de résultats eSport : très bientôt sur iPhone (App Store), puis sur Android (Google Play).">
 <meta property="og:url" content="https://flashesport.gg/telechargement.html">
 <meta property="og:image" content="https://flashesport.gg/assets/img/og.jpg">
 <meta property="og:image:width" content="1200">
@@ -34,8 +34,8 @@
 <meta property="og:image:alt" content="Flash eSport : l'éclair en verre rouge et le nom de l'app.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@flashesportfr">
-<meta name="twitter:title" content="Télécharger Flash eSport — iPhone et Android">
-<meta name="twitter:description" content="Flash eSport arrive très bientôt sur iPhone, puis sur Android. Une app gratuite pour suivre tes équipes eSport.">
+<meta name="twitter:title" content="Téléchargement — Flash eSport">
+<meta name="twitter:description" content="Télécharger Flash eSport, l'application gratuite de résultats eSport : très bientôt sur iPhone (App Store), puis sur Android (Google Play).">
 <meta name="twitter:image" content="https://flashesport.gg/assets/img/og.jpg">
 <!-- /gabarit:partage -->
 </head>
@@ -64,10 +64,20 @@
       <p class="surtitre">Téléchargement</p>
       <h1 class="titre titre-xl">Télécharge<br><span class="rouge">Flash eSport</span></h1>
       <p class="chapo">L'app arrive très bientôt sur iPhone, puis sur Android. Suis-nous sur Instagram et X pour être prévenu.</p>
-      <div class="stores stores-page">
-        <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></span>
-        <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></span>
-      </div>
+      <ul class="badges stores-page">
+        <li class="badge" data-store="app-store">
+          <span class="badge-mention">Bientôt disponible</span>
+          <span class="badge-lien" data-store-url=""><img src="assets/img/badges/app-store-fr.svg" alt="Télécharger dans l'App Store" width="127" height="40"></span>
+        </li>
+        <li class="badge" data-store="google-play">
+          <span class="badge-mention">Bientôt disponible</span>
+          <span class="badge-lien" data-store-url=""><img src="assets/img/badges/google-play-fr.png" alt="Disponible sur Google Play" width="646" height="250"></span>
+        </li>
+      </ul>
+      <!-- Liens prêts pour la sortie. Pour activer un store sur tout le site, une seule valeur à changer :
+           LIENS_STORES dans assets/js/site.js.
+           App Store   : https://apps.apple.com/app/id6800447821
+           Google Play : https://play.google.com/store/apps/details?id=com.flashesport.mobile  [À CONFIRMER : identifiant Android] -->
       <ul class="reseaux stores-page">
         <li><a href="https://www.instagram.com/flashesport.gg/" target="_blank" rel="noopener noreferrer"><b>Instagram</b> @flashesport.gg</a></li>
         <li><a href="https://x.com/flashesportfr" target="_blank" rel="noopener noreferrer"><b>X</b> @flashesportfr</a></li>
@@ -107,7 +117,7 @@
 </footer>
 <!-- /gabarit:pied -->
 <!-- gabarit:scripts -->
-<script src="assets/js/site.js?v=20261006-0956" defer></script>
+<script src="assets/js/site.js?v=20261006-1047" defer></script>
 <!-- /gabarit:scripts -->
 </body>
 </html>
