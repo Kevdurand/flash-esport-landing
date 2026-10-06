@@ -61,6 +61,7 @@ let iconHoles = [];
 const clock = new THREE.Clock();
 let currentScroll = 0;
 let currentContact = 0, targetContact = 0;   // 0..1 : progression dans le chapitre final
+let finalOpen = false;                       // le bloc final est entré à l'écran : il prend le relais du chapitre 4
 const stageElement = document.querySelector('.scroll-stage');
 const contactSection = document.querySelector('#telecharger');
 const contactCardElement = document.querySelector('.final-bloc');
@@ -757,9 +758,10 @@ function smoothZones(amount) {
 // pendant la recomposition (62 → 80 %) pour que l'éclair reformé ne soit jamais vu de profil : la vue
 // de côté tombe pendant que les éclats sont encore en mouvement.
 function orbitAngle(scroll) {
-    // L'avance atteint 0,145 tour à 80 % (l'éclair reformé est alors presque de face), puis se résorbe
-    // linéairement jusqu'à la fin : la rotation reste toujours dans le même sens.
-    const lead = 0.145 * (scroll <= 0.80 ? smoothScrollRange(scroll, 0.56, 0.76) : 1 - (scroll - 0.80) / 0.20);
+    // L'avance atteint 0,2 tour à 78 % : l'éclair reformé est alors vu presque de face (à moins de 8°),
+    // l'angle où le verre est rouge profond et non pâle. Elle se résorbe ensuite linéairement jusqu'à la
+    // fin : la rotation reste toujours dans le même sens.
+    const lead = 0.20 * (scroll <= 0.78 ? smoothScrollRange(scroll, 0.56, 0.78) : 1 - (scroll - 0.78) / 0.22);
     return (scroll + lead) * Math.PI * 2.0;
 }
 
@@ -1234,7 +1236,14 @@ const _projected = new THREE.Vector3();
 function readScroll() {
     const maxScroll = stageMaxScroll();
     const scrollTop = window.scrollY || 0;
-    targetContact = contactSection ? clamp((scrollTop - maxScroll) / window.innerHeight, 0, 1) : 0;
+    // Le chapitre final ne commence que lorsque son bloc entre réellement à l'écran (et non dès que sa
+    // section, plus haute que lui, dépasse le bas de la fenêtre) : le chapitre 4 garde son texte et son
+    // éclair jusque-là, il n'y a jamais d'écran sans texte entre les deux.
+    if (contactSection) {
+        const enter = clamp(0.06 + contactCardElement.offsetTop / window.innerHeight, 0, 0.8);
+        targetContact = clamp(((scrollTop - maxScroll) / window.innerHeight - enter) / (1 - enter), 0, 1);
+    } else targetContact = 0;
+    finalOpen = targetContact > 0.02;
     return clamp(scrollTop / maxScroll, 0, 1);
 }
 
@@ -1274,7 +1283,7 @@ function animate(now = performance.now()) {
     // L'éclair suit légèrement la souris, respire doucement, et fait un tour sur lui-même
     // en rejoignant le chapitre final.
     if (modelPivot) {
-        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + Math.sin(final * Math.PI) * 0.18;
+        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + Math.sin(final * Math.PI) * 0.06;
         modelPivot.rotation.x = mouseY * 0.15 + Math.sin(time * 0.27) * 0.025;
         modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.035 * (1 - separation);
             }
@@ -1387,7 +1396,6 @@ function updateSlides(scroll) {
     });
 
     const now = performance.now();
-    const finalOpen = targetContact > 0.02;
     const inside = T.slides.map(([start, end]) => !finalOpen && scroll >= start && scroll <= end);
     const current = inside.indexOf(true);
     const actives = slideState.map((state, index) => {
@@ -1420,19 +1428,20 @@ function updateSlides(scroll) {
 let finalPinned = -1;
 function updateFinal() {
     if (!contactSection) return;
-    document.body.classList.toggle('contact-open', targetContact > 0.02);
-    contactSection.classList.toggle('active', currentContact > (layout.portrait ? 0.30 : 0.45));
+    document.body.classList.toggle('contact-open', finalOpen);
+    contactSection.classList.toggle('active', finalOpen);
     // Fin de page : le bloc final (et sa dalle de verre) reste en place, l'éclair aussi ; c'est le pied
     // de page qui monte et les recouvre. En remontant, tout se retrouve exactement au même endroit.
     const over = Math.max(0, Math.round(window.scrollY + window.innerHeight - (contactSection.offsetTop + contactSection.offsetHeight)));
     if (over !== finalPinned) {
         finalPinned = over;
         // Le bloc remonte juste ce qu'il faut pour que ses boutons restent visibles au-dessus du pied de
-        // page, sans jamais passer sous l'en-tête.
+        // page. Sur téléphone il défile alors derrière la barre du haut en verre, comme une page normale ;
+        // sur ordinateur il s'arrête sous la barre.
         const sectionTop = window.innerHeight - contactSection.offsetHeight;      // haut de la section quand elle est épinglée
         const top = sectionTop + contactCardElement.offsetTop, bottom = top + contactCardElement.offsetHeight;
-        const header = layout.portrait ? 62 : 70;
-        const lift = clamp(bottom + 28 - (window.innerHeight - over), 0, Math.max(0, top - header - 18));
+        const room = layout.portrait ? Infinity : Math.max(0, top - 70 - 10);
+        const lift = clamp(bottom + (layout.portrait ? 20 : 16) - (window.innerHeight - over), 0, room);
         contactSection.style.transform = over > 0 ? `translate3d(0, ${over - lift}px, 0)` : '';
     }
 }

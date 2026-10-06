@@ -73,32 +73,17 @@ button { font: inherit; color: inherit; }
 .titre-xl { font-size: var(--t-xl); }
 .titre-l { font-size: var(--t-l); line-height: 1.04; }
 .titre-m { font-size: var(--t-m); line-height: 1.12; letter-spacing: 0.02em; }
-.titre .rouge, .rouge { color: var(--rouge-lumiere); }
+.titre .rouge, .rouge { color: var(--rouge); }
 
-/* Rouge « matière » des grands titres : référence #B00000, travaillée comme le verre de l'éclair.
-   Dégradé vertical dans les lettres (arête claire en haut, #E01818 → #B00000 → #7A0000), halo léger
-   derrière, et un seul balayage de lumière à l'apparition. Aucun effet en boucle. */
+/* Grands titres rouges : #B00000, profond et mat, avec un dégradé vertical très léger vers un rouge plus
+   sombre en bas. Aucun reflet, aucun blanc, aucun effet animé : ils apparaissent comme les autres textes. */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  /* `:not(.line)` : sur l'accueil la classe .rouge est portée par la ligne, le dégradé va sur son contenu
-     (.line-inner). Sans cette exclusion, la ligne resterait peinte même quand son chapitre est masqué. */
-  .titre .rouge:not(.line), .line.rouge .line-inner, .logo-texte span {
-    --arete: 9.6%;      /* hauteur des capitales d'Anton dans la boîte de ligne : l'arête claire s'y cale, pas sur les accents */
-    background-image:
-      linear-gradient(104deg, transparent 48.5%, var(--titre-balayage) 50%, transparent 51.5%),
-      linear-gradient(180deg, var(--rouge-lumiere) 0%, var(--rouge-lumiere) calc(var(--arete) - 0.2%), var(--rouge-arete) var(--arete), var(--rouge-arete) calc(var(--arete) + 1.5%), var(--rouge-lumiere) calc(var(--arete) + 4.5%), var(--rouge) 56%, var(--rouge-profond) 100%);
-    background-size: 300% 100%, 100% 100%;
-    background-position: 100% 0, 0 0;      /* le balayage attend hors champ */
-    background-repeat: no-repeat;
+  .titre .rouge:not(.line), .line.rouge .line-inner {
+    background-image: linear-gradient(180deg, var(--rouge) 0%, var(--rouge) 46%, var(--rouge-sombre) 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
   }
-  .line.rouge .line-inner { --arete: 6.3%; }
-  .titre .rouge:not(.line) { display: inline-block; filter: drop-shadow(0 0 26px var(--titre-halo)); animation: titre-balayage 0.95s cubic-bezier(0.4, 0, 0.2, 1) 0.55s 1 both; }
-  .logo-texte span { background-image: linear-gradient(180deg, var(--rouge-lumiere) 20%, var(--rouge) 100%); background-size: 100% 100%; background-position: 0 0; }
-}
-@keyframes titre-balayage { from { background-position: 100% 0, 0 0; } to { background-position: 0% 0, 0 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .titre .rouge:not(.line), .line.rouge .line-inner { animation: none !important; }
+  .titre .rouge:not(.line) { display: inline-block; }
 }
 
 .surtitre {
@@ -111,7 +96,6 @@ button { font: inherit; color: inherit; }
 .surtitre::before {
   content: ""; width: 1.75rem; height: 2px; border-radius: 2px;
   background: var(--rouge);
-  box-shadow: 0 0 10px 1px var(--rouge-halo-doux);
 }
 .chapo { font-size: clamp(1.0625rem, 1.4vw, 1.25rem); line-height: 1.6; color: var(--texte-doux); }
 
@@ -126,27 +110,34 @@ button { font: inherit; color: inherit; }
   font-family: var(--police-titre); font-size: 1.3125rem; line-height: 1;
   letter-spacing: 0.035em; text-transform: uppercase; white-space: nowrap;
 }
-.logo-texte span { color: var(--rouge-lumiere); }
+.logo-texte span { color: var(--rouge); }
 
 /* ---- En-tête ---- */
 .entete {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  height: var(--entete-h);
-  padding: 0 var(--marge);
+  height: calc(var(--entete-h) + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) max(var(--marge), env(safe-area-inset-right, 0px)) 0 max(var(--marge), env(safe-area-inset-left, 0px));
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5rem;
 }
-/* Verre sombre : sur un pseudo-élément, pour ne pas enfermer le menu plein écran. */
+/* Barre du haut en verre sombre translucide, toujours affichée (même matière que les barres de l'app) :
+   le contenu défile derrière elle. Le verre est sur un pseudo-élément pour ne pas enfermer le menu plein écran. */
 .entete::before {
   content: ""; position: absolute; inset: 0; z-index: -1;
-  background: var(--verre-entete);   /* assez dense pour rester lisible même sans flou d'arrière-plan */
-  -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
-  opacity: 0; transition: opacity 0.45s ease;
+  background: var(--verre-barre);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
 }
 .entete::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
   background: var(--trait);
 }
-.entete.est-defile::before { opacity: 1; }
+/* Sans flou d'arrière-plan (vieux navigateurs, paliers de qualité bas) : même barre, plus opaque. */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .entete::before, .pied { background: var(--verre-barre-opaque); }
+}
+html[data-qualite="1"] .entete::before, html[data-qualite="2"] .entete::before,
+html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
+  -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--verre-barre-opaque);
+}
 .entete-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; }
 
 .nav { display: flex; align-items: center; gap: clamp(1.25rem, 2.6vw, 2.25rem); }
@@ -196,27 +187,44 @@ button { font: inherit; color: inherit; }
   border: 1px solid transparent; border-radius: var(--rayon);
   font-family: var(--police-texte); font-size: var(--t-petit); font-weight: 600; line-height: 1.1;
   letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; text-align: center;
-  color: var(--blanc); cursor: pointer;
-  transition: background-color 0.35s ease, border-color 0.35s ease, transform 0.45s var(--courbe);
+  color: var(--blanc); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.35s ease, border-color 0.35s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-/* Lame de lumière sous le bouton */
+/* Lame de lumière rouge sous le bouton : elle s'intensifie au survol. */
 .btn::after {
   content: ""; position: absolute; left: 22%; right: 22%; bottom: -1px; height: 2px; border-radius: 2px;
   background: var(--rouge-lumiere); box-shadow: 0 0 16px 2px var(--rouge-halo);
   opacity: 0; transform: scaleX(0.35);
   transition: opacity 0.35s ease, transform 0.55s var(--courbe);
 }
+/* Reflet de lumière qui traverse le verre du bouton, une seule fois par survol. */
+.btn::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, var(--reflet-fort) 50%, transparent 58%) no-repeat;
+  background-size: 260% 100%; background-position: 130% 0; opacity: 0;
+}
+@keyframes btn-reflet {
+  0% { background-position: 130% 0; opacity: 0; }
+  15% { opacity: 1; }
+  100% { background-position: -30% 0; opacity: 0; }
+}
+/* Appui (iPhone) : légère compression, retour élastique. */
+.btn:active { transform: scale(0.97); transition-duration: 0.35s, 0.35s, 0.09s; }
+.btn:focus-visible { outline: 2px solid var(--blanc); outline-offset: 3px; box-shadow: 0 0 0 6px var(--rouge-fond); }
+a, button, summary { -webkit-tap-highlight-color: transparent; }
 .btn-rouge {
   background: var(--rouge-fond); border-color: var(--rouge-contour);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
 }
 .btn-verre {
-  background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut)); border-color: var(--neutre-contour);
+  background: var(--verre); border-color: var(--trait-fort);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
 }
 .btn-compact { min-height: 44px; padding: 0 1.05rem; font-size: var(--t-mini); }
 @media (hover: hover) {
   .btn:not([aria-disabled="true"]):hover { transform: translateY(-1px); }
   .btn:not([aria-disabled="true"]):hover::after { opacity: 1; transform: none; }
+  .btn:not([aria-disabled="true"]):hover::before { animation: btn-reflet 0.75s ease-out 1; }
   .btn-rouge:not([aria-disabled="true"]):hover { background: var(--rouge-fond-fort); border-color: var(--rouge-lumiere); }
   .btn-verre:not([aria-disabled="true"]):hover { border-color: var(--trait-fort); }
 }
@@ -231,7 +239,7 @@ button { font: inherit; color: inherit; }
   display: inline-flex; align-items: center; gap: 0.55em;
   font-size: 0.6875rem; font-weight: 600; line-height: 1; letter-spacing: 0.2em; text-transform: uppercase; color: var(--texte-faible);
 }
-.badge-mention::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--rouge); box-shadow: 0 0 8px var(--rouge-halo); }
+.badge-mention::before { content: ""; width: 1rem; height: 2px; border-radius: 2px; background: var(--rouge); }
 .badge-lien { position: relative; display: block; height: var(--badge-h); border-radius: var(--rayon); }
 .badge-lien img { display: block; width: auto; max-width: none; height: var(--badge-h); }
 .badge[data-store="google-play"] .badge-lien img { height: calc(var(--badge-h) * 1.3158); margin: calc(var(--badge-h) * -0.1579) 0; }
@@ -243,7 +251,7 @@ a.badge-lien::after {
   opacity: 0; transform: scaleX(0.35); transition: opacity 0.35s ease, transform 0.55s var(--courbe);
 }
 @media (hover: hover) {
-  a.badge-lien:hover { filter: drop-shadow(0 0 16px var(--rouge-halo-doux)); transform: translateY(-1px); }
+  a.badge-lien:hover { filter: drop-shadow(0 0 18px var(--rouge-halo-doux)); transform: translateY(-2px); }
   a.badge-lien:hover::after { opacity: 1; transform: none; }
 }
 a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
@@ -281,7 +289,8 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   position: relative; z-index: 9;
   padding: var(--e-5) var(--marge) calc(var(--e-3) + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--trait);
-  background: var(--noir);
+  background: var(--verre-barre);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
 }
 .pied-grille {
   max-width: var(--largeur); margin: 0 auto;
@@ -318,8 +327,8 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
     position: fixed; inset: 0; z-index: -2;
     flex-direction: column; align-items: flex-start; justify-content: center; gap: 0.25rem;
     padding: calc(var(--entete-h) + 1.5rem) var(--marge) calc(2rem + env(safe-area-inset-bottom, 0px));
-    background: var(--verre-dense);
-    -webkit-backdrop-filter: blur(26px) saturate(140%); backdrop-filter: blur(26px) saturate(140%);
+    background: var(--verre-menu);
+    -webkit-backdrop-filter: saturate(180%) blur(26px); backdrop-filter: saturate(180%) blur(26px);
     opacity: 0; visibility: hidden;
     transition: opacity 0.4s ease, visibility 0s linear 0.4s;
     overflow-y: auto;

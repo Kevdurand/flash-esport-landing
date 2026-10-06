@@ -9,20 +9,7 @@
 .slide-title, .final-titre { font-size: clamp(2.75rem, 6.2vw, 6.25rem); line-height: 1; margin: 0.9rem 0 1.4rem; }
 #accueil .slide-title { font-size: clamp(3.25rem, 8.4vw, 8.25rem); }
 .slide-title .line, .final-titre .line { display: block; }
-.slide-title .line.rouge, .final-titre .line.rouge { color: var(--rouge-lumiere); }
-/* Halo de lumière derrière la ligne rouge des titres (un élément à part : la netteté des lettres ne bouge pas). */
-.slide-title, .final-titre { position: relative; isolation: isolate; }
-.slide-title::after, .final-titre::after {
-  content: ""; position: absolute; z-index: -1; left: -5%; top: 42%; width: 82%; height: 78%; pointer-events: none;
-  background: radial-gradient(closest-side, var(--titre-halo), transparent);
-  filter: blur(22px); opacity: 0; transition: opacity 1.4s ease 0.35s;
-}
-.slide.active .slide-title::after, .final.active .final-titre::after, html:not(.js) .slide-title::after, html:not(.js) .final-titre::after { opacity: 1; }
-/* Un seul balayage de lumière dans les lettres, à l'apparition du titre. */
-.js .slide.active .line.rouge .line-inner, .js .final.active .line.rouge .line-inner {
-  animation: titre-balayage 0.95s cubic-bezier(0.4, 0, 0.2, 1) 0.6s 1 both;
-}
-.slide-desc, .final-texte { max-width: 40ch; font-size: clamp(1rem, 1.25vw, 1.1875rem); line-height: 1.6; color: var(--texte-doux); }
+.slide-title .line.rouge, .final-titre .line.rouge { color: var(--rouge); }
 .slide .badges { margin-top: 1.6rem; }
 
 /* Les six jeux, en Anton */
@@ -102,11 +89,11 @@
    un court instant. Il y a toujours un texte à l'écran, jamais deux superposés. */
 .mode-3d .slide:not(.active) .revele, .mode-3d .slide:not(.active) .jeux li,
 .mode-3d .slide:not(.active) .line-inner, .mode-3d .slide:not(.active) .tuto-texte { transition-duration: 0.3s; transition-delay: 0s; }
-.mode-3d .slide.active .line-inner { transition-delay: 0.28s; }
-.mode-3d .slide.active .line.rouge .line-inner { transition-delay: 0.37s; animation-delay: 0.9s; }
-.mode-3d .slide.active .revele { transition-delay: 0.3s; }
-.mode-3d .slide.active .d2 { transition-delay: 0.5s; }
-.mode-3d .slide.active .d3 { transition-delay: 0.62s; }
+.mode-3d .slide.active .line-inner { transition-delay: 0.1s; }
+.mode-3d .slide.active .line.rouge .line-inner { transition-delay: 0.19s; }
+.mode-3d .slide.active .revele { transition-delay: 0.12s; }
+.mode-3d .slide.active .d2 { transition-delay: 0.24s; }
+.mode-3d .slide.active .d3 { transition-delay: 0.34s; }
 .mode-3d .slide.active .jeux li { transition-duration: 0.6s, 0.75s, 0.65s; }
 .mode-3d .slide.active .jeux li:nth-child(1) { transition-delay: 0.36s; }
 .mode-3d .slide.active .jeux li:nth-child(2) { transition-delay: 0.41s; }
@@ -234,7 +221,7 @@ html:not(.mode-3d) .final-bloc {
   -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
   box-shadow: 0 30px 80px var(--voile);
   opacity: 0; transform: translateY(34px);
-  transition: opacity 0.9s var(--courbe-douce) 0.15s, transform 0.9s var(--courbe-douce) 0.15s;
+  transition: opacity 0.6s var(--courbe-douce) 0.04s, transform 0.75s var(--courbe-douce) 0.04s;
 }
 .mode-3d .final.active .final-bloc { opacity: 1; transform: none; }
 /* Quand la dalle 3D est active, le fond CSS s'efface : c'est le vrai verre qui se voit. */
@@ -245,12 +232,8 @@ html:not(.mode-3d) .final-bloc {
   -webkit-mask-composite: xor; mask-composite: exclude;
   background: linear-gradient(135deg, var(--reflet-fort) 0%, var(--neutre-contour) 28%, var(--neutre-contour) 60%, var(--rouge-contour) 100%);
 }
-.mode-3d .pied { background: var(--noir); }
-/* Le pied de page monte par-dessus le bloc final et l'éclair : ils s'y fondent au lieu d'être tranchés net. */
-.mode-3d .pied::before {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 7rem; pointer-events: none;
-  background: linear-gradient(to top, var(--noir), transparent);
-}
+/* Le pied de page en verre monte par-dessus le bloc final et l'éclair. */
+.mode-3d .pied { background: var(--verre-menu); }
 
 /* Indicateurs : filet de progression sous l'en-tête, tirets de chapitres à droite */
 .mode-3d .entete-progression { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none; }
@@ -326,7 +309,6 @@ html:not(.mode-3d) .final-bloc {
    ========================================================================= */
 @media (max-width: 900px), (max-aspect-ratio: 4/5) {
   .mode-3d .story-progress, .mode-3d .defiler { display: none; }
-  .mode-3d .pied::before { height: 3.5rem; }
   .loader { left: 50%; top: 73%; }
   .mode-3d .slide-title { font-size: clamp(2.25rem, 11.5vw, 4.5rem); margin: 0.7rem 0 0.9rem; }
   .mode-3d #accueil .slide-title { font-size: clamp(2.75rem, 14.5vw, 6rem); }
@@ -354,12 +336,14 @@ html:not(.mode-3d) .final-bloc {
   .mode-3d .panneau.revele { transform: translateY(16px); }
   .mode-3d .slide.active .panneau.revele { transform: none; }
   /* 5 — éclair en haut, bloc en dessous */
-  .mode-3d .final { justify-items: stretch; align-items: end; padding: 42vh var(--marge) 2.5rem; }
+  .mode-3d .final { min-height: 100vh; min-height: 100svh; justify-items: stretch; align-items: end; padding: calc(var(--entete-h) + 1rem) var(--marge) 1.25rem; }
   .mode-3d .final-bloc { width: auto; max-width: none; padding: 1.5rem 1.25rem; }
 }
 @media (max-width: 900px) and (max-height: 700px) {
   .mode-3d #accueil .slide-title { font-size: clamp(2.5rem, 12.5vw, 4.5rem); }
   .mode-3d .slide-desc { font-size: 0.9375rem; }
+  /* Petit écran (barre d'adresse de Safari affichée) : panneau plus étroit pour laisser sa place à l'éclair. */
+  .mode-3d .panneau { max-width: 19rem; }
 }
 /* Sur écran tactile : légère inclinaison automatique lente du panneau (pas de gyroscope) */
 @media (hover: none), (pointer: coarse) {
