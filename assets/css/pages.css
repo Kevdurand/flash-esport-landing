@@ -21,12 +21,11 @@ body.page main { flex: 1; padding-top: var(--entete-h); }
 .page-corps { padding-bottom: var(--e-6); }
 
 /* Éclair en image fixe */
-.eclair-fixe { position: relative; justify-self: center; width: min(100%, 22rem); }
-.eclair-fixe img { width: 100%; height: auto; }
-.eclair-fixe::before {
-  content: ""; position: absolute; inset: 12% 4%; z-index: -1; border-radius: 50%;
-  background: radial-gradient(closest-side, var(--rouge-halo-doux), transparent);
-  filter: blur(18px);
+.eclair-fixe { position: relative; justify-self: center; width: min(100%, 26rem); }
+.eclair-fixe img {
+  width: 100%; height: auto;
+  -webkit-mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
+  mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
 }
 
 /* Containers */

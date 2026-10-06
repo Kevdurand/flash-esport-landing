@@ -65,7 +65,7 @@ button { font: inherit; color: inherit; }
   font-family: var(--police-titre);
   font-weight: 400;
   text-transform: uppercase;
-  line-height: 0.98;
+  line-height: 1.08;   /* les capitales accentuées d'Anton ont besoin d'air */
   letter-spacing: 0.012em;
   color: var(--blanc);
 }

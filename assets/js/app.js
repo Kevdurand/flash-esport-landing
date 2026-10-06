@@ -1,0 +1,1411 @@
+/* FLASH ESPORT — moteur 3D de l'accueil : l'éclair en verre rouge.
+   Adapté du moteur « Premium 3D Glass » (verre à dispersion, découpage automatique en fragments,
+   recomposition, scroll lissé) : verre rouge, 5 chapitres Flash eSport, éclats en orbite autour du
+   téléphone, halo qui suit l'éclair, modes allégé et statique, compatibilité iPhone.
+   Three.js r160 hébergé dans le repo (assets/vendor) : aucun appel réseau hors du site. */
+import * as THREE from '../vendor/three.module.js';
+import { SVGLoader } from '../vendor/SVGLoader.js';
+
+// ---- Configuration -------------------------------------------------------------
+// `shapes` : la silhouette de l'éclair du logo (un seul <path>, viewBox 0 0 1000 1000).
+// `palette` : une couleur de fond par chapitre, du hero au final. Uniquement des rouges sur noir.
+// `fragments` : 6 éclats, un par jeu couvert.
+const SITE = {
+    shapes: ['../shapes/eclair.svg'],
+    palette: ['#3a0000', '#B00000', '#E01818', '#6e0000', '#B00000'],
+    fragments: 6
+};
+const SINGLE_SHAPE = SITE.shapes.length === 1;
+let openingSource = '', finalSource = '';
+
+// ---- Chronologie du scroll (0 → 1 sur la scène, puis chapitre final dans le flux) ----
+const T = {
+    burst: [0.10, 0.24],      // l'éclair éclate
+    orbit: [0.30, 0.38, 0.60, 0.66],   // les éclats entrent en orbite autour du téléphone, puis en sortent
+    join: [0.66, 0.79],       // les éclats reviennent à leur place
+    bevel: [0.79, 0.81],      // prisme unique : les biseaux grandissent
+    holes: [0.79, 0.85],
+    slides: [[-0.10, 0.085], [0.15, 0.315], [0.365, 0.645], [0.745, 1.05]],
+    tuto: [0.385, 0.635],     // les 4 étapes du tutoriel se partagent cette plage
+    nav: [0, 0.23, 0.40, 0.90],
+    chapters: [0.12, 0.34, 0.70]
+};
+// Position de l'éclair à l'écran par chapitre (fraction de la largeur / de la hauteur), puis au final.
+const FRAME = {
+    landscape: { fx: [0.72, 0.27, 0.66, 0.57], fy: [0.5, 0.5, 0.5, 0.5], final: [0.27, 0.5] },
+    portrait: { fx: [0.5, 0.5, 0.5, 0.5], fy: [0.685, 0.30, 0.46, 0.505], final: [0.5, 0.25] }
+};
+
+// ---- Réglages ------------------------------------------------------------------
+const LOGO_HEIGHT = 3.1;                              // hauteur de l'éclair, unités monde
+const LOGO_DEPTH = 0.44;
+const LOGO_BEVEL = { size: 0.042, thickness: 0.052 };
+// Une seule forme : le prisme recomposé est identique à celui qui a éclaté, biseau compris.
+const ICON_SIZE = SINGLE_SHAPE ? LOGO_HEIGHT : 2.9;
+const ICON_DEPTH = SINGLE_SHAPE ? LOGO_DEPTH : 0.50;
+const ICON_BEVEL = SINGLE_SHAPE ? LOGO_BEVEL : { size: 0.028, thickness: 0.038 };
+const SEAM_BEVEL = 0.006;                             // biseau pendant que les éclats fusionnent
+const MORPH_STEPS = 16;                               // pas de géométrie pendant la recomposition
+
+const canvas = document.querySelector('#webgl');
+let scene, camera, renderer, glass;
+let modelPivot;
+const logoPieces = [];
+let wholeBody;     // l'éclair entier, tant qu'il est assemblé
+let glassIcon;     // prisme final unique
+let iconOutline = [];
+let iconHoles = [];
+const clock = new THREE.Clock();
+let currentScroll = 0;
+let currentContact = 0, targetContact = 0;   // 0..1 : progression dans le chapitre final
+const stageElement = document.querySelector('.scroll-stage');
+const contactSection = document.querySelector('#telecharger');
+const contactCardElement = document.querySelector('.final-bloc');
+let glassCard, cardGlass;
+const CARD_DISTANCE = 6.0;
+const CARD_RIM_PX = 16, CARD_RADIUS_PX = 22, CARD_DEPTH = 0.08, CARD_RIM_DEPTH = 0.06;
+
+let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
+let cursorX = window.innerWidth / 2, cursorY = window.innerHeight / 2;
+let outerCursorX = cursorX, outerCursorY = cursorY;
+
+// ---- Qualité : 3 = complet · 2 = sans dispersion · 1 = allégé (résolution 1) · 0 = image fixe ----
+const pointerFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+const tactile = !pointerFine;
+const apple = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const portraitQuery = window.matchMedia('(max-width: 900px), (max-aspect-ratio: 4/5)');
+let tier = 3;
+let etat = { debug: false, lite: false };
+let repli = () => {};
+let running = false;
+
+let bgMaterial, bgMesh;
+const paletteUniforms = Object.fromEntries(SITE.palette.map((hex, index) =>
+    [`uC${index}`, { value: new THREE.Color(hex) }]));
+const shaderUniforms = {
+    ...paletteUniforms,
+    uTime: { value: 0 },
+    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    uMouse: { value: new THREE.Vector2(0, 0) },
+    uScroll: { value: 0 },
+    uVelocity: { value: 0 },
+    uObject: { value: new THREE.Vector2(0, 0) },     // position de l'éclair à l'écran
+    uGlow: { value: 0.0 },                            // intensité du halo derrière l'éclair
+    uGlowSpread: { value: 1.0 }
+};
+
+let sparkParticles;
+const sparkCount = 420;
+const sparkData = [];
+
+const sizes = { width: window.innerWidth, height: window.innerHeight };
+
+const V2 = (x = 0, y = 0) => new THREE.Vector2(x, y);
+const cross2 = (a, b) => a.x * b.y - a.y * b.x;
+const lerp = THREE.MathUtils.lerp;
+const clamp = THREE.MathUtils.clamp;
+
+function createSparkTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 16; canvas.height = 16;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.85)');
+    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.3)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 16, 16);
+    return new THREE.CanvasTexture(canvas);
+}
+
+// Poussière de verre : blanc chaud et braises rouges (aucun bleu, aucun violet).
+function createSparks() {
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(sparkCount * 3);
+    const colors = new Float32Array(sparkCount * 3);
+    for (let i = 0; i < sparkCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 6.5;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 5.0 - 0.5;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 6.5;
+        if (Math.random() < 0.55) {
+            colors[i * 3] = 1.0;
+            colors[i * 3 + 1] = 0.86 + Math.random() * 0.10;
+            colors[i * 3 + 2] = 0.80 + Math.random() * 0.12;
+        } else {
+            colors[i * 3] = 1.0;
+            colors[i * 3 + 1] = 0.10 + Math.random() * 0.16;
+            colors[i * 3 + 2] = 0.08 + Math.random() * 0.10;
+        }
+        sparkData.push({
+            speedX: (Math.random() - 0.5) * 0.4,
+            speedY: 0.15 + Math.random() * 0.3,
+            speedZ: (Math.random() - 0.5) * 0.4,
+            swaySpeed: 0.5 + Math.random() * 1.5,
+            swayRadius: 0.05 + Math.random() * 0.15,
+            phase: Math.random() * Math.PI * 2
+        });
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const material = new THREE.PointsMaterial({
+        size: 0.026, vertexColors: true, transparent: true, opacity: 0.42,
+        blending: THREE.AdditiveBlending, depthWrite: false, map: createSparkTexture()
+    });
+    sparkParticles = new THREE.Points(geometry, material);
+    scene.add(sparkParticles);
+}
+
+// Studio d'environnement : de longues boîtes à lumière donnent des reflets nets.
+// Panneaux blancs pour les arêtes, panneaux rouges pour la couleur du verre.
+function createGlassEnvironment() {
+    const studio = new THREE.Scene();
+    studio.background = new THREE.Color('#0a0606');
+    const panels = [
+        [2.8, 8, -4, 2, 3, '#ffffff', 2.6],
+        [0.65, 7, 3, 1, 2, '#ffe6e0', 4.0],
+        [5, 0.7, 0, 5, -1, '#ffffff', 3.5],
+        [0.5, 6, -2, 0, -4, '#e01818', 3.4],
+        [1.0, 5, 3, -1, -3, '#ff4a3a', 2.6],
+        [4, 0.35, 0, -3, 3, '#ff2020', 3.0],
+        [0.16, 5, -3, 0, 2, '#ffffff', 5.0],
+        [0.35, 4, 4, 0, -2, '#ff5a3c', 2.0]
+    ];
+    for (const [w, h, x, y, z, color, intensity] of panels) {
+        const panel = new THREE.Mesh(
+            new THREE.PlaneGeometry(w, h),
+            new THREE.MeshBasicMaterial({
+                color: new THREE.Color(color).multiplyScalar(intensity),
+                side: THREE.DoubleSide
+            })
+        );
+        panel.position.set(x, y, z);
+        panel.lookAt(0, 0, 0);
+        studio.add(panel);
+    }
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const environment = pmrem.fromScene(studio, 0.025, 0.1, 100);
+    scene.environment = environment.texture;
+    studio.traverse(object => {
+        if (object.isMesh) {
+            object.geometry.dispose();
+            object.material.dispose();
+        }
+    });
+    pmrem.dispose();
+}
+
+// Verre rouge profond, arêtes blanches et rouges lumineuses.
+function createGlassMaterial() {
+    const material = new THREE.MeshPhysicalMaterial({
+        color: '#ffd6d6',
+        metalness: 0.0,
+        roughness: 0.025,
+        transmission: 1.0,
+        thickness: 0.48,
+        ior: 1.46,
+        attenuationColor: new THREE.Color('#d01010'),
+        attenuationDistance: 0.9,
+        clearcoat: 0.65,
+        clearcoatRoughness: 0.018,
+        iridescence: 0.12,
+        iridescenceIOR: 1.3,
+        iridescenceThicknessRange: [100, 420],
+        envMapIntensity: 1.10,
+        side: THREE.DoubleSide
+    });
+    material.userData.dispersion = true;
+    // Three.js r160 n'a pas de paramètre de dispersion : la lumière transmise est échantillonnée
+    // avec trois indices de réfraction légèrement différents. En mode allégé (ou si la greffe ne
+    // s'applique pas), le verre garde la transmission standard, sans dispersion.
+    material.onBeforeCompile = shader => {
+        if (!material.userData.dispersion) return;
+        const pattern = /vec4 transmitted = getIBLVolumeRefraction\([\s\S]*?\);/;
+        const chunk = THREE.ShaderChunk.transmission_fragment;
+        if (!pattern.test(chunk) || !shader.fragmentShader.includes('#include <transmission_fragment>')) return;
+        shader.uniforms.uChromaticSpread = { value: 0.018 };
+        shader.fragmentShader = 'uniform float uChromaticSpread;\n' + shader.fragmentShader;
+        const transmission = chunk.replace(pattern,
+            `// Faces avant nettes, accents spectraux sur les arêtes rasantes.
+            float chromaticSpread = uChromaticSpread * mix(0.35, 1.0,
+                smoothstep(0.15, 0.85, 1.0 - abs(dot(n, v))));
+            vec4 transmitted = getIBLVolumeRefraction(
+                n, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                pos, modelMatrix, viewMatrix, projectionMatrix, material.ior, material.thickness,
+                material.attenuationColor, material.attenuationDistance );
+            vec4 transmittedRed = getIBLVolumeRefraction(
+                n, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                pos, modelMatrix, viewMatrix, projectionMatrix, material.ior - chromaticSpread, material.thickness,
+                material.attenuationColor, material.attenuationDistance );
+            vec4 transmittedBlue = getIBLVolumeRefraction(
+                n, v, material.roughness, material.diffuseColor, material.specularColor, material.specularF90,
+                pos, modelMatrix, viewMatrix, projectionMatrix, material.ior + chromaticSpread, material.thickness,
+                material.attenuationColor, material.attenuationDistance );
+            transmitted = vec4(transmittedRed.r, transmitted.g, transmittedBlue.b,
+                (transmittedRed.a + transmitted.a + transmittedBlue.a) / 3.0);`
+        );
+        shader.fragmentShader = shader.fragmentShader.replace('#include <transmission_fragment>', transmission);
+    };
+    material.customProgramCacheKey = () => `flash-verre-rouge-${material.userData.dispersion ? 'dispersion' : 'simple'}`;
+    return material;
+}
+
+// ---- 2D contour helpers ------------------------------------------------------
+
+// Remove near-duplicate and collinear vertices, force counter-clockwise order.
+function cleanContour(points, epsilon = 1e-4) {
+    const contour = [];
+    for (const p of points) {
+        if (!contour.length || contour[contour.length - 1].distanceTo(p) > epsilon) contour.push(p.clone());
+    }
+    while (contour.length > 1 && contour[0].distanceTo(contour[contour.length - 1]) <= epsilon) contour.pop();
+    const result = contour.filter((p, i) => {
+        const prev = contour[(i - 1 + contour.length) % contour.length];
+        const next = contour[(i + 1) % contour.length];
+        return Math.abs(cross2(p.clone().sub(prev), next.clone().sub(p))) > 1e-7;
+    });
+    if (THREE.ShapeUtils.isClockWise(result)) result.reverse();
+    return result;
+}
+
+// Sutherland-Hodgman clipping against a convex set of half-planes.
+function clipContour(points, halfPlanes) {
+    let polygon = points.map(p => p.clone());
+    for (const { origin, normal } of halfPlanes) {
+        const clipped = [];
+        for (let i = 0; i < polygon.length; i++) {
+            const p = polygon[i], q = polygon[(i + 1) % polygon.length];
+            const dp = p.clone().sub(origin).dot(normal), dq = q.clone().sub(origin).dot(normal);
+            if (dp >= 0) clipped.push(p);
+            if ((dp >= 0) !== (dq >= 0)) clipped.push(p.clone().lerp(q, dp / (dp - dq)));
+        }
+        polygon = clipped;
+        if (!polygon.length) break;
+    }
+    return cleanContour(polygon);
+}
+
+// Convex sector between two rays (counter-clockwise, less than 180 degrees apart).
+function wedgeHalfPlanes(center, startDeg, endDeg) {
+    const dir = deg => V2(Math.cos(THREE.MathUtils.degToRad(deg)), Math.sin(THREE.MathUtils.degToRad(deg)));
+    const a = dir(startDeg), b = dir(endDeg);
+    return [{ origin: center, normal: V2(-a.y, a.x) }, { origin: center, normal: V2(b.y, -b.x) }];
+}
+
+// Local contour around the bounding-box centre, plus that centre as a home position.
+function recentre(points) {
+    const centre = new THREE.Box2().setFromPoints(points).getCenter(V2());
+    return {
+        contour: points.map(p => p.clone().sub(centre)),
+        home: new THREE.Vector3(centre.x, centre.y, 0)
+    };
+}
+
+// Final shape: outline plus its holes, each scaled by holeScale (0 = not punched yet).
+function makeIconPrism(bevelSize, bevelThickness, holeScale) {
+    const shape = new THREE.Shape(iconOutline);
+    if (holeScale > 0.02) {
+        for (const hole of iconHoles) {
+            const centre = new THREE.Box2().setFromPoints(hole).getCenter(V2());
+            shape.holes.push(new THREE.Path(hole.map(p =>
+                p.clone().sub(centre).multiplyScalar(holeScale).add(centre))));
+        }
+    }
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: ICON_DEPTH, steps: 1, bevelEnabled: true, bevelSize, bevelThickness,
+        bevelSegments: 6, curveSegments: 24
+    });
+    geometry.translate(0, 0, -ICON_DEPTH / 2);
+    return geometry;
+}
+
+
+function makePrism(points, depth, bevelSize, bevelThickness) {
+    const geometry = new THREE.ExtrudeGeometry(new THREE.Shape(points), {
+        depth, steps: 1, bevelEnabled: true, bevelSize, bevelThickness,
+        bevelSegments: 6, curveSegments: 24
+    });
+    geometry.translate(0, 0, -depth / 2);
+    return geometry;
+}
+
+// ---- Morph correspondence ----------------------------------------------------
+
+// Radial matching around each polygon's visibility kernel: fold-free morphs
+// for star-shaped fragments. Throws when a kernel does not exist.
+function matchRadially(source, target) {
+    const prepare = points => {
+        const contour = points.filter((p, i) => i === 0 || p.distanceToSquared(points[i - 1]) > 1e-12);
+        if (contour[0].distanceToSquared(contour[contour.length - 1]) < 1e-12) contour.pop();
+        if (THREE.ShapeUtils.isClockWise(contour)) contour.reverse();
+        let kernel = [V2(-10, -10), V2(10, -10), V2(10, 10), V2(-10, 10)];
+        for (let i = 0; i < contour.length; i++) {
+            const a = contour[i], edge = contour[(i + 1) % contour.length].clone().sub(a);
+            const clipped = [];
+            for (let j = 0; j < kernel.length; j++) {
+                const p = kernel[j], q = kernel[(j + 1) % kernel.length];
+                const dp = cross2(edge, p.clone().sub(a)), dq = cross2(edge, q.clone().sub(a));
+                if (dp >= -1e-10) clipped.push(p);
+                if ((dp >= 0) !== (dq >= 0)) clipped.push(p.clone().lerp(q, dp / (dp - dq)));
+            }
+            kernel = clipped;
+        }
+        if (!kernel.length) throw new Error('Contour has no visibility kernel.');
+        const center = kernel.reduce((sum, p) => sum.add(p), V2()).multiplyScalar(1 / kernel.length);
+        return { contour, center };
+    };
+    const a = prepare(source), b = prepare(target);
+    const angle = (p, center) => (Math.atan2(p.y - center.y, p.x - center.x) + Math.PI * 2) % (Math.PI * 2);
+    const angles = [...a.contour.map(p => angle(p, a.center)), ...b.contour.map(p => angle(p, b.center)),
+        ...Array.from({ length: 32 }, (_, i) => i / 32 * Math.PI * 2)].sort((x, y) => x - y)
+        .filter((value, i, values) => i === 0 || value - values[i - 1] > 1e-8);
+    const sample = ({ contour, center }, angle) => {
+        const direction = V2(Math.cos(angle), Math.sin(angle));
+        let distance = Infinity;
+        for (let i = 0; i < contour.length; i++) {
+            const p = contour[i], edge = contour[(i + 1) % contour.length].clone().sub(p);
+            const denominator = cross2(direction, edge);
+            if (Math.abs(denominator) < 1e-12) continue;
+            const relative = p.clone().sub(center);
+            const t = cross2(relative, edge) / denominator;
+            const u = cross2(relative, direction) / denominator;
+            if (t >= 0 && u >= -1e-8 && u <= 1 + 1e-8) distance = Math.min(distance, t);
+        }
+        if (!isFinite(distance)) throw new Error('Ray missed the contour.');
+        return center.clone().addScaledVector(direction, distance);
+    };
+    return angles.map(angle => ({ source: sample(a, angle), target: sample(b, angle) }));
+}
+
+// Fallback for arbitrary polygons: equal arc-length resampling with the best
+// rotational alignment. Works for any simple contour, may fold on wild shapes.
+function matchByArcLength(source, target, samples = 160) {
+    const resample = points => {
+        const lengths = [0];
+        for (let i = 0; i < points.length; i++) {
+            lengths.push(lengths[i] + points[i].distanceTo(points[(i + 1) % points.length]));
+        }
+        const total = lengths[points.length];
+        const out = [];
+        let segment = 0;
+        for (let i = 0; i < samples; i++) {
+            const d = i / samples * total;
+            while (segment < points.length - 1 && lengths[segment + 1] < d) segment++;
+            const p = points[segment], q = points[(segment + 1) % points.length];
+            const span = lengths[segment + 1] - lengths[segment];
+            out.push(p.clone().lerp(q, span > 0 ? (d - lengths[segment]) / span : 0));
+        }
+        return out;
+    };
+    const a = resample(source), b = resample(target);
+    let best = 0, bestCost = Infinity;
+    for (let k = 0; k < samples; k++) {
+        let cost = 0;
+        for (let i = 0; i < samples; i++) cost += a[i].distanceToSquared(b[(i + k) % samples]);
+        if (cost < bestCost) { bestCost = cost; best = k; }
+    }
+    return a.map((p, i) => ({ source: p, target: b[(i + best) % samples] }));
+}
+
+function matchMorphContours(source, target, name) {
+    try {
+        return matchRadially(source, target);
+    } catch (error) {
+        console.warn(`[glass] radial morph unavailable for "${name}" (${error.message}); using arc-length matching.`);
+        return matchByArcLength(source, target);
+    }
+}
+
+// ---- Reading a shape ---------------------------------------------------------
+// Any SVG works. The largest contour is the outline; contours inside it are holes;
+// anything else is a separate solid (the leaf of an apple, the dot of an i).
+function pointInPolygon(point, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const a = polygon[i], b = polygon[j];
+        if ((a.y > point.y) !== (b.y > point.y)
+            && point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+    }
+    return inside;
+}
+
+function parseShape(svgText) {
+    const svg = new SVGLoader().parse(svgText);
+    const contours = svg.paths
+        .flatMap(path => path.subPaths.map(sub => cleanContour(sub.getPoints(6).map(p => V2(p.x, -p.y)))))
+        .filter(contour => contour.length >= 3 && Math.abs(THREE.ShapeUtils.area(contour)) > 1e-9)
+        .sort((a, b) => Math.abs(THREE.ShapeUtils.area(b)) - Math.abs(THREE.ShapeUtils.area(a)));
+    if (!contours.length) throw new Error('This SVG has no closed contour.');
+    const [outline, ...rest] = contours;
+    const holes = [], extras = [];
+    for (const contour of rest) {
+        const centre = new THREE.Box2().setFromPoints(contour).getCenter(V2());
+        (pointInPolygon(centre, outline) ? holes : extras).push(contour);
+    }
+    return { outline, holes, extras };
+}
+
+// Centre a shape on the origin and scale it to `height` world units.
+function fitShape(shape, height) {
+    const bounds = new THREE.Box2().setFromPoints(
+        [shape.outline, ...shape.holes, ...shape.extras].flat());
+    const centre = bounds.getCenter(V2());
+    const size = bounds.getSize(V2());
+    const scale = height / Math.max(size.x, size.y);
+    const fit = contour => contour.map(p => p.clone().sub(centre).multiplyScalar(scale));
+    return { outline: fit(shape.outline), holes: shape.holes.map(fit), extras: shape.extras.map(fit) };
+}
+
+// Visibility kernel of a polygon: from any point of it the whole contour is visible.
+// A non-empty kernel is what makes the radial morph fold-free.
+function visibilityKernel(points) {
+    const contour = points.slice();
+    if (THREE.ShapeUtils.isClockWise(contour)) contour.reverse();
+    const span = new THREE.Box2().setFromPoints(contour).getSize(V2()).length() * 2 + 1;
+    let kernel = [V2(-span, -span), V2(span, -span), V2(span, span), V2(-span, span)];
+    for (let i = 0; i < contour.length; i++) {
+        const a = contour[i];
+        const edge = contour[(i + 1) % contour.length].clone().sub(a);
+        const clipped = [];
+        for (let j = 0; j < kernel.length; j++) {
+            const p = kernel[j], q = kernel[(j + 1) % kernel.length];
+            const dp = cross2(edge, p.clone().sub(a)), dq = cross2(edge, q.clone().sub(a));
+            if (dp >= -1e-10) clipped.push(p);
+            if ((dp >= 0) !== (dq >= 0)) clipped.push(p.clone().lerp(q, dp / (dp - dq)));
+        }
+        kernel = clipped;
+        if (!kernel.length) return [];
+    }
+    return kernel;
+}
+
+// Cut a contour into `count` radial fragments. The start angle is chosen by scanning:
+// the winner is the split whose worst fragment has the largest visibility kernel, so
+// the morph stays fold-free on shapes this code has never seen.
+function partitionContour(outline, count) {
+    if (count <= 1) return [outline];
+    const centre = new THREE.Box2().setFromPoints(outline).getCenter(V2());
+    const step = 360 / count;
+    let best = null;
+    for (let offset = 0; offset < step - 0.001; offset += 5) {
+        const pieces = [];
+        let worst = Infinity;
+        for (let i = 0; i < count; i++) {
+            const piece = clipContour(outline,
+                wedgeHalfPlanes(centre, offset + i * step, offset + (i + 1) * step));
+            if (piece.length < 3) { worst = -1; break; }
+            const kernel = visibilityKernel(piece);
+            const ratio = kernel.length
+                ? Math.abs(THREE.ShapeUtils.area(kernel)) / Math.abs(THREE.ShapeUtils.area(piece)) : 0;
+            worst = Math.min(worst, ratio);
+            pieces.push(piece);
+        }
+        if (worst >= 0 && (!best || worst > best.worst)) best = { worst, pieces };
+    }
+    if (!best) throw new Error(`Could not split this shape into ${count} fragments.`);
+    if (best.worst === 0) {
+        console.warn('[glass] a fragment has no visibility kernel; using arc-length morphing there.');
+    }
+    return best.pieces;
+}
+
+// Fragments of a fitted shape: radial wedges of the outline plus any separate solids,
+// ordered by angle so both shapes are matched fragment to fragment along short paths.
+function shapeFragments(fit, count) {
+    const wedges = Math.max(1, count - fit.extras.length);
+    // Separate solids are tagged: they stay visible while the outline is assembled.
+    const extras = fit.extras.map(contour => Object.assign(contour.slice(), { isExtra: true }));
+    const pieces = [...partitionContour(fit.outline, wedges), ...extras].slice(0, Math.max(1, count));
+    const angle = contour => {
+        const c = new THREE.Box2().setFromPoints(contour).getCenter(V2());
+        return (Math.atan2(c.y, c.x) + Math.PI * 2) % (Math.PI * 2);
+    };
+    return pieces.sort((a, b) => angle(a) - angle(b));
+}
+
+// ---- Construction de l'éclair en verre -----------------------------------------
+function createGlassLogo() {
+    createGlassEnvironment();
+    modelPivot = new THREE.Group();
+    modelPivot.position.y = -0.3;
+    scene.add(modelPivot);
+
+    glass = createGlassMaterial();
+    const logo = new THREE.Group();
+    logo.rotation.set(-0.08, 0.28, -0.08);
+    modelPivot.add(logo);
+
+    const opening = fitShape(parseShape(openingSource), LOGO_HEIGHT);
+    const final = fitShape(parseShape(finalSource), ICON_SIZE);
+    iconOutline = final.outline;
+    iconHoles = final.holes;
+
+    // Éclair assemblé : un seul prisme étanche, exact avant l'éclatement.
+    const whole = recentre(opening.outline);
+    const wholeShape = new THREE.Shape(whole.contour);
+    const wholeOffset = V2(whole.home.x, whole.home.y);
+    for (const hole of opening.holes) {
+        wholeShape.holes.push(new THREE.Path(hole.map(p => p.clone().sub(wholeOffset))));
+    }
+    const wholeGeometry = new THREE.ExtrudeGeometry(wholeShape, {
+        depth: LOGO_DEPTH, steps: 1, bevelEnabled: true,
+        bevelSize: LOGO_BEVEL.size, bevelThickness: LOGO_BEVEL.thickness,
+        bevelSegments: 6, curveSegments: 24
+    });
+    wholeGeometry.translate(0, 0, -LOGO_DEPTH / 2);
+    wholeBody = new THREE.Mesh(wholeGeometry, glass);
+    wholeBody.position.copy(whole.home);
+    logo.add(wholeBody);
+
+    // Prisme final : les biseaux grandissent une fois les éclats fusionnés.
+    glassIcon = new THREE.Mesh(makeIconPrism(SEAM_BEVEL, SEAM_BEVEL, 0), glass);
+    glassIcon.userData.progress = -1;
+    glassIcon.visible = false;
+    logo.add(glassIcon);
+
+    const sources = shapeFragments(opening, SITE.fragments);
+    const targets = shapeFragments(final, sources.length);
+    const count = sources.length;
+    sources.forEach((sourceContour, index) => {
+        const isExtra = !!sourceContour.isExtra;
+        const source = recentre(sourceContour);
+        const target = recentre(targets[Math.min(index, targets.length - 1)]);
+        const geometry = makePrism(source.contour, LOGO_DEPTH, LOGO_BEVEL.size, LOGO_BEVEL.thickness);
+        const mesh = new THREE.Mesh(geometry, glass);
+        mesh.position.copy(source.home);
+        logo.add(mesh);
+        const radial = V2(source.home.x, source.home.y);
+        if (radial.lengthSq() < 1e-6) radial.set(Math.cos(index), Math.sin(index));
+        const offset = new THREE.Vector3(radial.x, radial.y, 0).normalize().multiplyScalar(1.15);
+        offset.z = (index % 2 === 0 ? 1 : -1) * 0.55;
+        const side = Math.sign(offset.x) || 1, vertical = Math.sign(offset.y) || 1;
+        // Orbite autour du téléphone (chapitre 3) : un anneau incliné, les éclats alternés en hauteur.
+        const order = (index * 2) % count + (index * 2 >= count && count % 2 === 0 ? 1 : 0);
+        logoPieces.push({
+            name: `fragment-${index}`, mesh, home: source.home, offset,
+            twist: new THREE.Vector3(vertical * 0.12, side * 0.18, -side * vertical * 0.09),
+            orbitAngle: index / count * Math.PI * 2,
+            orbitHeight: (order / Math.max(1, count - 1) - 0.5),
+            phase: index * 1.7 + 0.4,
+            targetHome: target.home,
+            correspondence: matchMorphContours(source.contour, target.contour, `fragment-${index}`),
+            originalGeometry: geometry, morphGeometry: null, isBody: !isExtra,
+            finalGeometry: isExtra ? makePrism(target.contour, ICON_DEPTH, ICON_BEVEL.size, ICON_BEVEL.thickness) : null,
+            targetContour: isExtra ? target.contour : null, extraBevel: -1
+        });
+    });
+}
+
+// ---- Liquid glass card: a transmissive slab pinned to the DOM card ----------
+// The slab lives in camera space at a fixed distance, so CSS pixels map linearly
+// to world units. Its refraction, blur and rim lensing are real: the background
+// shader is bent through the bevelled edge, like Apple's Liquid Glass.
+function roundedRectShape(w, h, r) {
+    const shape = new THREE.Shape();
+    const x = -w / 2, y = -h / 2;
+    shape.moveTo(x + r, y);
+    shape.lineTo(x + w - r, y);
+    shape.absarc(x + w - r, y + r, r, -Math.PI / 2, 0, false);
+    shape.lineTo(x + w, y + h - r);
+    shape.absarc(x + w - r, y + h - r, r, 0, Math.PI / 2, false);
+    shape.lineTo(x + r, y + h);
+    shape.absarc(x + r, y + h - r, r, Math.PI / 2, Math.PI, false);
+    shape.lineTo(x, y + r);
+    shape.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5, false);
+    return shape;
+}
+
+function cardUnitsPerPixel() {
+    return 2 * CARD_DISTANCE * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / sizes.height;
+}
+
+function buildGlassCardGeometry(w, h, unitsPerPixel) {
+    const rim = CARD_RIM_PX * unitsPerPixel;                  // refractive rim width
+    const radius = Math.max(rim + 0.002, CARD_RADIUS_PX * unitsPerPixel);
+    const shape = roundedRectShape(w - 2 * rim, h - 2 * rim, radius - rim);
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: CARD_DEPTH, steps: 1, bevelEnabled: true, bevelSize: rim, bevelThickness: CARD_RIM_DEPTH,
+        bevelSegments: 10, curveSegments: 18
+    });
+    geometry.translate(0, 0, -(CARD_DEPTH + CARD_RIM_DEPTH));   // front face at local z = 0
+    return geometry;
+}
+
+// Dalle de verre fumé calée derrière le bloc final (boutons des stores, réseaux).
+function createGlassCard() {
+    if (!contactCardElement) return;
+    cardGlass = createGlassMaterial();
+    cardGlass.side = THREE.FrontSide;
+    cardGlass.color.set('#b9a8a8');
+    cardGlass.roughness = 0.36;
+    cardGlass.thickness = 0.35;
+    cardGlass.attenuationColor.set('#2a0808');
+    cardGlass.attenuationDistance = 1.6;
+    cardGlass.clearcoat = 1.0;
+    cardGlass.clearcoatRoughness = 0.14;
+    cardGlass.iridescence = 0.06;
+    cardGlass.envMapIntensity = 0.5;
+    glassCard = new THREE.Mesh(buildGlassCardGeometry(1, 1, 1), cardGlass);
+    glassCard.userData = { w: 0, h: 0 };
+    glassCard.visible = false;
+    camera.add(glassCard);
+    document.body.classList.add('has-glass-card');
+}
+
+// La dalle suit le rectangle réel du bloc (reconstruite seulement si sa taille change).
+function updateGlassCard() {
+    if (!glassCard || !contactCardElement) return;
+    glassCard.visible = targetContact > 0.001;
+    if (!glassCard.visible) return;
+    const rect = contactCardElement.getBoundingClientRect();
+    const upp = cardUnitsPerPixel();
+    const w = rect.width * upp, h = rect.height * upp;
+    if (Math.abs(glassCard.userData.w - w) > 0.003 || Math.abs(glassCard.userData.h - h) > 0.003) {
+        glassCard.geometry.dispose();
+        glassCard.geometry = buildGlassCardGeometry(w, h, upp);
+        glassCard.userData = { w, h };
+    }
+    const cx = rect.left + rect.width / 2 - sizes.width / 2;
+    const cy = sizes.height / 2 - (rect.top + rect.height / 2);
+    glassCard.position.set(cx * upp, cy * upp, -CARD_DISTANCE);
+    glassCard.rotation.set(-mouseY * 0.02, mouseX * 0.025, 0);
+}
+
+// ---- Scroll et chronologie -----------------------------------------------------
+const layout = { portrait: portraitQuery.matches };
+
+function stageMaxScroll() {
+    const height = stageElement ? stageElement.offsetHeight : document.documentElement.scrollHeight;
+    return Math.max(1, height - window.innerHeight);
+}
+
+function smoothScrollRange(scroll, start, end) {
+    const t = clamp((scroll - start) / (end - start), 0, 1);
+    return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+function getLogoSeparation(scroll) {
+    return smoothScrollRange(scroll, T.burst[0], T.burst[1]) * (1 - smoothScrollRange(scroll, T.join[0], T.join[1]));
+}
+
+function getOrbit(scroll) {
+    return smoothScrollRange(scroll, T.orbit[0], T.orbit[1]) * (1 - smoothScrollRange(scroll, T.orbit[2], T.orbit[3]));
+}
+
+// Poids de chaque chapitre (leur somme vaut 1) : sert au cadrage.
+function chapterWeights(scroll) {
+    const a = smoothScrollRange(scroll, 0.08, 0.20);
+    const b = smoothScrollRange(scroll, 0.30, 0.40);
+    const c = smoothScrollRange(scroll, 0.62, 0.72);
+    return [1 - a, a - b, b - c, c];
+}
+
+// Cadrage. La caméra orbite autour de l'éclair ; elle vise un point décalé pour placer l'éclair
+// à une fraction donnée de l'écran : à côté du texte sur ordinateur, au-dessus ou en dessous
+// sur téléphone (même alternance que la mise en page empilée du CSS).
+let debugFrame = null;   // cadrage imposé par les crochets de test (image fixe, image de partage)
+function cameraFrame(scroll, contact = 0) {
+    const portrait = layout.portrait;
+    const separation = getLogoSeparation(scroll);
+    const join = smoothScrollRange(scroll, T.join[0], T.join[1]);
+    const final = smoothScrollRange(contact, 0, 0.85);
+    let radius = portrait
+        ? 9.1 - Math.sin(scroll * Math.PI) * 0.4 + separation * 1.8 + join * 1.2
+        : 4.7 - Math.sin(scroll * Math.PI) * 0.6 + separation * 2.6 + join * 0.9 + final * 0.1;
+    const weights = chapterWeights(scroll);
+    const frame = portrait ? FRAME.portrait : FRAME.landscape;
+    let fx = 0, fy = 0;
+    for (let i = 0; i < 4; i++) { fx += weights[i] * frame.fx[i]; fy += weights[i] * frame.fy[i]; }
+    fx = lerp(fx, frame.final[0], final);
+    fy = lerp(fy, frame.final[1], final);
+    if (debugFrame) { fx = debugFrame.fx; fy = debugFrame.fy; radius = debugFrame.radius || radius; }
+    const visibleHeight = 2 * radius * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const visibleWidth = visibleHeight * sizes.width / sizes.height;
+    const phi = scroll * Math.PI * 2.0;
+    const right = new THREE.Vector3(Math.cos(phi), 0, -Math.sin(phi));
+    const lookAt = new THREE.Vector3(0, -0.25 + (fy - 0.5) * visibleHeight, 0)
+        .addScaledVector(right, -(fx - 0.5) * visibleWidth);
+    return { radius, lookAt };
+}
+
+function cachedGeometry(owner, key, build) {
+    const cache = owner.geometryCache || (owner.geometryCache = new Map());
+    let geometry = cache.get(key);
+    if (geometry) cache.delete(key);
+    else geometry = build();
+    cache.set(key, geometry);
+    if (cache.size > 24) {
+        const oldest = cache.keys().next().value;
+        cache.get(oldest).dispose();
+        cache.delete(oldest);
+    }
+    return geometry;
+}
+const geometryStep = value => Math.round(value * MORPH_STEPS) / MORPH_STEPS;
+
+function morphGeometry(piece, geometryMorph) {
+    return cachedGeometry(piece, `morph:${geometryMorph}`, () => {
+        const contour = piece.correspondence.map(({ source, target }) => source.clone().lerp(target, geometryMorph));
+        return makePrism(contour, lerp(LOGO_DEPTH, ICON_DEPTH, geometryMorph),
+            lerp(LOGO_BEVEL.size, SEAM_BEVEL, geometryMorph),
+            lerp(LOGO_BEVEL.thickness, SEAM_BEVEL, geometryMorph));
+    });
+}
+
+// Prépare, pendant les temps morts, les géométries de la recomposition : aucun à-coup au scroll.
+function prewarmMorph() {
+    const jobs = [];
+    for (const piece of logoPieces) {
+        if (!piece.isBody) continue;
+        for (let step = 1; step <= MORPH_STEPS; step++) jobs.push([piece, step / MORPH_STEPS]);
+    }
+    const idle = window.requestIdleCallback || (callback => setTimeout(() => callback({ timeRemaining: () => 8 }), 60));
+    const run = deadline => {
+        while (jobs.length && deadline.timeRemaining() > 3) {
+            const [piece, value] = jobs.shift();
+            morphGeometry(piece, value);
+        }
+        if (jobs.length && running) idle(run);
+    };
+    idle(run);
+}
+
+const _position = new THREE.Vector3();
+const _orbit = new THREE.Vector3();
+
+function updateLogoPieces(scroll, time) {
+    const separation = getLogoSeparation(scroll);
+    const morph = smoothScrollRange(scroll, T.join[0], T.join[1]);
+    const orbit = getOrbit(scroll);
+    const geometryMorph = geometryStep(morph);
+    const complete = morph >= 1;
+    const assembled = separation <= 0 && morph <= 0;
+    if (wholeBody) wholeBody.visible = assembled;
+    if (glassIcon) {
+        glassIcon.visible = complete;
+        if (complete) {
+            const bevel = geometryStep(smoothScrollRange(scroll, T.bevel[0], T.bevel[1]));
+            const hole = geometryStep(smoothScrollRange(scroll, T.holes[0], T.holes[1]));
+            const key = `${bevel}:${hole}`;
+            if (key !== glassIcon.userData.progress) {
+                if (!glassIcon.geometryCache) glassIcon.geometry.dispose();
+                glassIcon.geometry = cachedGeometry(glassIcon, key, () => makeIconPrism(
+                    lerp(SEAM_BEVEL, ICON_BEVEL.size, bevel),
+                    lerp(SEAM_BEVEL, ICON_BEVEL.thickness, bevel), hole));
+                glassIcon.userData.progress = key;
+            }
+        }
+    }
+    const ringRadius = layout.portrait ? 1.95 : 2.75;
+    const ringHeight = layout.portrait ? 3.6 : 3.0;
+    for (const piece of logoPieces) {
+        const { mesh, home, targetHome, offset, twist, phase } = piece;
+        mesh.visible = piece.isBody ? !complete && !assembled : true;
+        if (!mesh.visible) continue;
+        _position.copy(home).lerp(targetHome, morph).addScaledVector(offset, separation);
+        // Les éclats flottent doucement tant qu'ils sont séparés.
+        const drift = separation * 0.07;
+        _position.x += Math.sin(time * 0.50 + phase) * drift;
+        _position.y += Math.cos(time * 0.42 + phase * 1.3) * drift;
+        _position.z += Math.sin(time * 0.37 + phase * 0.7) * drift;
+        if (orbit > 0) {
+            const angle = piece.orbitAngle + time * 0.14;
+            _orbit.set(Math.cos(angle) * ringRadius, piece.orbitHeight * ringHeight, Math.sin(angle) * ringRadius);
+            _position.lerp(_orbit, orbit);
+        }
+        mesh.position.copy(_position);
+        mesh.rotation.set(
+            twist.x * separation + Math.sin(time * 0.31 + phase) * 0.10 * separation + Math.sin(time * 0.21 + phase) * 0.55 * orbit,
+            twist.y * separation + Math.cos(time * 0.27 + phase) * 0.14 * separation + Math.sin(time * 0.17 + phase * 1.9) * 1.1 * orbit,
+            twist.z * separation + Math.sin(time * 0.23 + phase * 2.0) * 0.08 * separation);
+        if (!piece.isBody && complete) {
+            const bevel = geometryStep(smoothScrollRange(scroll, T.bevel[0], T.bevel[1]));
+            mesh.geometry = bevel >= 1 ? piece.finalGeometry : cachedGeometry(piece, `extra:${bevel}`,
+                () => makePrism(piece.targetContour, ICON_DEPTH,
+                    lerp(SEAM_BEVEL, ICON_BEVEL.size, bevel),
+                    lerp(SEAM_BEVEL, ICON_BEVEL.thickness, bevel)));
+        } else if (morph <= 0) {
+            mesh.geometry = piece.originalGeometry;
+        } else {
+            mesh.geometry = morphGeometry(piece, geometryMorph);
+        }
+    }
+}
+
+// ---- Fond : lignes ondulées fines, rouges sur noir, et halo qui suit l'éclair ----
+function createBackgroundShader() {
+    const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `;
+    const fragmentShader = `
+        varying vec2 vUv;
+        uniform float uTime;
+        uniform vec2 uResolution;
+        uniform vec2 uMouse;
+        uniform float uScroll;
+        uniform float uVelocity;
+        uniform vec2 uObject;
+        uniform float uGlow;
+        uniform float uGlowSpread;
+
+        mat2 rotate2d(float a) { return mat2(cos(a), -sin(a), sin(a), cos(a)); }
+        float fineLine(float d, float width) {
+            return 1.0 - smoothstep(width, width + 1.5 / uResolution.y, abs(d));
+        }
+        // Une couleur par chapitre (SITE.palette).
+        uniform vec3 uC0; uniform vec3 uC1; uniform vec3 uC2; uniform vec3 uC3; uniform vec3 uC4;
+        vec3 chapterColor(float progress) {
+            if (progress < 0.26) return mix(uC0, uC1, smoothstep(0.04, 0.22, progress));
+            if (progress < 0.56) return mix(uC1, uC2, smoothstep(0.30, 0.44, progress));
+            if (progress < 1.0) return mix(uC2, uC3, smoothstep(0.64, 0.86, progress));
+            return mix(uC3, uC4, smoothstep(1.0, 1.2, progress));
+        }
+        void main() {
+            vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+            float s = uScroll;
+            float time = uTime * 0.065;
+            vec3 primary = chapterColor(s);
+            vec3 secondary = chapterColor(min(1.22, s + 0.18));
+            vec3 color = vec3(0.0);
+
+            // Halo derrière l'éclair : il le suit à l'écran et nourrit la réfraction du verre.
+            vec2 g = (uv - uObject) * vec2(1.30, 0.82) / uGlowSpread;
+            float aura = exp(-dot(g, g) * 5.0);
+            float core = exp(-dot(g, g) * 22.0);
+            color += uC2 * (aura * 0.55 + core * 0.45) * uGlow;
+
+            // Deux volumes retenus donnent de la profondeur sans délaver le noir.
+            vec2 haloUv = (uv - vec2(0.16 + 0.16 * sin(s * 4.0), 0.14)) * vec2(1.20, 1.8);
+            float halo = exp(-dot(haloUv, haloUv) * 2.8);
+            vec2 lowerUv = (uv + vec2(0.40, 0.30)) * vec2(1.6, 2.6);
+            color += primary * halo * 0.10;
+            color += secondary * exp(-dot(lowerUv, lowerUv) * 2.0) * 0.035;
+
+            vec2 p = rotate2d(-0.24 + s * 0.65) * (uv - vec2(0.06, -0.08));
+            p += uMouse * 0.018;
+            p.x += 0.15 * sin(p.y * 2.8 + s * 4.8 + time * 0.3);
+            p.y += 0.09 * cos(p.x * 3.1 - s * 3.8 - time * 0.2);
+
+            // Trois grands plis, espacés, aux arêtes fines et polies.
+            for (int i = 0; i < 3; i++) {
+                float k = float(i);
+                vec2 q = p + vec2(0.0, 0.012 * sin(time + k));
+                float radius = length(q * vec2(0.90, 1.22));
+                float angle = atan(q.y, q.x);
+                float contour = 0.34 + k * 0.145
+                    + 0.075 * sin(angle * 2.0 + s * 5.0 + k * 0.28)
+                    + 0.022 * cos(angle * 3.0 - time);
+                float d = radius - contour;
+                float arc = smoothstep(-0.65, 0.65, sin(angle + k * 0.55 + s * 3.5));
+                vec3 tint = mix(primary, secondary, k * 0.38);
+                float body = exp(-pow(d * 25.0, 2.0));
+                float shoulder = exp(-pow((d + 0.018) * 13.0, 2.0));
+                color += tint * (body * 0.10 + shoulder * 0.025) * arc;
+                color += mix(tint, vec3(1.0, 0.82, 0.76), 0.22)
+                    * fineLine(d, 0.0008) * arc * (0.18 + uVelocity * 0.07);
+            }
+
+            // Trame périphérique à peine visible.
+            vec2 gridUv = rotate2d(-0.20 + s * 0.18) * uv + vec2(s * 0.08, s * 0.16);
+            vec2 cell = abs(fract(gridUv * 10.0) - 0.5);
+            float grid = max(fineLine((0.5 - cell.x) / 10.0, 0.0002), fineLine((0.5 - cell.y) / 10.0, 0.0002));
+            float periphery = smoothstep(0.28, 0.80, length(uv));
+            color += primary * grid * periphery * 0.022;
+
+            float vignette = 1.0 - smoothstep(0.36, 1.20, length(uv * vec2(0.8, 1.0)));
+            color *= mix(0.25, 1.0, vignette);
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `;
+    bgMaterial = new THREE.ShaderMaterial({
+        vertexShader, fragmentShader, uniforms: shaderUniforms, depthWrite: false, depthTest: false
+    });
+    bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), bgMaterial);
+    bgMesh.position.set(0.0, 0.0, -8.0);   // repère caméra, loin derrière
+    bgMesh.renderOrder = -10;
+    camera.add(bgMesh);
+}
+
+// ---- Qualité et taille de rendu ------------------------------------------------
+function pixelRatioCap() {
+    return Math.min(window.devicePixelRatio || 1, tier <= 1 ? 1 : (tactile ? 1.5 : 2));
+}
+
+function initialTier() {
+    if (etat.lite) return 1;
+    const memory = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+    if (memory !== undefined && memory < 4) return 1;
+    // Safari plafonne hardwareConcurrency sur iPhone et iPad : le signal n'y dit rien de la puissance
+    // réelle. Sur ces appareils, c'est la mesure des images par seconde qui décide.
+    if (!apple && cores !== undefined && cores <= 4) return 1;
+    return 3;
+}
+
+function applyTier() {
+    const dispersion = tier >= 3;
+    for (const material of [glass, cardGlass]) {
+        if (material && material.userData.dispersion !== dispersion) {
+            material.userData.dispersion = dispersion;
+            material.needsUpdate = true;
+        }
+    }
+    if (sparkParticles) sparkParticles.geometry.setDrawRange(0, tier <= 1 ? 160 : sparkCount);
+    resizeRenderer(true);
+    document.documentElement.dataset.qualite = String(tier);
+}
+
+function resizeRenderer(force = false) {
+    const width = canvas.clientWidth || window.innerWidth;
+    const height = canvas.clientHeight || window.innerHeight;
+    const ratio = pixelRatioCap();
+    // iPhone : la barre d'adresse de Safari change la hauteur visible mais pas celle de la toile
+    // (100lvh). Rien à recalculer dans ce cas : aucun saut pendant le scroll.
+    if (!force && width === sizes.width && height === sizes.height && renderer.getPixelRatio() === ratio) return false;
+    sizes.width = width;
+    sizes.height = height;
+    layout.portrait = portraitQuery.matches;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setPixelRatio(ratio);
+    renderer.setSize(width, height, false);
+    renderer.getDrawingBufferSize(shaderUniforms.uResolution.value);
+    return true;
+}
+
+// Images par seconde durablement basses : on descend d'un cran (dispersion, puis résolution,
+// puis image fixe en dernier recours). On ne remonte jamais.
+const perf = { enabled: true, frames: 0, total: 0, low: 0, graceUntil: 0 };
+function watchPerformance(now, delta, active) {
+    if (!perf.enabled || !active || delta > 250 || now < perf.graceUntil) return;
+    perf.frames++;
+    perf.total += delta;
+    if (perf.frames < 50) return;
+    const average = perf.total / perf.frames;
+    perf.frames = 0;
+    perf.total = 0;
+    perf.low = average > 30 ? perf.low + 1 : 0;
+    if (perf.low < 3) return;
+    perf.low = 0;
+    perf.graceUntil = now + 2500;
+    setTier(tier - 1);
+}
+
+function setTier(value) {
+    tier = clamp(Math.round(value), 0, 3);
+    if (tier <= 0) { stop(); repli(); return; }
+    applyTier();
+}
+
+function stop() {
+    if (!running) return;
+    running = false;
+    cancelAnimationFrame(animationRequest);
+    animationRequest = 0;
+    document.querySelectorAll('.slide-title, .final-titre').forEach(title => { title.style.fontSize = ''; });
+    try { renderer.dispose(); renderer.forceContextLoss(); } catch (error) { /* contexte déjà perdu */ }
+}
+
+// ---- Curseur réticule (ordinateur uniquement) ----------------------------------
+const cursorInner = document.querySelector('.cursor-inner');
+const cursorOuter = document.querySelector('.cursor-outer');
+const cursorLabel = document.querySelector('.cursor-label');
+let cursorLabelText = '';
+function setupPointer() {
+    document.body.classList.add('cursor-hidden');   // le réticule n'apparaît qu'au premier mouvement de souris
+    window.addEventListener('pointermove', (event) => {
+        if (event.pointerType === 'touch') return;
+        cursorX = event.clientX;
+        cursorY = event.clientY;
+        if (cursorInner) { cursorInner.style.left = `${cursorX}px`; cursorInner.style.top = `${cursorY}px`; }
+        targetMouseX = (event.clientX / window.innerWidth) * 2 - 1;
+        targetMouseY = (event.clientY / window.innerHeight) * 2 - 1;
+        document.body.classList.remove('cursor-hidden');
+    }, { passive: true });
+    if (!pointerFine) return;
+    document.addEventListener('mouseover', (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        document.body.classList.toggle('cursor-hover', Boolean(target && target.closest('a[href], button')));
+    });
+    document.addEventListener('mouseleave', () => document.body.classList.add('cursor-hidden'));
+}
+function updateCursor(damping) {
+    if (!pointerFine) return;
+    outerCursorX += (cursorX - outerCursorX) * damping(0.2);
+    outerCursorY += (cursorY - outerCursorY) * damping(0.2);
+    if (cursorOuter) { cursorOuter.style.left = `${outerCursorX}px`; cursorOuter.style.top = `${outerCursorY}px`; }
+    if (!cursorLabel) return;
+    cursorLabel.style.left = `${outerCursorX}px`;
+    cursorLabel.style.top = `${outerCursorY}px`;
+    const text = String(Math.round(currentScroll * 100)).padStart(3, '0');
+    if (text !== cursorLabelText) { cursorLabel.textContent = text; cursorLabelText = text; }
+}
+
+// Un titre tient sur deux lignes, jamais trois : une ligne trop large pour sa colonne
+// rétrécit jusqu'à tenir. Mesuré avec la police chargée, puis à chaque redimensionnement.
+function fitTitles() {
+    document.querySelectorAll('.slide-title, .final-titre').forEach(title => {
+        title.style.fontSize = '';
+        const lines = [...title.querySelectorAll('.line-inner')];
+        if (!lines.length) return;
+        const widest = Math.max(...lines.map(line => {
+            const range = document.createRange();
+            range.selectNodeContents(line);
+            return range.getBoundingClientRect().width;
+        }));
+        const available = title.clientWidth;
+        if (widest > available && available > 0) {
+            const size = parseFloat(getComputedStyle(title).fontSize);
+            title.style.fontSize = `${Math.floor(size * available / widest * 0.985)}px`;
+        }
+    });
+}
+
+// ---- Boucle de rendu -----------------------------------------------------------
+let animationRequest = 0;
+let lastFrameAt = 0;
+let lastInputAt = performance.now();
+const _target = new THREE.Vector3();
+const _projected = new THREE.Vector3();
+
+function readScroll() {
+    const maxScroll = stageMaxScroll();
+    const scrollTop = window.scrollY || 0;
+    targetContact = contactSection ? clamp((scrollTop - maxScroll) / window.innerHeight, 0, 1) : 0;
+    return clamp(scrollTop / maxScroll, 0, 1);
+}
+
+function animate(now = performance.now()) {
+    if (!running || document.hidden) return;
+    animationRequest = requestAnimationFrame(animate);
+    const targetScroll = readScroll();
+    const unsettled = Math.abs(targetScroll - currentScroll) > 0.0001 || Math.abs(targetContact - currentContact) > 0.0001;
+    const active = unsettled || now - lastInputAt < 1500;
+    const fps = active ? 60 : 30;
+    if (lastFrameAt && now - lastFrameAt < 1000 / fps - 1) return;
+    const frameDelta = lastFrameAt ? now - lastFrameAt : 16;
+    lastFrameAt = now;
+    watchPerformance(now, frameDelta, active);
+    if (!running) return;
+    const deltaTime = Math.min(clock.getDelta(), 0.1);
+    const time = clock.getElapsedTime();
+    const damping = factor => 1 - Math.pow(1 - factor, deltaTime * 60);
+
+    // Scroll lissé (inertie). Un peu plus vif au doigt qu'à la molette.
+    currentScroll += (targetScroll - currentScroll) * damping(tactile ? 0.055 : 0.032);
+    currentContact += (targetContact - currentContact) * damping(0.07);
+    if (Math.abs(targetContact - currentContact) < 0.0015) currentContact = targetContact;
+
+    mouseX += (targetMouseX - mouseX) * damping(0.05);
+    mouseY += (targetMouseY - mouseY) * damping(0.05);
+    updateCursor(damping);
+
+    const separation = getLogoSeparation(currentScroll);
+    const final = smoothScrollRange(currentContact, 0, 0.85);
+
+    // L'éclair suit légèrement la souris, respire doucement, et fait un tour sur lui-même
+    // en rejoignant le chapitre final.
+    if (modelPivot) {
+        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + final * Math.PI * 2.0;
+        modelPivot.rotation.x = mouseY * 0.15 + Math.sin(time * 0.27) * 0.025;
+        modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.035 * (1 - separation);
+            }
+    if (glass) glass.envMapIntensity = 1.10 + final * 0.45;
+
+    // Poussière de verre, agitée par le scroll rapide.
+    if (sparkParticles) {
+        const positions = sparkParticles.geometry.attributes.position.array;
+        const scrollVelocity = Math.abs(targetScroll - currentScroll);
+        const speedMultiplier = 1.0 + scrollVelocity * 9.0;
+        const turbulence = scrollVelocity * 0.8;
+        const count = sparkParticles.geometry.drawRange.count === Infinity ? sparkCount : sparkParticles.geometry.drawRange.count;
+        for (let i = 0; i < count; i++) {
+            const idx = i * 3;
+            const data = sparkData[i];
+            positions[idx]     += data.speedX * deltaTime * speedMultiplier;
+            positions[idx + 1] += data.speedY * deltaTime * speedMultiplier;
+            positions[idx + 2] += data.speedZ * deltaTime * speedMultiplier;
+            const currentSway = data.swayRadius * (1.0 + turbulence * 4.0);
+            positions[idx]     += Math.sin(time * data.swaySpeed + data.phase) * currentSway * deltaTime;
+            positions[idx + 2] += Math.cos(time * data.swaySpeed + data.phase) * currentSway * deltaTime;
+            if (positions[idx + 1] > 3.0 || Math.abs(positions[idx]) > 3.5 || Math.abs(positions[idx + 2]) > 3.5) {
+                positions[idx + 1] = -2.5;
+                positions[idx]     = (Math.random() - 0.5) * 3.0;
+                positions[idx + 2] = (Math.random() - 0.5) * 3.0;
+            }
+        }
+        sparkParticles.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // La caméra fait le tour de l'éclair au fil du scroll.
+    const frame = cameraFrame(currentScroll, currentContact);
+    const phi = currentScroll * Math.PI * 2.0;
+    const y = 0.35 + Math.sin(currentScroll * Math.PI) * 0.8;
+    _target.set(frame.radius * Math.sin(phi), y, frame.radius * Math.cos(phi));
+    camera.position.lerp(_target, damping(0.035));
+    camera.lookAt(frame.lookAt);
+    camera.updateMatrixWorld();
+    updateGlassCard();
+
+    // Fond : couleur du chapitre, halo calé sur l'éclair.
+    _projected.set(0, -0.3, 0).project(camera);
+    shaderUniforms.uObject.value.set(_projected.x * camera.aspect * 0.5, _projected.y * 0.5);
+    shaderUniforms.uGlow.value = 0.20 - separation * 0.07 + final * 0.14;
+    shaderUniforms.uGlowSpread.value = (layout.portrait ? 0.62 : 1.0) * (1.0 + separation * 0.9);
+    shaderUniforms.uTime.value = time;
+    shaderUniforms.uMouse.value.set(mouseX, -mouseY);
+    shaderUniforms.uScroll.value = currentScroll + currentContact * 0.22;
+    shaderUniforms.uVelocity.value += (Math.min(1, Math.abs(targetScroll - currentScroll) * 14) - shaderUniforms.uVelocity.value) * damping(0.06);
+
+    updateLogoPieces(currentScroll, time);
+    updateSlides(currentScroll);
+    updateHeader(currentScroll);
+    updateFinal();
+    renderer.render(scene, camera);
+}
+
+// ---- En-tête : chapitre actif, compteur, filet de progression -----------------
+const headerState = { chapter: -1, progress: '' };
+const chapterLinks = [...document.querySelectorAll('.nav [data-chapitre]')];
+const chapterCounter = document.getElementById('compteur-chapitre');
+const progressFill = document.getElementById('entete-progression');
+function updateHeader(scroll) {
+    const chapter = targetContact > 0.02 ? 4
+        : scroll < T.chapters[0] ? 0 : scroll < T.chapters[1] ? 1 : scroll < T.chapters[2] ? 2 : 3;
+    if (chapter !== headerState.chapter) {
+        headerState.chapter = chapter;
+        for (const link of chapterLinks) {
+            const current = Number(link.dataset.chapitre) === chapter;
+            link.classList.toggle('est-actif', current);
+            if (current) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current');
+        }
+        if (chapterCounter) chapterCounter.textContent = String(chapter + 1).padStart(2, '0');
+    }
+    if (progressFill) {
+        const total = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const progress = Math.min(1, window.scrollY / total).toFixed(4);
+        if (progress !== headerState.progress) { progressFill.style.transform = `scaleX(${progress})`; headerState.progress = progress; }
+    }
+}
+
+// ---- Chapitres : un texte reste affiché assez longtemps même si on scrolle vite ----
+const SLIDE_MIN_SHOW = 1500, SLIDE_LEAVE_HOLD = 400;
+const slides = [...document.querySelectorAll('.slide')];
+const slideState = T.slides.map(() => ({ active: false, since: 0, left: 0 }));
+const dashFills = [1, 2, 3, 4].map(i => document.getElementById(`dash-fill-${i}`));
+const dashBounds = [0, T.chapters[0], T.chapters[1], T.chapters[2], 1];
+const dashState = ['', '', '', ''];
+const tutoSteps = [...document.querySelectorAll('.tuto-etape')];
+const tutoDots = [...document.querySelectorAll('.tuto-points span')];
+let tutoStep = -1;
+
+function updateSlides(scroll) {
+    dashFills.forEach((fill, i) => {
+        if (!fill) return;
+        const progress = clamp((scroll - dashBounds[i]) / (dashBounds[i + 1] - dashBounds[i]), 0, 1).toFixed(3);
+        if (progress !== dashState[i]) { fill.style.transform = `scaleY(${progress})`; dashState[i] = progress; }
+    });
+
+    const now = performance.now();
+    const loading = document.body.classList.contains('is-loading');
+    const finalOpen = targetContact > 0.02;
+    const inside = T.slides.map(([start, end]) => !loading && !finalOpen && scroll >= start && scroll <= end);
+    const current = inside.indexOf(true);
+    const actives = slideState.map((state, index) => {
+        if (current === index) {
+            if (!state.active) state.since = now;
+            state.active = true;
+            state.left = 0;
+            return true;
+        }
+        if (state.active && current === -1 && !finalOpen && !loading) {
+            if (!state.left) state.left = now;
+            if (now - state.since < SLIDE_MIN_SHOW || now - state.left < SLIDE_LEAVE_HOLD) return true;
+        }
+        state.active = false;
+        state.left = 0;
+        return false;
+    });
+    slides.forEach((slide, index) => { if (slide) slide.classList.toggle('active', actives[index]); });
+
+    // Tutoriel : les 4 étapes se succèdent au rythme du scroll dans le chapitre 3.
+    const local = clamp((scroll - T.tuto[0]) / (T.tuto[1] - T.tuto[0]), 0, 0.9999);
+    const step = Math.floor(local * tutoSteps.length);
+    if (step !== tutoStep) {
+        tutoStep = step;
+        tutoSteps.forEach((element, index) => element.classList.toggle('est-active', index === step));
+        tutoDots.forEach((element, index) => element.classList.toggle('est-actif', index === step));
+    }
+}
+
+function updateFinal() {
+    if (!contactSection) return;
+    document.body.classList.toggle('contact-open', targetContact > 0.02);
+    contactSection.classList.toggle('active', currentContact > (layout.portrait ? 0.30 : 0.45));
+}
+
+function setupNavigation() {
+    const go = (index) => {
+        const top = index >= 4 && contactSection ? contactSection.offsetTop : stageMaxScroll() * T.nav[index];
+        window.scrollTo({ top, behavior: 'smooth' });
+    };
+    document.querySelectorAll('[data-chapitre]').forEach(link => {
+        link.addEventListener('click', (event) => { event.preventDefault(); go(Number(link.dataset.chapitre)); });
+    });
+    document.querySelectorAll('a[href="#accueil"]:not([data-chapitre])').forEach(link => {
+        link.addEventListener('click', (event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    });
+    // Arrivée avec une ancre de chapitre (les chapitres sont fixes : le navigateur ne peut pas y sauter seul).
+    const anchors = { '#jeux': 1, '#app': 2, '#direct': 3 };
+    const index = anchors[window.location.hash];
+    if (index) window.scrollTo(0, stageMaxScroll() * T.nav[index]);
+}
+
+function snapCamera() {
+    const frame = cameraFrame(currentScroll, currentContact);
+    const phi = currentScroll * Math.PI * 2.0;
+    camera.position.set(frame.radius * Math.sin(phi), 0.35 + Math.sin(currentScroll * Math.PI) * 0.8, frame.radius * Math.cos(phi));
+    camera.lookAt(frame.lookAt);
+}
+
+// Crochets de test : actifs seulement avec ?debug=1 (captures automatisées).
+function installDebugHooks() {
+    window.__glassSite = {
+        snap(value) {
+            window.scrollTo(0, stageMaxScroll() * value);
+            currentScroll = value;
+            currentContact = targetContact = 0;
+            snapCamera();
+        },
+        snapContact(value) {
+            window.scrollTo(0, stageMaxScroll() + window.innerHeight * value);
+            currentScroll = 1;
+            currentContact = targetContact = value;
+            snapCamera();
+        },
+        setTier,
+        frame(fx, fy, radius) { debugFrame = fx === undefined ? null : { fx, fy, radius }; snapCamera(); },
+        get tier() { return tier; },
+        get scroll() { return currentScroll; },
+        get contact() { return currentContact; },
+        get pieces() { return logoPieces.map(p => ({ name: p.name, points: p.correspondence.length })); },
+        get info() { return renderer.info.render; }
+    };
+}
+
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color('#000000');
+    scene.fog = new THREE.FogExp2('#000000', 0.01);
+
+    camera = new THREE.PerspectiveCamera(50, sizes.width / sizes.height, 0.1, 100);
+    camera.position.set(0, 0.2, 3.0);
+    scene.add(camera);
+
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+    if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 indisponible');
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 2.2;
+
+    createBackgroundShader();
+
+    scene.add(new THREE.AmbientLight('#ffffff', 0.1));
+    // Lumière principale : blanche, en haut à droite.
+    const keyLight = new THREE.SpotLight('#ffffff', 18.0);
+    keyLight.position.set(4, 6, 3);
+    keyLight.angle = Math.PI / 4;
+    keyLight.penumbra = 0.9;
+    scene.add(keyLight);
+    // Lumière de contour : chaude, derrière à gauche, dessine la silhouette.
+    const rimLight = new THREE.DirectionalLight('#ffe8e0', 10.0);
+    rimLight.position.set(-5, 3, -4);
+    scene.add(rimLight);
+    const fillLight = new THREE.DirectionalLight('#fff3e6', 0.8);
+    fillLight.position.set(-2, -4, 2);
+    scene.add(fillLight);
+
+    createSparks();
+    createGlassLogo();
+    createGlassCard();
+    tier = initialTier();
+    applyTier();
+    fitTitles();
+
+    // Compile aussi le shader de la dalle maintenant, pas à l'arrivée sur le chapitre final.
+    if (glassCard) {
+        glassCard.visible = true;
+        renderer.compile(scene, camera);
+        glassCard.visible = false;
+    }
+
+    currentScroll = readScroll();
+    currentContact = targetContact;
+    snapCamera();
+
+    for (const type of ['scroll', 'pointermove', 'pointerdown', 'keydown', 'resize', 'touchmove']) {
+        window.addEventListener(type, () => { lastInputAt = performance.now(); }, { passive: true });
+    }
+    document.addEventListener('visibilitychange', () => {
+        cancelAnimationFrame(animationRequest);
+        animationRequest = 0;
+        if (!document.hidden && running) {
+            clock.getDelta();
+            lastFrameAt = 0;
+            lastInputAt = performance.now();
+            perf.graceUntil = performance.now() + 1500;
+            animationRequest = requestAnimationFrame(animate);
+        }
+    });
+    window.addEventListener('resize', () => {
+        if (!running) return;
+        if (resizeRenderer()) { headerState.chapter = -1; }
+        fitTitles();
+    });
+    canvas.addEventListener('webglcontextlost', (event) => {
+        event.preventDefault();
+        if (!running) return;
+        stop();
+        repli();
+    });
+
+    setupPointer();
+    setupNavigation();
+    if (etat.debug) installDebugHooks();
+
+    running = true;
+    perf.graceUntil = performance.now() + 3000;
+    animate();
+    prewarmMorph();
+}
+
+// Point d'entrée, appelé par accueil.js. `repliStatique` bascule la page en image fixe.
+export async function demarrer(etatInitial, repliStatique) {
+    etat = etatInitial;
+    repli = repliStatique;
+    const params = new URLSearchParams(window.location.search);
+    if (etat.debug) {
+        // Réglages de test : autre forme de assets/shapes/, autre nombre d'éclats.
+        const forme = params.get('forme');
+        if (forme && /^[a-z0-9-]+$/.test(forme)) SITE.shapes[0] = `../shapes/${forme}.svg`;
+        const fragments = Number(params.get('fragments'));
+        if (fragments >= 1 && fragments <= 8) SITE.fragments = fragments;
+        perf.enabled = params.get('auto') === '1';
+    }
+    const version = new URL(import.meta.url).search;
+    const sources = await Promise.all(SITE.shapes.map(async (path) => {
+        const response = await fetch(new URL(path + version, import.meta.url));
+        if (!response.ok) throw new Error(`Forme introuvable : ${path}`);
+        return response.text();
+    }));
+    openingSource = sources[0];
+    finalSource = SINGLE_SHAPE ? sources[0] : sources[1];
+
+    init();
+
+    // Première image rendue, shaders compilés : on lève le préchargeur une fois les polices prêtes.
+    const release = () => { if (running) fitTitles(); etat.loader.done(); };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(release, release); else release();
+}

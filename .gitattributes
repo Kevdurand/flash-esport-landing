@@ -1,0 +1,5 @@
+assets/vendor/** -text
+*.woff2 binary
+*.webp binary
+*.png binary
+*.jpg binary

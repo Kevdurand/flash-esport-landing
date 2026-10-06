@@ -1,0 +1,358 @@
+/* FLASH ESPORT — accueil.
+   Par défaut : page statique (image fixe de l'éclair, simples fondus) — utilisée sans JavaScript,
+   sans WebGL2 ou avec « mouvement réduit ». La classe html.mode-3d (posée par demarrage.js)
+   transforme les mêmes sections en chapitres plein écran pilotés par le scroll, par-dessus la scène 3D. */
+
+/* =========================================================================
+   Éléments communs aux deux modes
+   ========================================================================= */
+.slide-title, .final-titre { font-size: clamp(2.75rem, 6.2vw, 6.25rem); line-height: 1; margin: 0.9rem 0 1.4rem; }
+#accueil .slide-title { font-size: clamp(3.25rem, 8.4vw, 8.25rem); }
+.slide-title .line, .final-titre .line { display: block; }
+.slide-title .line.rouge, .final-titre .line.rouge { color: var(--rouge-lumiere); }
+.slide-desc, .final-texte { max-width: 40ch; font-size: clamp(1rem, 1.25vw, 1.1875rem); line-height: 1.6; color: var(--texte-doux); }
+.slide .stores { margin-top: 1.75rem; }
+
+/* Les six jeux, en Anton */
+.jeux { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem 2rem; margin-bottom: 1.5rem; max-width: 36rem; }
+.jeux li {
+  display: flex; align-items: baseline; gap: 0.75rem; padding: 0.55rem 0;
+  border-bottom: 1px solid var(--trait);
+  font-family: var(--police-titre); font-size: clamp(1.125rem, 2vw, 1.75rem); line-height: 1.15; letter-spacing: 0.02em;
+  text-transform: uppercase; color: var(--blanc);
+}
+.jeux li span { font-family: var(--police-texte); font-size: var(--t-mini); font-weight: 600; letter-spacing: 0.14em; color: var(--rouge-texte); }
+
+/* Maquette de téléphone en HTML/CSS : cadre fin, coins arrondis, reflet discret */
+.telephone {
+  position: relative; aspect-ratio: 900 / 1852; margin: 0;
+  border-radius: 13.5% / 6.6%;
+  background: linear-gradient(145deg, var(--neutre-haut), var(--neutre-bas) 60%);
+  border: 1px solid var(--trait-fort);
+  box-shadow: 0 30px 80px var(--voile-fort), 0 0 70px var(--rouge-halo-doux), inset 0 0 0 1px var(--neutre-contour);
+}
+/* L'écran : marges en % du téléphone lui-même (un padding en % dépendrait de la largeur de la page). */
+.telephone-ecran { position: absolute; inset: 1.15% 2.4%; display: block; overflow: hidden; border-radius: 11.6% / 5.6%; background: var(--ecran-vide); }
+.telephone-ecran img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.telephone::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(125deg, var(--reflet) 0%, transparent 26%, transparent 74%, var(--neutre-contour) 100%);
+}
+.tuto { list-style: none; }
+.tuto-num { display: block; font-size: var(--t-mini); font-weight: 600; letter-spacing: 0.3em; color: var(--rouge-texte); }
+.tuto-texte h3 { margin: 0.5rem 0 0.6rem; font-size: clamp(1.625rem, 3vw, 2.75rem); }
+.tuto-texte p { max-width: 32ch; color: var(--texte-doux); font-size: clamp(1rem, 1.25vw, 1.1875rem); line-height: 1.55; }
+.tuto-points { display: none; }
+
+/* Panneau en verre incliné (clin d'œil à l'ancien site) */
+.panneau { perspective: 1200px; }
+.panneau-verre {
+  position: relative; padding: 10px; border-radius: 18px;
+  border: 1px solid var(--trait-fort);
+  background: var(--verre);
+  -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 40px 90px var(--voile-fort), 0 0 80px var(--rouge-halo-doux);
+  transform-style: preserve-3d; will-change: transform;
+}
+.panneau-verre img { width: 100%; height: auto; border-radius: 10px; }
+.panneau-verre::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(120deg, var(--reflet) 0%, transparent 30%, transparent 70%, var(--neutre-contour) 100%);
+}
+/* Lame de lumière rouge sous le panneau */
+.panneau::after {
+  content: ""; display: block; width: 46%; height: 2px; margin: 18px auto 0; border-radius: 2px;
+  background: var(--rouge-lumiere); box-shadow: 0 0 22px 3px var(--rouge-halo);
+}
+@keyframes panneau-balance {
+  0%, 100% { transform: rotateX(5deg) rotateY(-9deg); }
+  50% { transform: rotateX(-3deg) rotateY(8deg); }
+}
+
+/* Bloc final */
+.final { position: relative; z-index: 8; padding: var(--e-6) var(--marge); }
+.final-bloc { position: relative; max-width: 37.5rem; padding: clamp(1.5rem, 4vw, 2.75rem); border-radius: var(--rayon-pilule); }
+.final-titre { font-size: clamp(2.5rem, 5.4vw, 4.75rem); }
+.final .stores { margin: 1.75rem 0 1.25rem; }
+
+/* Apparition : fondu flou. Actif seulement avec JavaScript (classe .js posée par demarrage.js). */
+.js .revele, .js .jeux li, .js .tuto-etape, .js .affiche {
+  opacity: 0; transform: translateY(16px); filter: blur(10px);
+  transition: opacity 0.9s ease, transform 1.1s var(--courbe), filter 1s var(--courbe);
+}
+.js .slide.active .revele, .js .slide.active .jeux li, .js .slide.active .tuto-etape, .js .slide.active .affiche,
+.js .final.active .revele { opacity: 1; transform: none; filter: none; }
+.js .line { overflow: hidden; padding: 0.08em 0 0.1em; margin: -0.08em 0 -0.1em; white-space: nowrap; }
+.js .line-inner {
+  display: block; transform: translateY(105%); opacity: 0; filter: blur(12px);
+  transition: transform 1.15s var(--courbe), opacity 0.7s ease-out, filter 1.05s var(--courbe);
+}
+.js .line.rouge .line-inner { transition-delay: 0.09s; }
+.js .slide.active .line-inner, .js .final.active .line-inner { transform: none; opacity: 1; filter: blur(0); }
+.js .slide.active .d2 { transition-delay: 0.22s; }
+.js .slide.active .d3 { transition-delay: 0.34s; }
+.js .slide.active .jeux li:nth-child(1) { transition-delay: 0.20s; }
+.js .slide.active .jeux li:nth-child(2) { transition-delay: 0.30s; }
+.js .slide.active .jeux li:nth-child(3) { transition-delay: 0.40s; }
+.js .slide.active .jeux li:nth-child(4) { transition-delay: 0.50s; }
+.js .slide.active .jeux li:nth-child(5) { transition-delay: 0.60s; }
+.js .slide.active .jeux li:nth-child(6) { transition-delay: 0.70s; }
+
+/* Éléments réservés au mode 3D */
+.loader[hidden] { display: none; }
+#webgl, .scroll-stage, .story-progress, .cursor-inner, .cursor-outer, .cursor-label, .defiler,
+.entete-progression { display: none; }
+
+/* =========================================================================
+   Mode statique (par défaut)
+   ========================================================================= */
+html:not(.mode-3d) body.accueil::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 82% -8%, var(--rouge-brume), transparent 70%),
+    url("../img/fond-lignes.svg") center top / cover no-repeat;
+}
+html:not(.mode-3d) .slide {
+  position: relative; max-width: calc(var(--largeur) + 2 * var(--marge)); margin: 0 auto;
+  padding: clamp(4rem, 10vw, 7.5rem) var(--marge);
+}
+html:not(.mode-3d) #accueil {
+  min-height: 100vh; min-height: 100svh; padding-top: calc(var(--entete-h) + 3rem);
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); align-items: center; gap: var(--e-4);
+}
+html:not(.mode-3d) .affiche {
+  width: 100%; max-width: 28rem; height: auto; justify-self: center;
+  -webkit-mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
+  mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
+}
+html:not(.mode-3d) .tuto { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--e-4) var(--e-3); margin-top: var(--e-4); }
+html:not(.mode-3d) .tuto-etape .telephone { width: 100%; max-width: 15rem; margin-bottom: 1.5rem; }
+html:not(.mode-3d) .tuto-texte h3 { font-size: clamp(1.375rem, 2.2vw, 1.75rem); }
+html:not(.mode-3d) #direct { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--e-5); }
+html:not(.mode-3d) .final { max-width: calc(var(--largeur) + 2 * var(--marge)); margin: 0 auto; }
+html:not(.mode-3d) .final-bloc {
+  border: 1px solid var(--neutre-contour);
+  background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut));
+}
+@media (max-width: 900px) {
+  html:not(.mode-3d) #accueil { grid-template-columns: 1fr; }
+  html:not(.mode-3d) .affiche { max-width: 15rem; justify-self: start; order: -1; margin-bottom: -1rem; }
+  html:not(.mode-3d) .tuto { grid-template-columns: 1fr; }
+  html:not(.mode-3d) .tuto-etape { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr); gap: 1.25rem; align-items: center; }
+  html:not(.mode-3d) .tuto-etape .telephone { margin-bottom: 0; }
+  html:not(.mode-3d) #direct { grid-template-columns: 1fr; gap: var(--e-4); }
+}
+
+/* =========================================================================
+   Mode 3D : chapitres plein écran pilotés par le scroll
+   ========================================================================= */
+.mode-3d, .mode-3d body { scrollbar-width: none; -ms-overflow-style: none; }
+.mode-3d ::-webkit-scrollbar { display: none; width: 0; }
+.mode-3d body.is-loading { overflow: hidden; }
+
+.mode-3d #webgl {
+  display: block; position: fixed; top: 0; left: 0; z-index: 1;
+  width: 100%; height: 100vh; height: 100lvh;
+  outline: none; pointer-events: none;
+}
+.mode-3d .scroll-stage { display: block; height: 1100vh; pointer-events: none; }
+.mode-3d .scene { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+.mode-3d .slide {
+  position: absolute; top: var(--entete-h); right: var(--marge); bottom: 0; left: var(--marge);
+  visibility: hidden; transition: visibility 0s linear 1s;
+}
+.mode-3d .slide.active { visibility: visible; transition-delay: 0s; }
+.mode-3d .slide.active a, .mode-3d .slide.active .panneau { pointer-events: auto; }
+.mode-3d .slide-corps { position: absolute; }
+.mode-3d .affiche { display: none; }
+
+/* Chapitre 1 — hero : texte à gauche, éclair à droite */
+.mode-3d #accueil .slide-corps { left: 0; top: 47%; transform: translateY(-50%); width: min(54vw, 52rem); }
+.mode-3d .defiler {
+  display: inline-flex; align-items: center; gap: 0.9rem; position: absolute; left: 0; bottom: 2.25rem;
+  font-size: var(--t-mini); font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--texte-faible);
+}
+.mode-3d .defiler::after {
+  content: ""; width: 3rem; height: 1px; background: linear-gradient(90deg, var(--rouge-lumiere), transparent);
+  animation: defiler 2.4s var(--courbe) infinite; transform-origin: left center;
+}
+@keyframes defiler { 0% { transform: scaleX(0); opacity: 1; } 70% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+
+/* Chapitre 2 — les jeux : texte à droite, éclats à gauche */
+.mode-3d #jeux .slide-corps { left: 51%; right: 0; top: 50%; transform: translateY(-50%); }
+
+/* Chapitre 3 — le tutoriel : titre et étape à gauche, téléphone au premier plan */
+.mode-3d #app .slide-corps { left: 0; bottom: 53%; width: min(46vw, 40rem); }
+.mode-3d #app .slide-title { font-size: clamp(2.5rem, 4.8vw, 4.75rem); margin-bottom: 0; }
+.mode-3d .tuto-etape { opacity: 1; transform: none; filter: none; }
+.mode-3d .telephone {
+  position: absolute; left: 66%; top: 49%; height: min(76%, 46rem); z-index: 1;
+  transform: translate(-50%, -50%) scale(0.985); opacity: 0;
+  transition: opacity 0.7s ease 0.7s, transform 1.2s var(--courbe);
+}
+.mode-3d .slide.active .tuto-etape.est-active .telephone { opacity: 1; z-index: 2; transform: translate(-50%, -50%); transition: opacity 0.7s ease, transform 1.2s var(--courbe); }
+.mode-3d .slide:not(.active) .telephone { transition: opacity 0.6s ease, transform 1.2s var(--courbe); }
+.mode-3d .tuto-texte {
+  position: absolute; left: 0; top: 54%; width: min(40vw, 30rem);
+  opacity: 0; transform: translateY(18px); filter: blur(8px); visibility: hidden;
+  transition: opacity 0.45s ease, transform 0.6s var(--courbe), filter 0.5s var(--courbe), visibility 0s linear 0.6s;
+}
+.mode-3d .slide.active .tuto-etape.est-active .tuto-texte {
+  opacity: 1; transform: none; filter: none; visibility: visible;
+  transition: opacity 0.7s ease 0.25s, transform 1s var(--courbe) 0.25s, filter 0.8s var(--courbe) 0.25s, visibility 0s;
+}
+.mode-3d .tuto-points { display: flex; gap: 0.5rem; position: absolute; left: 0; bottom: 2.5rem; opacity: 0; transition: opacity 0.6s ease; }
+.mode-3d .slide.active .tuto-points { opacity: 1; }
+.tuto-points span { width: 2.25rem; height: 2px; border-radius: 2px; background: var(--trait-fort); transition: background-color 0.4s ease, box-shadow 0.4s ease; }
+.tuto-points span.est-actif { background: var(--rouge-lumiere); box-shadow: 0 0 12px 1px var(--rouge-halo); }
+
+/* Chapitre 4 — le match en direct : texte à gauche, panneau incliné à droite */
+.mode-3d #direct .slide-corps { left: 0; top: 50%; transform: translateY(-50%); width: min(40vw, 34rem); }
+.mode-3d .panneau { position: absolute; right: 1%; top: 50%; width: min(36vw, 33rem); margin-top: -1rem; transform: translateY(-50%); }
+.mode-3d .panneau.revele { transform: translateY(calc(-50% + 16px)); }
+.mode-3d .slide.active .panneau.revele { transform: translateY(-50%); }
+
+/* Chapitre 5 — final : dans le flux, la dalle de verre 3D se cale derrière le bloc */
+.mode-3d .final {
+  min-height: 100vh; min-height: 100lvh; display: grid; align-items: center; justify-items: end;
+  padding: calc(var(--entete-h) + 3rem) var(--marge) 5rem;
+}
+.mode-3d .final-bloc {
+  width: min(37.5rem, 100%);
+  border: 1px solid var(--trait-fort);
+  background: var(--verre);
+  -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 30px 80px var(--voile);
+  opacity: 0; transform: translateY(34px);
+  transition: opacity 0.9s var(--courbe-douce) 0.15s, transform 0.9s var(--courbe-douce) 0.15s;
+}
+.mode-3d .final.active .final-bloc { opacity: 1; transform: none; }
+/* Quand la dalle 3D est active, le fond CSS s'efface : c'est le vrai verre qui se voit. */
+.mode-3d body.has-glass-card .final-bloc { border-color: transparent; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+.mode-3d body.has-glass-card .final-bloc::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; padding: 1px;
+  -webkit-mask: linear-gradient(var(--noir) 0 0) content-box, linear-gradient(var(--noir) 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  background: linear-gradient(135deg, var(--reflet-fort) 0%, var(--neutre-contour) 28%, var(--neutre-contour) 60%, var(--rouge-contour) 100%);
+}
+.mode-3d .pied { background: var(--noir); }
+
+/* Indicateurs : filet de progression sous l'en-tête, tirets de chapitres à droite */
+.mode-3d .entete-progression { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none; }
+.mode-3d .entete-progression span {
+  display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: left center;
+  background: linear-gradient(90deg, var(--rouge), var(--rouge-lumiere)); box-shadow: 0 0 10px var(--rouge-halo);
+}
+.mode-3d .story-progress {
+  display: flex; flex-direction: column; gap: 12px;
+  position: fixed; top: 50%; right: calc(var(--marge) * 0.45); transform: translateY(-50%);
+  z-index: 11; pointer-events: none; transition: opacity 0.6s;
+}
+.story-dash { width: 2px; height: 40px; background: var(--trait-fort); border-radius: 2px; overflow: hidden; }
+.story-dash-fill { width: 100%; height: 100%; background: var(--rouge-lumiere); border-radius: 2px; transform: scaleY(0); transform-origin: center top; }
+.mode-3d body.contact-open .story-progress { opacity: 0; }
+
+/* ---- Curseur réticule : ordinateur uniquement ---- */
+@media (hover: hover) and (pointer: fine) {
+  .mode-3d body, .mode-3d body * { cursor: none !important; }
+  .mode-3d .cursor-inner {
+    display: block; position: fixed; top: 0; left: 0; width: 4px; height: 4px; background: var(--blanc); border-radius: 50%;
+    transform: translate(-50%, -50%); pointer-events: none; z-index: 9999; mix-blend-mode: difference;
+    transition: width 0.25s, height 0.25s, opacity 0.3s;
+  }
+  .mode-3d .cursor-outer {
+    display: block; position: fixed; top: 0; left: 0; width: 36px; height: 36px;
+    border: 1px solid var(--texte-faible); border-radius: 50%;
+    transform: translate(-50%, -50%); pointer-events: none; z-index: 9998; mix-blend-mode: difference;
+    transition: width 0.35s var(--courbe-douce), height 0.35s var(--courbe-douce), border-color 0.35s, opacity 0.3s;
+  }
+  .cursor-ticks { position: absolute; inset: -7px; animation: cursor-spin 16s linear infinite; }
+  .cursor-ticks span { position: absolute; background: var(--blanc); }
+  .cursor-ticks span:nth-child(1) { left: 50%; top: 0; width: 1px; height: 6px; margin-left: -0.5px; }
+  .cursor-ticks span:nth-child(2) { left: 50%; bottom: 0; width: 1px; height: 6px; margin-left: -0.5px; }
+  .cursor-ticks span:nth-child(3) { top: 50%; left: 0; width: 6px; height: 1px; margin-top: -0.5px; }
+  .cursor-ticks span:nth-child(4) { top: 50%; right: 0; width: 6px; height: 1px; margin-top: -0.5px; }
+  .mode-3d .cursor-label {
+    display: block; position: fixed; top: 0; left: 0; transform: translate(26px, 14px);
+    font: 500 9px/1 var(--police-texte); letter-spacing: 2px; white-space: nowrap; color: var(--texte-faible);
+    pointer-events: none; z-index: 9997; mix-blend-mode: difference; transition: opacity 0.3s;
+  }
+  body.cursor-hover .cursor-outer { width: 58px; height: 58px; border-color: var(--blanc); }
+  body.cursor-hover .cursor-ticks { animation-duration: 3s; }
+  body.cursor-hover .cursor-inner { width: 6px; height: 6px; }
+  body.cursor-hidden .cursor-inner, body.cursor-hidden .cursor-outer, body.cursor-hidden .cursor-label { opacity: 0; }
+}
+@keyframes cursor-spin { to { transform: rotate(360deg); } }
+
+/* ---- Préchargeur ---- */
+.loader {
+  position: fixed; inset: 0; z-index: 9990; background: var(--noir);
+  display: grid; place-items: center;
+  transition: opacity 0.7s var(--courbe), visibility 0s linear 0.7s;
+}
+.loader.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-inner { display: grid; justify-items: center; text-align: center; gap: 1.25rem; width: min(320px, 70vw); }
+.loader-eclair { width: 22px; height: 33px; fill: var(--rouge-lumiere); filter: drop-shadow(0 0 14px var(--rouge-halo)); }
+.loader-value {
+  font-family: var(--police-titre); font-size: clamp(3.5rem, 8vw, 6rem); line-height: 1; letter-spacing: 0.02em;
+  color: var(--blanc); font-variant-numeric: tabular-nums;
+}
+.loader-unit { font-size: 0.35em; margin-left: 0.12em; color: var(--texte-faible); }
+.loader-bar { width: 100%; height: 2px; background: var(--trait); overflow: hidden; border-radius: 2px; }
+.loader-bar span { display: block; width: 100%; height: 100%; background: var(--rouge-lumiere); box-shadow: 0 0 12px var(--rouge-halo); transform: scaleX(0); transform-origin: left center; }
+.loader-hint { font-family: var(--police-titre); font-size: var(--t-petit); letter-spacing: 0.3em; text-transform: uppercase; color: var(--texte-faible); }
+
+/* =========================================================================
+   Mode 3D — portrait et écrans étroits : composition empilée
+   (la caméra suit la même alternance, voir cameraFrame() dans app.js)
+   ========================================================================= */
+@media (max-width: 900px), (max-aspect-ratio: 4/5) {
+  .mode-3d .story-progress, .mode-3d .defiler { display: none; }
+  .mode-3d .slide-title { font-size: clamp(2.25rem, 11.5vw, 4.5rem); margin: 0.7rem 0 0.9rem; }
+  .mode-3d #accueil .slide-title { font-size: clamp(2.75rem, 14.5vw, 6rem); }
+  .mode-3d .slide-desc { font-size: 1rem; line-height: 1.55; max-width: 34ch; }
+  .mode-3d .slide .stores { margin-top: 1.25rem; flex-wrap: nowrap; }
+  .mode-3d .slide .btn-store { flex: 1 1 0; min-width: 0; padding: 0.55rem 0.9rem; }
+  .mode-3d .slide .btn-store .store-nom { font-size: 1.1875rem; }
+
+  /* 1 — texte en haut, éclair en bas */
+  .mode-3d #accueil .slide-corps { left: 0; right: 0; top: 4%; width: auto; transform: none; }
+  /* 2 — éclats en haut, texte en bas */
+  .mode-3d #jeux .slide-corps { left: 0; right: 0; top: auto; bottom: 4.5%; transform: none; }
+  .mode-3d .jeux { gap: 0 1.25rem; margin-bottom: 1rem; }
+  .mode-3d .jeux li { font-size: clamp(1rem, 4.6vw, 1.375rem); padding: 0.5rem 0; gap: 0.5rem; }
+  /* 3 — titre, téléphone, étape */
+  .mode-3d #app .slide-corps { left: 0; right: 0; top: 2.5%; bottom: auto; width: auto; }
+  .mode-3d #app .surtitre { display: none; }
+  .mode-3d #app .slide-title { font-size: clamp(1.75rem, 8.6vw, 3rem); margin: 0; }
+  .mode-3d .telephone { left: 50%; top: 45.5%; height: 50%; }
+  .mode-3d .tuto-texte { left: 0; right: 0; top: 74%; width: auto; }
+  .mode-3d .tuto-texte h3 { font-size: clamp(1.5rem, 7vw, 2.25rem); margin: 0.3rem 0 0.4rem; }
+  .mode-3d .tuto-texte p { font-size: 0.9375rem; line-height: 1.5; max-width: 36ch; }
+  .mode-3d .tuto-points { bottom: auto; top: 75.2%; left: auto; right: 0; }
+  .mode-3d .tuto-points span { width: 1.25rem; }
+  /* 4 — texte en haut, éclair au milieu, panneau en bas */
+  .mode-3d #direct .slide-corps { left: 0; right: 0; top: 4%; width: auto; transform: none; }
+  .mode-3d .panneau { left: 0; right: 0; top: auto; bottom: 4%; width: auto; max-width: 24rem; margin: 0 auto; transform: none; }
+  .mode-3d .panneau.revele { transform: translateY(16px); }
+  .mode-3d .slide.active .panneau.revele { transform: none; }
+  /* 5 — éclair en haut, bloc en dessous */
+  .mode-3d .final { justify-items: stretch; align-items: end; padding: 42vh var(--marge) 2.5rem; }
+  .mode-3d .final-bloc { width: auto; max-width: none; padding: 1.5rem 1.25rem; }
+  .mode-3d .final .stores { flex-wrap: nowrap; }
+  .mode-3d .final .btn-store { flex: 1 1 0; min-width: 0; padding: 0.55rem 0.9rem; }
+  .mode-3d .final .btn-store .store-nom { font-size: 1.1875rem; }
+}
+@media (max-width: 900px) and (max-height: 700px) {
+  .mode-3d #accueil .slide-title { font-size: clamp(2.5rem, 12.5vw, 4.5rem); }
+  .mode-3d .slide-desc { font-size: 0.9375rem; }
+}
+/* Sur écran tactile : légère inclinaison automatique lente du panneau (pas de gyroscope) */
+@media (hover: none), (pointer: coarse) {
+  .slide.active .panneau-verre { animation: panneau-balance 9s ease-in-out infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide.active .panneau-verre { animation: none; }
+}
+
+html:not(.mode-3d) .compteur { display: none; }
