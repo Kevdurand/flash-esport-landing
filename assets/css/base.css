@@ -405,12 +405,3 @@ body::after {
   opacity: var(--grain);
 }
 html[data-qualite="1"] body::after, html[data-qualite="2"] body::after { display: none; }
-
-/* ---- Passage d'une page à l'autre : fondu court (navigateurs récents ; sans effet ailleurs) ---- */
-@media (prefers-reduced-motion: no-preference) {
-  @view-transition { navigation: auto; }
-  ::view-transition-old(root) { animation: 0.16s ease-in both page-sortie; }
-  ::view-transition-new(root) { animation: 0.34s ease-out 0.04s both page-entree; }
-}
-@keyframes page-sortie { to { opacity: 0; } }
-@keyframes page-entree { from { opacity: 0; } }

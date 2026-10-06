@@ -1501,20 +1501,11 @@ function updateHeader(scroll) {
 const SLIDE_MIN_SHOW = 1500, SLIDE_LEAVE_HOLD = 400;
 const slides = [...document.querySelectorAll('.slide')];
 const slideState = T.slides.map(() => ({ active: false, since: 0, left: 0 }));
-const dashFills = [1, 2, 3, 4].map(i => document.getElementById(`dash-fill-${i}`));
-const dashBounds = [0, T.chapters[0], T.chapters[1], T.chapters[2], 1];
-const dashState = ['', '', '', ''];
 const tutoSteps = [...document.querySelectorAll('.tuto-etape')];
 const tutoDots = [...document.querySelectorAll('.tuto-points span')];
 let tutoStep = -1;
 
 function updateSlides(scroll) {
-    dashFills.forEach((fill, i) => {
-        if (!fill) return;
-        const progress = clamp((scroll - dashBounds[i]) / (dashBounds[i + 1] - dashBounds[i]), 0, 1).toFixed(3);
-        if (progress !== dashState[i]) { fill.style.transform = `scaleY(${progress})`; dashState[i] = progress; }
-    });
-
     const now = performance.now();
     const inside = T.slides.map(([start, end]) => !finalOpen && scroll >= start && scroll <= end);
     const current = inside.indexOf(true);

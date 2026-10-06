@@ -198,3 +198,9 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
   .sommaire-page summary { pointer-events: none; }
   .sommaire-page summary::after { display: none; }
 }
+
+/* ---- Arrivée sur une page : le contenu entre en fondu court sous la barre du haut, qui reste en place.
+   (Les transitions de vue entre documents ont été essayées puis retirées : Chrome les interrompt avec une
+   erreur en console à l'arrivée sur l'accueil.) ---- */
+body.page main { animation: page-entree 0.42s ease-out both; }
+@keyframes page-entree { from { opacity: 0; transform: translateY(8px); } }

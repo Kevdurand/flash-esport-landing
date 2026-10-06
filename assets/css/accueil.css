@@ -108,7 +108,7 @@
 
 /* Éléments réservés au mode 3D */
 .loader[hidden] { display: none; }
-#webgl, .scroll-stage, .story-progress, .cursor-inner, .cursor-outer, .cursor-label, .defiler,
+#webgl, .scroll-stage, .defiler,
 .entete-progression { display: none; }
 
 /* =========================================================================
@@ -248,23 +248,18 @@ html:not(.mode-3d) .final-bloc {
   -webkit-mask-composite: xor; mask-composite: exclude;
   background: linear-gradient(135deg, var(--reflet-fort) 0%, var(--neutre-contour) 28%, var(--neutre-contour) 60%, var(--rouge-contour) 100%);
 }
-/* Le pied de page en verre monte par-dessus le bloc final et l'éclair. */
+/* Le pied de page en verre monte par-dessus le bloc final et l'éclair. Il reprend la marge de la barre du haut
+   et des titres : une seule grille sur toute la page. */
+.mode-3d .pied-grille, .mode-3d .pied-bas { max-width: none; }
 .mode-3d .pied { background: var(--verre-menu); }
 
-/* Indicateurs : filet de progression sous l'en-tête, tirets de chapitres à droite */
+/* Indicateur : filet de progression sous l'en-tête */
 .mode-3d .entete-progression { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none; }
 .mode-3d .entete-progression span {
   display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: left center;
   background: linear-gradient(90deg, var(--rouge), var(--rouge-lumiere)); box-shadow: 0 0 10px var(--rouge-halo);
 }
-.mode-3d .story-progress {
-  display: flex; flex-direction: column; gap: 12px;
-  position: fixed; top: 50%; right: calc(var(--marge) * 0.45); transform: translateY(-50%);
-  z-index: 11; pointer-events: none; transition: opacity 0.6s;
-}
-.story-dash { width: 2px; height: 40px; background: var(--trait-fort); border-radius: 2px; overflow: hidden; }
-.story-dash-fill { width: 100%; height: 100%; background: var(--rouge-lumiere); border-radius: 2px; transform: scaleY(0); transform-origin: center top; }
-.mode-3d body.contact-open .story-progress { opacity: 0; }
+
 
 /* ---- Braise : une petite lumière rouge suit la souris avec inertie et s'ouvre en anneau sur ce qui se clique.
    Ordinateur uniquement ; le pointeur du système reste visible. ---- */
@@ -312,7 +307,7 @@ html:not(.mode-3d) .final-bloc {
    (la caméra suit la même alternance, voir cameraFrame() dans app.js)
    ========================================================================= */
 @media (max-width: 900px), (max-aspect-ratio: 4/5) {
-  .mode-3d .story-progress, .mode-3d .defiler { display: none; }
+  .mode-3d .defiler { display: none; }
   .loader { left: 50%; top: 73%; }
   .mode-3d .slide-title { font-size: clamp(2.25rem, 11.5vw, 4.5rem); margin: 0.7rem 0 0.9rem; }
   .mode-3d #accueil .slide-title { font-size: clamp(2.75rem, 14.5vw, 6rem); }
