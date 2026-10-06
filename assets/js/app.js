@@ -22,14 +22,15 @@ let openingSource = '', finalSource = '';
 const T = {
     open: [0.085, 0.10],      // juste avant d'éclater : les biseaux se resserrent (miroir de la fin)
     burst: [0.10, 0.24],      // l'éclair éclate
-    orbit: [0.30, 0.38, 0.60, 0.66],   // les éclats entrent en orbite autour du téléphone, puis en sortent
+    orbit: [0.29, 0.36, 0.60, 0.66],   // les éclats entrent en orbite autour du téléphone, puis en sortent
     join: [0.66, 0.79],       // les éclats reviennent à leur place
     bevel: [0.79, 0.81],      // prisme unique : les biseaux grandissent
     holes: [0.79, 0.85],
-    slides: [[-0.10, 0.085], [0.15, 0.315], [0.365, 0.645], [0.745, 1.05]],
-    tuto: [0.385, 0.635],     // les 4 étapes du tutoriel se partagent cette plage
+    // Fenêtres d'affichage des textes. Les zones sans texte entre deux chapitres restent courtes (2 à 5 %).
+    slides: [[-0.10, 0.10], [0.135, 0.325], [0.345, 0.665], [0.715, 1.05]],
+    tuto: [0.365, 0.655],     // les 4 étapes du tutoriel se partagent cette plage
     nav: [0, 0.23, 0.40, 0.90],
-    chapters: [0.12, 0.34, 0.70]
+    chapters: [0.118, 0.335, 0.69]
 };
 // Position de l'éclair à l'écran par chapitre (fraction de la largeur / de la hauteur), puis au final.
 const FRAME = {
@@ -70,12 +71,11 @@ let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
 let cursorX = window.innerWidth / 2, cursorY = window.innerHeight / 2;
 let outerCursorX = cursorX, outerCursorY = cursorY;
 
-// ---- Qualité : 3 = complet · 2 = sans dispersion · 1 = allégé (résolution 1) · 0 = image fixe ----
 const pointerFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 const tactile = !pointerFine;
 const apple = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const portraitQuery = window.matchMedia('(max-width: 900px), (max-aspect-ratio: 4/5)');
-let tier = 3;
+let tier = 5;                // palier de qualité, voir « Qualité de rendu »
 let etat = { debug: false, lite: false };
 let repli = () => {};
 let running = false;
@@ -649,13 +649,12 @@ function createGlassCard() {
     glassCard.userData = { w: 0, h: 0 };
     glassCard.visible = false;
     camera.add(glassCard);
-    document.body.classList.add('has-glass-card');
 }
 
 // La dalle suit le rectangle réel du bloc (reconstruite seulement si sa taille change).
 function updateGlassCard() {
     if (!glassCard || !contactCardElement) return;
-    glassCard.visible = targetContact > 0.001;
+    glassCard.visible = slabEnabled && targetContact > 0.001;
     if (!glassCard.visible) return;
     const rect = contactCardElement.getBoundingClientRect();
     const upp = cardUnitsPerPixel();
@@ -695,7 +694,7 @@ function getOrbit(scroll) {
 // Poids de chaque chapitre (leur somme vaut 1) : sert au cadrage.
 function chapterWeights(scroll) {
     const a = smoothScrollRange(scroll, 0.08, 0.20);
-    const b = smoothScrollRange(scroll, 0.30, 0.40);
+    const b = smoothScrollRange(scroll, 0.29, 0.37);
     const c = smoothScrollRange(scroll, 0.62, 0.72);
     return [1 - a, a - b, b - c, c];
 }
@@ -775,7 +774,7 @@ function cameraFrame(scroll, contact = 0) {
     const right = new THREE.Vector3(Math.cos(phi), 0, -Math.sin(phi));
     const lookAt = new THREE.Vector3(0, -0.25 + (fy - 0.5) * visibleHeight, 0)
         .addScaledVector(right, -(fx - 0.5) * visibleWidth);
-    return { radius, lookAt };
+    return { radius, lookAt, fx, fy };
 }
 
 function cachedGeometry(owner, key, build) {
@@ -986,29 +985,64 @@ function createBackgroundShader() {
 }
 
 // ---- Qualité et taille de rendu ------------------------------------------------
+// ---- Qualité de rendu ----------------------------------------------------------
+// Cinq paliers, du verre complet au verre simplifié. Quel que soit le palier, la scène reste la même :
+// même éclair, même taille, même position, mêmes chapitres. Les performances ne font jamais basculer
+// vers l'image fixe en cours de visite.
+//   5 = verre complet (dispersion)       4 = sans dispersion
+//   3 = résolution × 0,75                2 = résolution × 0,55, dalle du chapitre final en CSS
+//   1 = verre simplifié (sans réfraction : une seule passe de rendu)
+const TIER_MAX = 5;
+const RENDER_SCALE = [0.8, 0.8, 0.62, 0.78, 1, 1];
+let forcedTier = 0;          // ?debug=1&palier=N : palier imposé pour les captures
+let slabEnabled = false;     // dalle de verre 3D derrière le bloc final
+let simpleGlass = null;
+
 function pixelRatioCap() {
-    return Math.min(window.devicePixelRatio || 1, tier <= 1 ? 1 : (tactile ? 1.5 : 2));
+    const base = Math.min(window.devicePixelRatio || 1, tactile ? 1.5 : 2);
+    return Math.max(0.5, base * RENDER_SCALE[tier]);
 }
 
 function initialTier() {
-    if (etat.lite) return 1;
+    if (forcedTier) return forcedTier;
+    if (etat.lite) return 3;
     const memory = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
-    if (memory !== undefined && memory < 4) return 1;
+    if (memory !== undefined && memory < 4) return 3;
     // Safari plafonne hardwareConcurrency sur iPhone et iPad : le signal n'y dit rien de la puissance
-    // réelle. Sur ces appareils, c'est la mesure des images par seconde qui décide.
-    if (!apple && cores !== undefined && cores <= 4) return 1;
-    return 3;
+    // réelle. Ailleurs, peu de cœurs = départ sans dispersion ; la mesure des images/s fait le reste.
+    if (!apple && cores !== undefined && cores <= 4) return 4;
+    return TIER_MAX;
+}
+
+// Verre simplifié du dernier palier : rubis sombre légèrement translucide, sans réfraction (une seule
+// passe de rendu). Reflets retenus : pas de face blanche, pas d'aplat saturé.
+function createSimpleGlassMaterial() {
+    return new THREE.MeshPhysicalMaterial({
+        color: '#4a0000', metalness: 0.0, roughness: 0.22,
+        clearcoat: 0.55, clearcoatRoughness: 0.2, specularIntensity: 0.55,
+        envMapIntensity: 0.5, emissive: new THREE.Color('#3c0000'),
+        transparent: true, opacity: 0.88, side: THREE.FrontSide
+    });
 }
 
 function applyTier() {
-    const dispersion = tier >= 3;
+    const dispersion = tier >= 5;
     for (const material of [glass, cardGlass]) {
         if (material && material.userData.dispersion !== dispersion) {
             material.userData.dispersion = dispersion;
             material.needsUpdate = true;
         }
     }
-    if (sparkParticles) sparkParticles.geometry.setDrawRange(0, tier <= 1 ? 160 : sparkCount);
+    const simple = tier <= 1;
+    if (simple && !simpleGlass) simpleGlass = createSimpleGlassMaterial();
+    const material = simple ? simpleGlass : glass;
+    for (const mesh of [wholeBody, glassIcon, ...logoPieces.map(piece => piece.mesh)]) {
+        if (mesh && mesh.material !== material) mesh.material = material;
+    }
+    slabEnabled = tier >= 3 && !!glassCard;
+    document.body.classList.toggle('has-glass-card', slabEnabled);
+    if (glassCard && !slabEnabled) glassCard.visible = false;
+    if (sparkParticles) sparkParticles.geometry.setDrawRange(0, tier <= 2 ? 160 : sparkCount);
     resizeRenderer(true);
     document.documentElement.dataset.qualite = String(tier);
 }
@@ -1031,27 +1065,34 @@ function resizeRenderer(force = false) {
     return true;
 }
 
-// Images par seconde durablement basses : on descend d'un cran (dispersion, puis résolution,
-// puis image fixe en dernier recours). On ne remonte jamais.
-const perf = { enabled: true, frames: 0, total: 0, low: 0, graceUntil: 0 };
+// Images par seconde durablement basses : on descend d'un palier (ou de plusieurs si c'est très lent).
+// On ne remonte jamais, et on ne descend jamais sous le verre simplifié.
+const perf = { enabled: true, frames: 0, total: 0, squares: 0, low: 0, graceUntil: 0 };
 function watchPerformance(now, delta, active) {
-    if (!perf.enabled || !active || delta > 250 || now < perf.graceUntil) return;
+    if (!perf.enabled || tier <= 1 || !active || delta > 1500 || now < perf.graceUntil) return;
+    const sample = Math.min(delta, 400);
     perf.frames++;
-    perf.total += delta;
-    if (perf.frames < 50) return;
+    perf.total += sample;
+    perf.squares += sample * sample;
+    if (perf.frames < 36 && perf.total < 2500) return;          // fenêtre : 36 images ou 2,5 s
     const average = perf.total / perf.frames;
+    const deviation = Math.sqrt(Math.max(0, perf.squares / perf.frames - average * average));
     perf.frames = 0;
     perf.total = 0;
-    perf.low = average > 30 ? perf.low + 1 : 0;
-    if (perf.low < 3) return;
+    perf.squares = 0;
+    // Écran ou mode économie d'énergie à 30 images/s : cadence régulière, ce n'est pas un manque de puissance.
+    const capped = average > 31 && average < 35.5 && deviation < 2.5;
+    perf.low = average > 28 && !capped ? perf.low + 1 : 0;
+    if (perf.low < 2) return;
     perf.low = 0;
-    perf.graceUntil = now + 2500;
-    setTier(tier - 1);
+    perf.graceUntil = now + 2000;
+    setTier(average > 120 ? 1 : average > 60 ? tier - 2 : tier - 1);
 }
 
 function setTier(value) {
-    tier = clamp(Math.round(value), 0, 3);
-    if (tier <= 0) { stop(); repli(); return; }
+    const next = clamp(Math.round(value), 1, TIER_MAX);
+    if (next === tier) return;
+    tier = next;
     applyTier();
 }
 
@@ -1061,8 +1102,35 @@ function stop() {
     cancelAnimationFrame(animationRequest);
     animationRequest = 0;
     document.querySelectorAll('.slide-title, .final-titre').forEach(title => { title.style.fontSize = ''; });
+    if (contactSection) contactSection.style.transform = '';
     document.documentElement.classList.remove('scene-prete');
     try { renderer.dispose(); renderer.forceContextLoss(); } catch (error) { /* contexte déjà perdu */ }
+}
+
+// Contexte WebGL perdu (pilote graphique, mémoire) : le navigateur le rend en général tout seul.
+// En attendant, la toile est masquée et les chapitres continuent de suivre le scroll. S'il ne revient
+// pas en un peu plus d'une seconde, l'image fixe de l'éclair prend le relais en fondu, au même endroit
+// et à la même taille, une seule fois pour toute la visite (pas d'aller-retour).
+const lost = { active: false, since: 0, poster: null };
+function showPoster() {
+    if (lost.poster) return;
+    const poster = document.createElement('img');
+    poster.className = 'affiche-secours';
+    poster.alt = '';
+    poster.setAttribute('aria-hidden', 'true');
+    poster.src = new URL('../img/eclair-poster.webp', import.meta.url).href;
+    document.body.appendChild(poster);
+    lost.poster = poster;
+    requestAnimationFrame(() => document.documentElement.classList.add('affiche-secours-visible'));
+}
+function updatePoster(frame, separation) {
+    if (!lost.poster) return;
+    // L'image fait 960×1200 ; l'éclair en occupe 62,5 % de la hauteur, centré.
+    const visibleHeight = 2 * frame.radius * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const height = (OBJECT_HEIGHT * 0.96 / visibleHeight) * sizes.height / 0.625;
+    lost.poster.style.height = `${height.toFixed(1)}px`;
+    lost.poster.style.transform = `translate3d(${(frame.fx * sizes.width - height * 0.4).toFixed(1)}px, ${(frame.fy * sizes.height - height / 2).toFixed(1)}px, 0)`;
+    lost.poster.style.opacity = String(1 - separation * 0.7);
 }
 
 // ---- Curseur réticule (ordinateur uniquement) ----------------------------------
@@ -1160,9 +1228,12 @@ function animate(now = performance.now()) {
     watchPerformance(now, frameDelta, active);
     if (!running) return;
     if (!mediasShown && (targetScroll > 0.04 || now > mediasAt)) showMedias();
-    const deltaTime = Math.min(clock.getDelta(), 0.1);
+    // Le lissage suit le temps réel écoulé : sur une machine lente (peu d'images par seconde), le texte
+    // et la 3D restent calés sur la position de défilement au lieu de prendre du retard.
+    const elapsed = Math.min(clock.getDelta(), 1.0);
+    const deltaTime = Math.min(elapsed, 0.1);
     const time = clock.getElapsedTime();
-    const damping = factor => 1 - Math.pow(1 - factor, deltaTime * 60);
+    const damping = factor => 1 - Math.pow(1 - factor, elapsed * 60);
 
     // Scroll lissé (inertie). Un peu plus vif au doigt qu'à la molette.
     currentScroll += (targetScroll - currentScroll) * damping(tactile ? 0.055 : 0.032);
@@ -1185,6 +1256,7 @@ function animate(now = performance.now()) {
         modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.035 * (1 - separation);
             }
     if (glass) glass.envMapIntensity = 1.10 + final * 0.45;
+    if (simpleGlass) simpleGlass.envMapIntensity = 0.5 + final * 0.2;
 
     // Poussière de verre, agitée par le scroll rapide.
     if (sparkParticles) {
@@ -1235,6 +1307,11 @@ function animate(now = performance.now()) {
     updateSlides(currentScroll);
     updateHeader(currentScroll);
     updateFinal();
+    if (lost.active) {
+        if (now - lost.since > 1200) showPoster();
+        updatePoster(frame, separation);
+        return;
+    }
     renderer.render(scene, camera);
 }
 
@@ -1311,10 +1388,18 @@ function updateSlides(scroll) {
     }
 }
 
+let finalPinned = -1;
 function updateFinal() {
     if (!contactSection) return;
     document.body.classList.toggle('contact-open', targetContact > 0.02);
     contactSection.classList.toggle('active', currentContact > (layout.portrait ? 0.30 : 0.45));
+    // Fin de page : le bloc final (et sa dalle de verre) reste en place, l'éclair aussi ; c'est le pied
+    // de page qui monte et les recouvre. En remontant, tout se retrouve exactement au même endroit.
+    const over = Math.max(0, Math.round(window.scrollY + window.innerHeight - (contactSection.offsetTop + contactSection.offsetHeight)));
+    if (over !== finalPinned) {
+        finalPinned = over;
+        contactSection.style.transform = over > 0 ? `translate3d(0, ${over}px, 0)` : '';
+    }
 }
 
 function setupNavigation() {
@@ -1359,6 +1444,13 @@ function installDebugHooks() {
         setTier,
         frame(fx, fy, radius) { debugFrame = fx === undefined ? null : { fx, fy, radius }; snapCamera(); },
         get tier() { return tier; },
+        // perd volontairement le contexte WebGL (test de l'image de secours) ; `restore` le rend
+        loseContext(restore = false) {
+            const extension = renderer.getContext().getExtension('WEBGL_lose_context');
+            if (!extension) return false;
+            if (restore) extension.restoreContext(); else extension.loseContext();
+            return true;
+        },
         get zones() { return zones; },
         get scroll() { return currentScroll; },
         get contact() { return currentContact; },
@@ -1468,10 +1560,20 @@ async function init() {
         measureZones();
     });
     canvas.addEventListener('webglcontextlost', (event) => {
-        event.preventDefault();
+        event.preventDefault();          // autorise le navigateur à rendre le contexte
         if (!running) return;
-        stop();
-        repli();
+        lost.active = true;
+        lost.since = performance.now();
+        // La toile est masquée tout de suite : un contexte perdu peut s'afficher en gris.
+        document.documentElement.classList.add('contexte-perdu');
+    });
+    canvas.addEventListener('webglcontextrestored', () => {
+        if (!running || lost.poster) return;
+        lost.active = false;
+        document.documentElement.classList.remove('contexte-perdu');
+        lastFrameAt = 0;
+        clock.getDelta();
+        applyTier();
     });
 
     setupPointer();
@@ -1499,6 +1601,8 @@ export async function demarrer(etatInitial, repliStatique) {
         const fragments = Number(params.get('fragments'));
         if (fragments >= 1 && fragments <= 8) SITE.fragments = fragments;
         perf.enabled = params.get('auto') === '1';
+        const palier = Number(params.get('palier'));
+        if (palier >= 1 && palier <= TIER_MAX) forcedTier = palier;
     }
     const version = new URL(import.meta.url).search;
     const sources = await Promise.all(SITE.shapes.map(async (path) => {

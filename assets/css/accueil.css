@@ -236,6 +236,11 @@ html:not(.mode-3d) .final-bloc {
   background: linear-gradient(135deg, var(--reflet-fort) 0%, var(--neutre-contour) 28%, var(--neutre-contour) 60%, var(--rouge-contour) 100%);
 }
 .mode-3d .pied { background: var(--noir); }
+/* Le pied de page monte par-dessus le bloc final et l'éclair : ils s'y fondent au lieu d'être tranchés net. */
+.mode-3d .pied::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 7rem; pointer-events: none;
+  background: linear-gradient(to top, var(--noir), transparent);
+}
 
 /* Indicateurs : filet de progression sous l'en-tête, tirets de chapitres à droite */
 .mode-3d .entete-progression { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none; }
@@ -279,7 +284,10 @@ html:not(.mode-3d) .final-bloc {
   }
   body.cursor-hover .cursor-outer { width: 58px; height: 58px; border-color: var(--blanc); }
   body.cursor-hover .cursor-ticks { animation-duration: 3s; }
-  body.cursor-hover .cursor-inner { width: 6px; height: 6px; }
+  body.cursor-hover .cursor-inner { opacity: 0; }
+  /* Au survol d'un lien : un simple anneau fin, rien qui recouvre le texte. */
+  body.cursor-hover .cursor-ticks, body.cursor-hover .cursor-label { opacity: 0; }
+  .cursor-ticks { transition: opacity 0.25s; }
   body.cursor-hidden .cursor-inner, body.cursor-hidden .cursor-outer, body.cursor-hidden .cursor-label { opacity: 0; }
 }
 @keyframes cursor-spin { to { transform: rotate(360deg); } }
@@ -357,3 +365,14 @@ html:not(.mode-3d) .final-bloc {
 }
 
 html:not(.mode-3d) .compteur { display: none; }
+
+/* Image de secours si le contexte WebGL est perdu pour de bon : même place et même taille que l'éclair, en fondu. */
+.affiche-secours {
+  position: fixed; top: 0; left: 0; z-index: 1; width: auto; max-width: none; pointer-events: none;
+  opacity: 0; transition: opacity 1.2s ease;
+  -webkit-mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
+  mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
+}
+.mode-3d.affiche-secours-visible #webgl { opacity: 0; }
+.mode-3d.contexte-perdu #webgl { visibility: hidden; }
+html:not(.mode-3d) .affiche-secours { display: none; }
