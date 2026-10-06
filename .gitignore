@@ -2,3 +2,12 @@
 .vscode/
 .idea/
 *.log
+
+# Fichiers de travail de la refonte (ne jamais publier)
+CLAUDE.md
+PLAN.md
+JOURNAL.md
+LANCEMENT.txt
+_rapport/
+_ressources/
+node_modules/
