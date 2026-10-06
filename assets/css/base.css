@@ -353,7 +353,10 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   .menu-ouvert .entete::before { opacity: 0; }
   html.menu-ouvert, html.menu-ouvert body { overflow: hidden; }
 
-  .pied-grille { grid-template-columns: 1fr; gap: var(--e-3); }
+  .pied { padding-top: 2.5rem; }
+  .pied-marque p { display: none; }
+  .pied-grille { grid-template-columns: 1fr; gap: 1rem; }
+  .pied-bas { margin-top: 1.5rem; padding-top: 1.25rem; }
   .pied .reseaux { flex-direction: row; gap: 0 1.75rem; }
 }
 @media (min-width: 821px) {

@@ -700,7 +700,7 @@ function getOrbit(scroll) {
 function chapterWeights(scroll) {
     // Chaque changement de cadrage est centré sur le seuil du chapitre : l'éclair croise la colonne de
     // texte au moment où l'ancien texte s'efface et avant que le nouveau n'apparaisse.
-    const a = layout.portrait ? smoothScrollRange(scroll, 0.08, 0.12) : smoothScrollRange(scroll, 0.065, 0.135);
+    const a = layout.portrait ? smoothScrollRange(scroll, 0.08, 0.12) : smoothScrollRange(scroll, 0.075, 0.105);
     const b = smoothScrollRange(scroll, 0.30, 0.37);
     const c = smoothScrollRange(scroll, 0.62, 0.72);
     return [1 - a, a - b, b - c, c];
@@ -1315,7 +1315,9 @@ function animate(now = performance.now()) {
     const phi = orbitAngle(currentScroll);
     const y = 0.35 + Math.sin(currentScroll * Math.PI) * 0.8;
     _target.set(frame.radius * Math.sin(phi), y, frame.radius * Math.cos(phi));
-    camera.position.lerp(_target, damping(0.035));
+    // Le scroll est déjà lissé : la caméra le suit de près. Un second lissage trop mou la mettait en
+    // retard pendant le défilement (éclair vu de profil, reflets pâles) par rapport aux positions calculées.
+    camera.position.lerp(_target, damping(0.12));
     camera.lookAt(frame.lookAt);
     camera.updateMatrixWorld();
     updateGlassCard();
