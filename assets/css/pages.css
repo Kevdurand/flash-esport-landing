@@ -56,6 +56,9 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 }
 .contact-mail:hover { background-size: 100% 4px; }
 .carte h2 { margin-bottom: 0.75rem; }
+.carte .surtitre { display: flex; }
+.contact-bloc .carte:first-child .btn { margin-top: auto; }
+.contact-bloc .carte:first-child p { margin-bottom: 1.5rem; }
 .carte p { color: var(--texte-doux); }
 .carte p + p { margin-top: 0.75rem; }
 .carte .btn { margin-top: 1.25rem; }
@@ -72,7 +75,7 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 .faq details { border-bottom: 1px solid var(--trait); }
 .faq summary {
   position: relative; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
-  min-height: 72px; padding: 1.25rem 0.25rem; cursor: pointer; list-style: none;
+  min-height: 72px; padding: 1.25rem 0; cursor: pointer; list-style: none;
   font-family: var(--police-titre); font-size: clamp(1.25rem, 2.6vw, 1.625rem); line-height: 1.2; letter-spacing: 0.02em;
   text-transform: uppercase; color: var(--blanc);
   transition: color 0.3s ease;
@@ -92,7 +95,7 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
   content: ""; position: absolute; left: 0; bottom: 0; width: 3.5rem; height: 2px; border-radius: 2px;
   background: var(--rouge-lumiere); box-shadow: 0 0 14px 1px var(--rouge-halo);
 }
-.faq .reponse { padding: 1.1rem 0.25rem 1.6rem; max-width: 62ch; color: var(--texte-doux); }
+.faq .reponse { padding: 1.1rem 0 1.6rem; max-width: 62ch; color: var(--texte-doux); }
 .faq .reponse p + p { margin-top: 0.75rem; }
 
 /* ---- Pages légales : lecture confortable ---- */

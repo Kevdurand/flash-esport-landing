@@ -24,7 +24,7 @@
   --verre-dense: rgba(4, 4, 4, 0.86);
   --verre-barre: rgba(0, 0, 0, 0.66);            /* barre du haut et pied de page : verre sombre translucide, comme dans l'app */
   --verre-barre-opaque: rgba(0, 0, 0, 0.88);     /* même barre sans flou (paliers de qualité bas, navigateurs sans flou) */
-  --verre-menu: rgba(0, 0, 0, 0.82);
+  --verre-menu: rgba(0, 0, 0, 0.88);
   --voile: rgba(0, 0, 0, 0.55);
   --voile-fort: rgba(0, 0, 0, 0.82);
   --reflet: rgba(255, 255, 255, 0.10);

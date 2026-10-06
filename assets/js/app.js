@@ -165,13 +165,13 @@ function createGlassEnvironment() {
     const studio = new THREE.Scene();
     studio.background = new THREE.Color('#0a0606');
     const panels = [
-        [2.8, 8, -4, 2, 3, '#ffa094', 1.5],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
-        [0.45, 7, 3, 1, 2, '#ffe6e0', 3.8],      // bandes fines blanches : elles dessinent les arêtes
-        [5, 0.7, 0, 5, -1, '#ffe2da', 2.8],
+        [2.8, 8, -4, 2, 3, '#f03226', 1.2],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
+        [0.45, 7, 3, 1, 2, '#ff5c4a', 2.6],      // bandes fines blanches : elles dessinent les arêtes
+        [5, 0.7, 0, 5, -1, '#ff5846', 2.2],
         [0.5, 6, -2, 0, -4, '#e01818', 3.4],
         [1.0, 5, 3, -1, -3, '#ff4a3a', 2.6],
         [4, 0.35, 0, -3, 3, '#ff2020', 3.0],
-        [0.16, 5, -3, 0, 2, '#ffffff', 6.0],
+        [0.16, 5, -3, 0, 2, '#ff4e3e', 3.0],
         [0.35, 4, 4, 0, -2, '#ff5a3c', 2.0]
     ];
     for (const [w, h, x, y, z, color, intensity] of panels) {
@@ -1240,7 +1240,7 @@ function readScroll() {
     // section, plus haute que lui, dépasse le bas de la fenêtre) : le chapitre 4 garde son texte et son
     // éclair jusque-là, il n'y a jamais d'écran sans texte entre les deux.
     if (contactSection) {
-        const enter = clamp(0.06 + contactCardElement.offsetTop / window.innerHeight, 0, 0.8);
+        const enter = clamp(0.14 + contactCardElement.offsetTop / window.innerHeight, 0, 0.8);
         targetContact = clamp(((scrollTop - maxScroll) / window.innerHeight - enter) / (1 - enter), 0, 1);
     } else targetContact = 0;
     finalOpen = targetContact > 0.02;

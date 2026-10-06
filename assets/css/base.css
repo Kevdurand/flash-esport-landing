@@ -145,7 +145,7 @@ html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
 
 .nav { display: flex; align-items: center; gap: clamp(1.25rem, 2.6vw, 2.25rem); }
 .nav a {
-  position: relative; display: inline-flex; align-items: center; min-height: 44px;
+  position: relative; display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap;
   font-size: var(--t-petit); font-weight: 500; letter-spacing: 0.06em;
   color: var(--texte-doux); text-decoration: none;
   transition: color 0.35s ease;
@@ -213,7 +213,7 @@ html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
 }
 /* Appui (iPhone) : légère compression, retour élastique. */
 .btn:active { transform: scale(0.97); transition-duration: 0.35s, 0.35s, 0.09s; }
-.btn:focus-visible { outline: 1.5px solid var(--blanc); outline-offset: 4px; }
+.btn:focus-visible { outline: 1.5px solid var(--blanc); outline-offset: 7px; }
 a, button, summary { -webkit-tap-highlight-color: transparent; }
 .btn-rouge {
   background: var(--rouge-fond); border-color: var(--rouge-contour);
@@ -266,6 +266,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
 }
 /* Téléphone : la mention ne doit jamais être plus large que son badge. */
 @media (max-width: 599px) { .badge-mention { font-size: 0.5938rem; letter-spacing: 0.1em; } }
+@media (min-width: 600px) { .badges { column-gap: 1.75rem; } }
 @media (max-width: 359px) { .badges { --badge-h: 40px; --badge-g: 52px; --badge-gm: -6px; gap: 0.75rem; } }
 
 /* ---- Liens de texte ---- */
