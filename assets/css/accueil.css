@@ -142,11 +142,6 @@ html:not(.mode-3d) .final-bloc {
   border: 1px solid var(--neutre-contour);
   background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut));
 }
-/* Barre du haut alignée sur la colonne de contenu, comme sur les pages secondaires. */
-.mode-statique .entete {
-  padding-left: max(var(--marge), env(safe-area-inset-left, 0px), calc((100% - var(--largeur)) / 2));
-  padding-right: max(var(--marge), env(safe-area-inset-right, 0px), calc((100% - var(--largeur)) / 2));
-}
 @media (max-width: 900px) {
   html:not(.mode-3d) #accueil { grid-template-columns: 1fr; }
   html:not(.mode-3d) .affiche { max-width: 15rem; justify-self: start; order: -1; margin-bottom: -1rem; }
@@ -274,9 +269,9 @@ html:not(.mode-3d) .final-bloc {
     will-change: transform;
   }
   body.cursor-hover .braise {
-    width: 46px; height: 46px; margin: -23px 0 0 -23px;
-    background: var(--rouge-fond); border-color: var(--rouge-lumiere);
-    box-shadow: 0 0 24px 2px var(--rouge-halo-doux);
+    width: 40px; height: 40px; margin: -20px 0 0 -20px;
+    background: transparent; border-color: var(--rouge-lumiere);     /* anneau vide : le texte du lien reste net */
+    box-shadow: 0 0 22px 2px var(--rouge-halo-doux);
   }
   body.cursor-hidden .braise { opacity: 0; }
 }
@@ -294,10 +289,9 @@ html:not(.mode-3d) .final-bloc {
 .loader-value {
   position: relative; display: inline-flex; align-items: baseline; justify-content: center; min-width: 3.1em; padding: 0.2em 0.35em 0.12em;
   border: 1px solid var(--neutre-contour); border-radius: 6px;
-  background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut));
+  background: linear-gradient(to bottom, var(--neutre-haut) calc(50% - 0.5px), var(--noir) calc(50% - 0.5px), var(--noir) calc(50% + 0.5px), var(--neutre-bas) calc(50% + 0.5px));
   font-family: var(--police-titre); font-size: 2.5rem; line-height: 1; letter-spacing: 0.04em; color: var(--blanc);
 }
-.loader-value::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--noir); opacity: 0.4; }
 .loader-unit { font-size: 0.35em; margin-left: 0.12em; color: var(--texte-faible); }
 .loader-bar { width: 100%; height: 2px; background: var(--trait); overflow: hidden; border-radius: 2px; }
 .loader-bar span { display: block; width: 100%; height: 100%; background: var(--rouge-lumiere); box-shadow: 0 0 12px var(--rouge-halo); transform: scaleX(0); transform-origin: left center; }

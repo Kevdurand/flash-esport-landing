@@ -170,16 +170,21 @@ html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
 .score-case {
   position: relative; display: inline-grid; place-items: center; min-width: 2.1em; height: 1.8em; padding: 0.1em 0.3em 0;
   overflow: hidden; border: 1px solid var(--neutre-contour); border-radius: 4px;
-  background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut));
+  background: linear-gradient(to bottom, var(--neutre-haut) calc(50% - 0.5px), var(--noir) calc(50% - 0.5px), var(--noir) calc(50% + 0.5px), var(--neutre-bas) calc(50% + 0.5px));      /* le pli du tableau de score, derrière le chiffre */
   perspective: 90px;
 }
-.score-case::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--noir); opacity: 0.28; }
 .score-case b { display: block; font-weight: 400; color: var(--blanc); }
 .score-case b.sort { animation: score-sort 0.15s ease-in both; }
 .score-case b.entre { animation: score-entre 0.36s var(--courbe) both; }
 @keyframes score-sort { to { transform: rotateX(-86deg); opacity: 0.3; } }
 @keyframes score-entre { from { transform: rotateX(86deg); opacity: 0.3; } }
 .score i { width: 10px; height: 1px; background: var(--trait-fort); }
+/* Surtitre de chapitre : le numéro du chapitre dans une case de score remplace le trait rouge. */
+.surtitre-score::before { display: none; }
+.surtitre-score .score-case {
+  font-family: var(--police-titre); font-size: 0.875rem; line-height: 1; letter-spacing: 0.06em; color: var(--blanc);
+  border-bottom-color: var(--rouge);
+}
 
 .menu-btn {
   display: none; position: relative; width: 44px; height: 44px; margin-right: -10px;

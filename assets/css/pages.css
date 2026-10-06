@@ -9,10 +9,7 @@ body.page::before {
 }
 body.page { display: flex; flex-direction: column; }
 body.page main { flex: 1; padding-top: var(--entete-h); }
-body.page .entete {
-  padding-left: max(var(--marge), env(safe-area-inset-left, 0px), calc((100% - var(--largeur)) / 2));
-  padding-right: max(var(--marge), env(safe-area-inset-right, 0px), calc((100% - var(--largeur)) / 2));
-}
+
 
 .conteneur { width: 100%; max-width: calc(var(--largeur) + 2 * var(--marge)); margin: 0 auto; padding: 0 var(--marge); }
 .conteneur-etroit > * { max-width: 52rem; }
@@ -40,6 +37,10 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
   background: linear-gradient(to top, var(--neutre-bas), var(--neutre-haut));
 }
 .carte-rouge { background: var(--rouge-fond); border-color: var(--rouge-contour); }
+.carte::before {
+  content: ""; position: absolute; left: clamp(1.25rem, 3vw, 2rem); top: -1px; width: 3.5rem; height: 2px; border-radius: 2px;
+  background: var(--rouge-lumiere); box-shadow: 0 0 14px 1px var(--rouge-halo);
+}
 
 .apparait { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.75s var(--courbe-nette); }
 .apparait.est-visible, html:not(.js) .apparait { opacity: 1; transform: none; filter: none; }

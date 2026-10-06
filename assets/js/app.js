@@ -12,7 +12,7 @@ import { SVGLoader } from '../vendor/SVGLoader.js';
 // `fragments` : 6 éclats, un par jeu couvert.
 const SITE = {
     shapes: ['../shapes/eclair.svg'],
-    palette: ['#3a0000', '#B00000', '#E01818', '#6e0000', '#B00000'],
+    palette: ['#3a0000', '#B00000', '#960a0a', '#6e0000', '#B00000'],
     fragments: 6
 };
 const SINGLE_SHAPE = SITE.shapes.length === 1;
@@ -216,7 +216,7 @@ function createFireflies() {
 
                 float depth = max(-mv.z, 0.25);
                 vSoft = 1.0 - smoothstep(0.34 * uFocus, 1.08 * uFocus, depth);       // plus proche que l'éclair : grosse et floue
-                float size = aLook.x * uBoost * uScale / depth * (1.0 + vSoft * 1.5);
+                float size = aLook.x * uBoost * uScale / depth * (1.0 + vSoft * 1.5) * (1.0 + burst * 0.9);
                 gl_PointSize = clamp(size, 1.0, 84.0);
 
                 float breath = smoothstep(-0.55, 0.9,
@@ -320,6 +320,9 @@ function createGlassMaterial() {
         iridescenceIOR: 1.3,
         iridescenceThicknessRange: [100, 420],
         envMapIntensity: 1.0,
+        // Lumière intérieure très faible : le cœur du verre reste rouge profond au lieu de tomber au noir.
+        emissive: new THREE.Color('#3a0000'),
+        emissiveIntensity: 0.2,
         side: THREE.DoubleSide
     });
     material.userData.dispersion = true;
@@ -1441,7 +1444,7 @@ function animate(now = performance.now()) {
     // Fond : couleur du chapitre, halo calé sur l'éclair.
     _projected.set(0, -0.3, 0).project(camera);
     shaderUniforms.uObject.value.set(_projected.x * camera.aspect * 0.5, _projected.y * 0.5);
-    shaderUniforms.uGlow.value = 0.20 - separation * 0.07 + final * 0.14;
+    shaderUniforms.uGlow.value = 0.27 - separation * 0.13 + final * 0.09;
     shaderUniforms.uGlowSpread.value = (layout.portrait ? 0.62 : 1.0) * (1.0 + separation * 0.9);
     shaderUniforms.uTime.value = time;
     shaderUniforms.uMouse.value.set(mouseX, -mouseY);
@@ -1641,7 +1644,7 @@ async function init() {
     keyLight.penumbra = 0.9;
     scene.add(keyLight);
     // Lumière de contour : chaude, derrière à gauche, dessine la silhouette.
-    const rimLight = new THREE.DirectionalLight('#ffe8e0', 10.0);
+    const rimLight = new THREE.DirectionalLight('#ff4a3a', 6.0);
     rimLight.position.set(-5, 3, -4);
     scene.add(rimLight);
     const fillLight = new THREE.DirectionalLight('#fff3e6', 0.8);
