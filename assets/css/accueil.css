@@ -33,7 +33,7 @@
   font-family: var(--police-titre); font-size: clamp(1.125rem, 2vw, 1.75rem); line-height: 1.15; letter-spacing: 0.02em;
   text-transform: uppercase; color: var(--blanc);
 }
-.jeux li span { font-family: var(--police-texte); font-size: var(--t-mini); font-weight: 600; letter-spacing: 0.14em; color: var(--texte-faible); }
+.jeux li span { font-family: var(--police-texte); font-size: var(--t-mini); font-weight: 600; letter-spacing: 0.14em; color: var(--texte-doux); }
 
 
 
@@ -342,10 +342,10 @@ html:not(.mode-3d) .final-bloc {
   .mode-3d #app .slide-corps { left: 0; right: 0; top: 2.5%; bottom: auto; width: auto; }
   .mode-3d #app .surtitre { display: none; }
   .mode-3d #app .slide-title { font-size: clamp(1.75rem, 8.6vw, 3rem); margin: 0; }
-  .mode-3d .tuto-texte { left: 0; right: 0; top: 74%; width: auto; }
+  .mode-3d .tuto-texte { left: 0; right: 0; top: 75.5%; width: auto; }
   .mode-3d .tuto-texte h3 { font-size: clamp(1.5rem, 7vw, 2.25rem); margin: 0.3rem 0 0.4rem; }
   .mode-3d .tuto-texte p { font-size: 0.9375rem; line-height: 1.5; max-width: 36ch; }
-  .mode-3d .tuto-points { bottom: auto; top: 75.2%; left: auto; right: 0; }
+  .mode-3d .tuto-points { bottom: auto; top: 76.4%; left: auto; right: 0; }
   .mode-3d .tuto-points span { width: 1.25rem; }
   /* 4 — texte en haut, éclair au milieu, panneau en bas */
   .mode-3d #direct .slide-corps { left: 0; right: 0; top: 4%; width: auto; transform: none; }
@@ -389,22 +389,22 @@ html:not(.mode-3d) .affiche-secours { display: none; }
 .telephone-cadre { display: block; width: 101.6%; height: 100%; margin-left: -0.8%; overflow: visible; }
 .telephone::before {                      /* ombre portée douce + léger halo rouge, derrière le boîtier */
   content: ""; position: absolute; z-index: -1; inset: 2% 3% 1%; border-radius: 17% / 8.2%;
-  box-shadow: 0 2.6rem 5rem var(--voile-fort), 0 0 6rem var(--rouge-halo-doux);
+  box-shadow: 0 3rem 4.5rem var(--noir), 0 1rem 2rem var(--voile-fort), 0 0 7rem var(--rouge-halo-doux);
 }
 .tel-boitier { fill: url(#tel-titane); }
-.tel-arete { fill: none; stroke: url(#tel-arete); stroke-width: 3; }
+.tel-arete { fill: none; stroke: url(#tel-arete); stroke-width: 4; }
 .tel-lisere-sombre { fill: none; stroke: var(--titane-ombre); stroke-width: 3; }
 .tel-lisere-clair { fill: none; stroke: var(--titane-lisere); stroke-width: 1.6; }
 .tel-boutons rect { fill: var(--titane-bouton); }
 .tel-antennes rect { fill: var(--titane-ombre); opacity: 0.55; }
 .tel-bord { fill: var(--noir); }
-.tel-barre { fill: var(--ecran-vide); }
+.tel-barre { fill: var(--ecran-app); }
 .tel-ile { fill: var(--noir); }
 .tel-objectif { fill: var(--titane-objectif); }
 .tel-reflet { fill: url(#tel-reflet); }
 .tel-t1 { stop-color: var(--titane-clair); } .tel-t2 { stop-color: var(--titane-moyen); } .tel-t3 { stop-color: var(--titane-sombre); } .tel-t4 { stop-color: var(--titane-ombre); }
 .tel-a1 { stop-color: var(--titane-eclat); } .tel-a2 { stop-color: var(--titane-moyen); } .tel-a3 { stop-color: var(--noir); }
-.tel-r1 { stop-color: var(--blanc); stop-opacity: 0.085; } .tel-r2 { stop-color: var(--blanc); stop-opacity: 0.022; } .tel-r3 { stop-color: var(--blanc); stop-opacity: 0; }
+.tel-r1 { stop-color: var(--blanc); stop-opacity: 0.13; } .tel-r2 { stop-color: var(--blanc); stop-opacity: 0.035; } .tel-r3 { stop-color: var(--blanc); stop-opacity: 0; }
 
 .tuto-ecran { display: block; position: relative; }
 .tuto-ecran img { display: block; width: 100%; height: auto; }
@@ -446,6 +446,6 @@ html:not(.mode-3d) .tuto-ecran {
 @media (max-width: 900px), (max-aspect-ratio: 4/5) {
   .mode-3d #app { --tel-h: 62vh; --tel-x: calc(50vw - var(--marge) - var(--tel-w) / 2); --tel-y: 13vh; }
   @supports (width: 1cqw) {
-    .mode-3d #app { --tel-h: 50cqh; --tel-x: calc(50cqw - var(--tel-w) / 2); --tel-y: 20.5cqh; }
+    .mode-3d #app { --tel-h: 57cqh; --tel-x: calc(50cqw - var(--tel-w) / 2); --tel-y: 15.5cqh; }
   }
 }

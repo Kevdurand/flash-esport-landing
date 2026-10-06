@@ -32,12 +32,13 @@
   --reflet-fort: rgba(255, 255, 255, 0.28);
   --ecran-vide: #0A0A0A;
   /* Cadre du téléphone : titane sombre (reflet clair en haut à gauche, plus sombre en bas) */
-  --titane-eclat: #B8B0A8;
-  --titane-clair: #6E6862;
-  --titane-moyen: #3A3633;
-  --titane-sombre: #1F1D1B;
-  --titane-ombre: #0C0B0A;
-  --titane-lisere: #4A4541;
+  --titane-eclat: #D2CBC3;
+  --titane-clair: #8E8780;
+  --titane-moyen: #56514C;
+  --titane-sombre: #2E2B29;
+  --titane-ombre: #131211;
+  --titane-lisere: #6A645E;
+  --ecran-app: #050505;                          /* fond du haut des captures de l'app (zone de la Dynamic Island) */
   --titane-bouton: #2B2826;
   --titane-objectif: #111010;
 
