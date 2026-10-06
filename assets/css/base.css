@@ -84,7 +84,7 @@ button { font: inherit; color: inherit; }
   .titre .rouge:not(.line), .line.rouge .line-inner, .logo-texte span {
     --arete: 9.6%;      /* hauteur des capitales d'Anton dans la boîte de ligne : l'arête claire s'y cale, pas sur les accents */
     background-image:
-      linear-gradient(104deg, transparent 45%, var(--titre-balayage) 50%, transparent 55%),
+      linear-gradient(104deg, transparent 47.4%, var(--titre-balayage) 50%, transparent 52.6%),
       linear-gradient(180deg, var(--rouge-lumiere) 0%, var(--rouge-lumiere) calc(var(--arete) - 0.2%), var(--rouge-arete) var(--arete), var(--rouge-arete) calc(var(--arete) + 1.5%), var(--rouge-lumiere) calc(var(--arete) + 4.5%), var(--rouge) 56%, var(--rouge-profond) 100%);
     background-size: 300% 100%, 100% 100%;
     background-position: 100% 0, 0 0;      /* le balayage attend hors champ */

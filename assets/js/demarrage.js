@@ -30,14 +30,16 @@
       if (hero && window.scrollY < window.innerHeight * 0.5) hero.classList.add("active");
     });
   }
-  document.addEventListener("DOMContentLoaded", function () {
+  // On n'attend pas la fin du chargement des scripts : dès que la section existe dans la page.
+  (function attendreHero() {
+    if (!document.getElementById("accueil")) { requestAnimationFrame(attendreHero); return; }
     if (document.fonts && document.fonts.load) {
       document.fonts.load('1em "Anton"').then(lancerHero, lancerHero);
       setTimeout(lancerHero, 1200);
     } else {
       lancerHero();
     }
-  });
+  })();
   if (statique) return;
 
   // ---- Indicateur de chargement de la scène : discret, à l'emplacement de l'éclair, sans bloquer la page ----
@@ -47,7 +49,7 @@
   if (!el || !count || !fill) return;
   el.hidden = false;
   var start = performance.now(), ready = false, rampAt = 0, shownAtRamp = 0, shown = 0, finished = false;
-  var RAMP = 220;
+  var RAMP = 220, affiche = -1;
   function finish() {
     if (finished) return;
     finished = true;
@@ -65,8 +67,13 @@
     } else {
       shown = 92 * (1 - Math.exp(-(now - start) / 1600));
     }
-    count.textContent = String(Math.round(shown)).padStart(2, "0");
-    fill.style.transform = "scaleX(" + (shown / 100) + ")";
+    // La page n'est retouchée que lorsque le chiffre affiché change (pas à chaque image).
+    var entier = Math.round(shown);
+    if (entier !== affiche) {
+      affiche = entier;
+      count.textContent = String(entier).padStart(2, "0");
+      fill.style.transform = "scaleX(" + (entier / 100) + ")";
+    }
     if (rampAt && shown >= 99.5) { finish(); return; }
     requestAnimationFrame(tick);
   }

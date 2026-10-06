@@ -389,7 +389,7 @@ html:not(.mode-3d) .affiche-secours { display: none; }
 .telephone-cadre { display: block; width: 101.6%; height: 100%; margin-left: -0.8%; overflow: visible; }
 .telephone::before {                      /* ombre portée douce + léger halo rouge, derrière le boîtier */
   content: ""; position: absolute; z-index: -1; inset: 2% 3% 1%; border-radius: 17% / 8.2%;
-  box-shadow: 0 3rem 4.5rem var(--noir), 0 1rem 2rem var(--voile-fort), 0 0 7rem var(--rouge-halo-doux);
+  box-shadow: 0 3rem 4.5rem var(--noir), 0 1rem 2rem var(--voile-fort), 0 0 8rem var(--tel-halo);
 }
 .tel-boitier { fill: url(#tel-titane); }
 .tel-arete { fill: none; stroke: url(#tel-arete); stroke-width: 4; }
@@ -404,7 +404,10 @@ html:not(.mode-3d) .affiche-secours { display: none; }
 .tel-reflet { fill: url(#tel-reflet); }
 .tel-t1 { stop-color: var(--titane-clair); } .tel-t2 { stop-color: var(--titane-moyen); } .tel-t3 { stop-color: var(--titane-sombre); } .tel-t4 { stop-color: var(--titane-ombre); }
 .tel-a1 { stop-color: var(--titane-eclat); } .tel-a2 { stop-color: var(--titane-moyen); } .tel-a3 { stop-color: var(--noir); }
-.tel-r1 { stop-color: var(--blanc); stop-opacity: 0.13; } .tel-r2 { stop-color: var(--blanc); stop-opacity: 0.035; } .tel-r3 { stop-color: var(--blanc); stop-opacity: 0; }
+.tel-r1 { stop-color: var(--blanc); stop-opacity: 0.2; } .tel-r2 { stop-color: var(--blanc); stop-opacity: 0.05; }
+.tel-etat { fill: var(--blanc); }
+.tel-heure { fill: var(--blanc); font-family: var(--police-texte); font-weight: 600; font-size: 46px; letter-spacing: 0.5px; }
+.tel-pile { fill: none; stroke: var(--texte-faible); stroke-width: 3; } .tel-r3 { stop-color: var(--blanc); stop-opacity: 0; }
 
 .tuto-ecran { display: block; position: relative; }
 .tuto-ecran img { display: block; width: 100%; height: auto; }

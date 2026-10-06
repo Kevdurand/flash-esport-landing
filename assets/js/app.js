@@ -20,22 +20,22 @@ let openingSource = '', finalSource = '';
 
 // ---- Chronologie du scroll (0 → 1 sur la scène, puis chapitre final dans le flux) ----
 const T = {
-    open: [0.085, 0.10],      // juste avant d'éclater : les biseaux se resserrent (miroir de la fin)
-    burst: [0.10, 0.24],      // l'éclair éclate
+    open: [0.07, 0.085],      // juste avant d'éclater : les biseaux se resserrent (miroir de la fin)
+    burst: [0.085, 0.22],      // l'éclair éclate
     orbit: [0.30, 0.37, 0.61, 0.67],   // les éclats entrent en orbite autour du téléphone, puis en sortent
     join: [0.66, 0.79],       // les éclats reviennent à leur place
     bevel: [0.79, 0.81],      // prisme unique : les biseaux grandissent
     holes: [0.79, 0.85],
     // Fenêtres d'affichage des textes : contiguës. Il y a toujours le texte d'un chapitre à l'écran, et il
     // change exactement en même temps que le chapitre indiqué dans l'en-tête (mêmes seuils que `chapters`).
-    slides: [[-0.10, 0.118], [0.118, 0.335], [0.335, 0.69], [0.69, 1.05]],
+    slides: [[-0.10, 0.09], [0.09, 0.335], [0.335, 0.69], [0.69, 1.05]],
     tuto: [0.355, 0.675],     // les 4 étapes du tutoriel se partagent cette plage
     nav: [0, 0.23, 0.40, 0.90],
-    chapters: [0.118, 0.335, 0.69]
+    chapters: [0.09, 0.335, 0.69]
 };
 // Position de l'éclair à l'écran par chapitre (fraction de la largeur / de la hauteur), puis au final.
 const FRAME = {
-    landscape: { fx: [0.72, 0.27, 0.675, 0.57], fy: [0.5, 0.5, 0.5, 0.5], final: [0.27, 0.5] },
+    landscape: { fx: [0.72, 0.27, 0.675, 0.505], fy: [0.5, 0.5, 0.5, 0.5], final: [0.27, 0.5] },
     portrait: { fx: [0.5, 0.5, 0.5, 0.5], fy: [0.685, 0.30, 0.46, 0.505], final: [0.5, 0.25] }
 };
 
@@ -166,7 +166,7 @@ function createGlassEnvironment() {
     const panels = [
         [2.8, 8, -4, 2, 3, '#ff9a8c', 1.5],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
         [0.45, 7, 3, 1, 2, '#ffe6e0', 3.4],      // bandes fines blanches : elles dessinent les arêtes
-        [5, 0.7, 0, 5, -1, '#ffffff', 3.5],
+        [5, 0.7, 0, 5, -1, '#ffd2c8', 2.6],
         [0.5, 6, -2, 0, -4, '#e01818', 3.4],
         [1.0, 5, 3, -1, -3, '#ff4a3a', 2.6],
         [4, 0.35, 0, -3, 3, '#ff2020', 3.0],
@@ -208,12 +208,16 @@ function createGlassMaterial() {
         ior: 1.46,
         attenuationColor: new THREE.Color('#d01010'),
         attenuationDistance: 0.9,
-        clearcoat: 0.5,
+        clearcoat: 0.28,
         clearcoatRoughness: 0.018,
+        // Reflets de face teintés en rouge, arêtes rasantes blanches : le verre reste rouge profond
+        // au lieu de blanchir quand une grande face renvoie une boîte à lumière.
+        specularColor: new THREE.Color('#ff6f5e'),
+        specularIntensity: 0.9,
         iridescence: 0.12,
         iridescenceIOR: 1.3,
         iridescenceThicknessRange: [100, 420],
-        envMapIntensity: 1.10,
+        envMapIntensity: 1.0,
         side: THREE.DoubleSide
     });
     material.userData.dispersion = true;
@@ -696,7 +700,7 @@ function getOrbit(scroll) {
 function chapterWeights(scroll) {
     // Chaque changement de cadrage est centré sur le seuil du chapitre : l'éclair croise la colonne de
     // texte au moment où l'ancien texte s'efface et avant que le nouveau n'apparaisse.
-    const a = smoothScrollRange(scroll, 0.065, 0.17);
+    const a = smoothScrollRange(scroll, 0.05, 0.13);
     const b = smoothScrollRange(scroll, 0.30, 0.37);
     const c = smoothScrollRange(scroll, 0.62, 0.72);
     return [1 - a, a - b, b - c, c];
@@ -753,7 +757,9 @@ function smoothZones(amount) {
 // pendant la recomposition (62 → 80 %) pour que l'éclair reformé ne soit jamais vu de profil : la vue
 // de côté tombe pendant que les éclats sont encore en mouvement.
 function orbitAngle(scroll) {
-    const lead = 0.085 * (smoothScrollRange(scroll, 0.62, 0.80) - smoothScrollRange(scroll, 0.88, 1.0));
+    // L'avance atteint 0,145 tour à 80 % (l'éclair reformé est alors presque de face), puis se résorbe
+    // linéairement jusqu'à la fin : la rotation reste toujours dans le même sens.
+    const lead = 0.145 * (scroll <= 0.80 ? smoothScrollRange(scroll, 0.60, 0.80) : 1 - (scroll - 0.80) / 0.20);
     return (scroll + lead) * Math.PI * 2.0;
 }
 
@@ -1265,11 +1271,11 @@ function animate(now = performance.now()) {
     // L'éclair suit légèrement la souris, respire doucement, et fait un tour sur lui-même
     // en rejoignant le chapitre final.
     if (modelPivot) {
-        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + final * Math.PI * 2.0;
+        modelPivot.rotation.y = mouseX * 0.25 + Math.sin(time * 0.35) * 0.07 + Math.sin(final * Math.PI) * 0.45;
         modelPivot.rotation.x = mouseY * 0.15 + Math.sin(time * 0.27) * 0.025;
         modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.035 * (1 - separation);
             }
-    if (glass) glass.envMapIntensity = 1.10 + final * 0.45;
+    if (glass) glass.envMapIntensity = 1.0 + final * 0.4;
     if (simpleGlass) simpleGlass.envMapIntensity = 0.32 + final * 0.12;
 
     // Poussière de verre, agitée par le scroll rapide.
@@ -1412,7 +1418,12 @@ function updateFinal() {
     const over = Math.max(0, Math.round(window.scrollY + window.innerHeight - (contactSection.offsetTop + contactSection.offsetHeight)));
     if (over !== finalPinned) {
         finalPinned = over;
-        contactSection.style.transform = over > 0 ? `translate3d(0, ${over}px, 0)` : '';
+        // Le bloc remonte juste ce qu'il faut pour que ses boutons restent visibles au-dessus du pied de
+        // page, sans jamais passer sous l'en-tête.
+        const top = contactCardElement.offsetTop, bottom = top + contactCardElement.offsetHeight;
+        const header = layout.portrait ? 62 : 70;
+        const lift = clamp(bottom + 28 - (window.innerHeight - over), 0, Math.max(0, top - header - 18));
+        contactSection.style.transform = over > 0 ? `translate3d(0, ${over - lift}px, 0)` : '';
     }
 }
 
