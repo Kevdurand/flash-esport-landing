@@ -12,3 +12,9 @@ _rapport/
 _ressources/
 node_modules/
 CONSIGNES.md
+
+# Sécurité : aucun fichier .md ou .txt à la racine ne peut être suivi par git, sauf ceux du site
+/*.md
+!/README.md
+/*.txt
+!/robots.txt
