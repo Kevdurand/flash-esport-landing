@@ -107,12 +107,13 @@
 .mode-3d .slide.active .revele { transition-delay: 0.3s; }
 .mode-3d .slide.active .d2 { transition-delay: 0.5s; }
 .mode-3d .slide.active .d3 { transition-delay: 0.62s; }
-.mode-3d .slide.active .jeux li:nth-child(1) { transition-delay: 0.45s; }
-.mode-3d .slide.active .jeux li:nth-child(2) { transition-delay: 0.53s; }
-.mode-3d .slide.active .jeux li:nth-child(3) { transition-delay: 0.61s; }
-.mode-3d .slide.active .jeux li:nth-child(4) { transition-delay: 0.69s; }
-.mode-3d .slide.active .jeux li:nth-child(5) { transition-delay: 0.77s; }
-.mode-3d .slide.active .jeux li:nth-child(6) { transition-delay: 0.85s; }
+.mode-3d .slide.active .jeux li { transition-duration: 0.6s, 0.75s, 0.65s; }
+.mode-3d .slide.active .jeux li:nth-child(1) { transition-delay: 0.36s; }
+.mode-3d .slide.active .jeux li:nth-child(2) { transition-delay: 0.41s; }
+.mode-3d .slide.active .jeux li:nth-child(3) { transition-delay: 0.46s; }
+.mode-3d .slide.active .jeux li:nth-child(4) { transition-delay: 0.51s; }
+.mode-3d .slide.active .jeux li:nth-child(5) { transition-delay: 0.56s; }
+.mode-3d .slide.active .jeux li:nth-child(6) { transition-delay: 0.61s; }
 
 /* Éléments réservés au mode 3D */
 .loader[hidden] { display: none; }

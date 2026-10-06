@@ -164,13 +164,13 @@ function createGlassEnvironment() {
     const studio = new THREE.Scene();
     studio.background = new THREE.Color('#0a0606');
     const panels = [
-        [2.8, 8, -4, 2, 3, '#b81a12', 0.85],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
-        [0.45, 7, 3, 1, 2, '#ffe6e0', 3.2],      // bandes fines blanches : elles dessinent les arêtes
-        [5, 0.7, 0, 5, -1, '#ffb4a6', 1.9],
+        [2.8, 8, -4, 2, 3, '#ffa094', 1.5],      // grande boîte : rouge clair, pour que les faces ne blanchissent pas
+        [0.45, 7, 3, 1, 2, '#ffe6e0', 3.8],      // bandes fines blanches : elles dessinent les arêtes
+        [5, 0.7, 0, 5, -1, '#ffe2da', 2.8],
         [0.5, 6, -2, 0, -4, '#e01818', 3.4],
         [1.0, 5, 3, -1, -3, '#ff4a3a', 2.6],
         [4, 0.35, 0, -3, 3, '#ff2020', 3.0],
-        [0.16, 5, -3, 0, 2, '#ffffff', 4.5],
+        [0.16, 5, -3, 0, 2, '#ffffff', 6.0],
         [0.35, 4, 4, 0, -2, '#ff5a3c', 2.0]
     ];
     for (const [w, h, x, y, z, color, intensity] of panels) {
@@ -208,12 +208,12 @@ function createGlassMaterial() {
         ior: 1.46,
         attenuationColor: new THREE.Color('#d01010'),
         attenuationDistance: 0.9,
-        clearcoat: 0.28,
+        clearcoat: 0.6,           // le vernis ne renvoie presque rien de face et beaucoup en rasant : il dessine les arêtes blanches
         clearcoatRoughness: 0.018,
         // Reflets de face teintés en rouge, arêtes rasantes blanches : le verre reste rouge profond
         // au lieu de blanchir quand une grande face renvoie une boîte à lumière.
-        specularColor: new THREE.Color('#ff6f5e'),
-        specularIntensity: 0.9,
+        specularColor: new THREE.Color('#ffc9c0'),
+        specularIntensity: 0.85,
         iridescence: 0.12,
         iridescenceIOR: 1.3,
         iridescenceThicknessRange: [100, 420],
@@ -1515,7 +1515,7 @@ async function init() {
 
     scene.add(new THREE.AmbientLight('#ffffff', 0.1));
     // Lumière principale : blanche, en haut à droite.
-    const keyLight = new THREE.SpotLight('#ffe9e2', 9.0);
+    const keyLight = new THREE.SpotLight('#ffe9e2', 4.0);      // doux : pas de point chaud blanc sur les grandes faces
     keyLight.position.set(4, 6, 3);
     keyLight.angle = Math.PI / 4;
     keyLight.penumbra = 0.9;
