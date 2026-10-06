@@ -20,6 +20,7 @@ let openingSource = '', finalSource = '';
 
 // ---- Chronologie du scroll (0 → 1 sur la scène, puis chapitre final dans le flux) ----
 const T = {
+    open: [0.085, 0.10],      // juste avant d'éclater : les biseaux se resserrent (miroir de la fin)
     burst: [0.10, 0.24],      // l'éclair éclate
     orbit: [0.30, 0.38, 0.60, 0.66],   // les éclats entrent en orbite autour du téléphone, puis en sortent
     join: [0.66, 0.79],       // les éclats reviennent à leur place
@@ -826,15 +827,20 @@ function updateLogoPieces(scroll, time) {
     const separation = getLogoSeparation(scroll);
     const morph = smoothScrollRange(scroll, T.join[0], T.join[1]);
     const orbit = getOrbit(scroll);
-    const geometryMorph = geometryStep(morph);
     const complete = morph >= 1;
     const assembled = separation <= 0 && morph <= 0;
-    if (wholeBody) wholeBody.visible = assembled;
+    // Éclatement sans à-coup, miroir exact de la recomposition : le prisme entier resserre ses biseaux,
+    // laisse la place aux éclats (jointifs, biseau minimal), dont les biseaux grandissent en s'écartant.
+    const closing = assembled ? smoothScrollRange(scroll, T.open[0], T.open[1]) : 0;
+    const opening = smoothScrollRange(scroll, T.burst[0], T.burst[0] + 0.07);
+    const geometryMorph = geometryStep(Math.max(morph, 1 - opening));
+    const prism = complete || closing > 0;
+    if (wholeBody) wholeBody.visible = assembled && !prism;
     if (glassIcon) {
-        glassIcon.visible = complete;
-        if (complete) {
-            const bevel = geometryStep(smoothScrollRange(scroll, T.bevel[0], T.bevel[1]));
-            const hole = geometryStep(smoothScrollRange(scroll, T.holes[0], T.holes[1]));
+        glassIcon.visible = prism;
+        if (prism) {
+            const bevel = complete ? geometryStep(smoothScrollRange(scroll, T.bevel[0], T.bevel[1])) : geometryStep(1 - closing);
+            const hole = complete ? geometryStep(smoothScrollRange(scroll, T.holes[0], T.holes[1])) : 1;
             const key = `${bevel}:${hole}`;
             if (key !== glassIcon.userData.progress) {
                 if (!glassIcon.geometryCache) glassIcon.geometry.dispose();
@@ -873,7 +879,7 @@ function updateLogoPieces(scroll, time) {
                 () => makePrism(piece.targetContour, ICON_DEPTH,
                     lerp(SEAM_BEVEL, ICON_BEVEL.size, bevel),
                     lerp(SEAM_BEVEL, ICON_BEVEL.thickness, bevel)));
-        } else if (morph <= 0) {
+        } else if (geometryMorph <= 0) {
             mesh.geometry = piece.originalGeometry;
         } else {
             mesh.geometry = morphGeometry(piece, geometryMorph);
@@ -1124,6 +1130,8 @@ function showMedias() {
 }
 
 const pause = () => new Promise(resolve => setTimeout(resolve, 0));
+// Repères de temps de l'initialisation (visibles dans l'onglet Performance du navigateur).
+const mark = name => { try { performance.mark(`flash:${name}`); } catch (error) { /* sans importance */ } };
 
 // ---- Boucle de rendu -----------------------------------------------------------
 let animationRequest = 0;
@@ -1361,6 +1369,7 @@ function installDebugHooks() {
 
 // Initialisation découpée en étapes courtes : la page reste réactive pendant que la scène se prépare.
 async function init() {
+    mark('debut');
     scene = new THREE.Scene();
     scene.background = new THREE.Color('#000000');
     scene.fog = new THREE.FogExp2('#000000', 0.01);
@@ -1374,6 +1383,7 @@ async function init() {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 2.2;
 
+    mark('renderer');
     createBackgroundShader();
 
     scene.add(new THREE.AmbientLight('#ffffff', 0.1));
@@ -1392,10 +1402,13 @@ async function init() {
     scene.add(fillLight);
 
     createSparks();
+    mark('fond');
     await pause();
     createGlassEnvironment();
+    mark('environnement');
     await pause();
     createGlassLogo();
+    mark('eclair');
     await pause();
     createGlassCard();
     tier = initialTier();
@@ -1407,13 +1420,31 @@ async function init() {
     snapCamera();
 
     // Compile tous les shaders maintenant (dalle du chapitre final comprise), sans bloquer la page
-    // quand le navigateur sait compiler en parallèle.
+    // quand le navigateur sait compiler en parallèle. Three.js rend le verre en deux temps : d'abord
+    // le fond et les faces arrière dans une texture (passe de transmission), puis l'image finale.
+    // Les deux jeux de shaders sont préparés ici, sinon la première image les compilerait d'un bloc.
+    mark('dalle');
     if (glassCard) glassCard.visible = true;
     glassIcon.visible = true;
-    if (renderer.extensions.has('KHR_parallel_shader_compile')) await renderer.compileAsync(scene, camera);
-    else renderer.compile(scene, camera);
+    const parallel = renderer.extensions.has('KHR_parallel_shader_compile');
+    const compileScene = async () => {
+        if (parallel) await renderer.compileAsync(scene, camera); else renderer.compile(scene, camera);
+    };
+    const transmissionTarget = new THREE.WebGLRenderTarget(4, 4);
+    renderer.setRenderTarget(transmissionTarget);
+    glass.side = THREE.BackSide;
+    glass.needsUpdate = true;
+    await compileScene();
+    mark('shaders-transmission');
+    await pause();
+    renderer.setRenderTarget(null);
+    glass.side = THREE.DoubleSide;
+    glass.needsUpdate = true;
+    await compileScene();
+    transmissionTarget.dispose();
     if (glassCard) glassCard.visible = false;
     glassIcon.visible = false;
+    mark('shaders');
     await pause();
 
     for (const type of ['scroll', 'pointermove', 'pointerdown', 'keydown', 'resize', 'touchmove']) {
@@ -1451,6 +1482,7 @@ async function init() {
     perf.graceUntil = performance.now() + 3000;
     mediasAt = performance.now() + 2500;
     animate();
+    mark('premiere-image');
     document.documentElement.classList.add('scene-prete');
     prewarmMorph();
 }
