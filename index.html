@@ -1,214 +1,105 @@
 <!doctype html>
 <html lang="fr">
 <head>
+<!-- gabarit:tete -->
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-qOhFsq0QMV2REqNwk5hGH5bZE9SkX6gt6yeyKdYPv+U='; style-src 'self'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Flash eSport, les scores eSport de tes équipes</title>
-<meta name="description" content="Scores en direct, calendriers et résultats de tes équipes eSport favorites sur six jeux, dans une seule app.">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/exo2-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-0739">
+<link rel="stylesheet" href="assets/css/base.css?v=20261006-0739">
+<link rel="stylesheet" href="assets/css/pages.css?v=20261006-0739">
+<!-- /gabarit:tete -->
+<title>Flash eSport — Tes équipes eSport, en direct</title>
+<meta name="description" content="Scores en direct, résultats, calendrier et tournois de tes équipes eSport sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Une app française, simple et rapide.">
+<!-- gabarit:partage -->
 <link rel="canonical" href="https://flashesport.gg/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="Flash eSport">
-<meta property="og:title" content="Flash eSport, les scores eSport de tes équipes">
-<meta property="og:description" content="Scores en direct, calendriers et résultats de tes équipes eSport favorites sur six jeux, dans une seule app.">
+<meta property="og:title" content="Flash eSport — Tes équipes eSport, en direct">
+<meta property="og:description" content="Scores en direct, résultats, calendrier et tournois de tes équipes eSport sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Une app française, simple et rapide.">
 <meta property="og:url" content="https://flashesport.gg/">
-<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/fonts/exo2-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/style.css">
-<script>document.documentElement.classList.add("js")</script>
+<meta property="og:image" content="https://flashesport.gg/assets/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Flash eSport : l'éclair en verre rouge et le nom de l'app.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@flashesportfr">
+<meta name="twitter:title" content="Flash eSport — Tes équipes eSport, en direct">
+<meta name="twitter:description" content="Scores en direct, résultats, calendrier et tournois de tes équipes eSport sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Une app française, simple et rapide.">
+<meta name="twitter:image" content="https://flashesport.gg/assets/img/og.jpg">
+<!-- /gabarit:partage -->
 </head>
-<body>
+<body class="page">
+<!-- gabarit:entete -->
 <a class="lien-evitement" href="#contenu">Aller au contenu</a>
-<header class="barre-haut">
-  <div class="conteneur">
-    <a class="logo" href="index.html" aria-label="Flash eSport, accueil"><svg viewBox="0 0 24 36" aria-hidden="true"><path fill="#B00000" d="M15 0 2 20h9L8 36l14-22h-9z"/></svg><span>FLASH <em>ESPORT</em></span></a>
-    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="navigation" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
-    <nav class="nav" id="navigation" aria-label="Navigation principale"><ul><li><a href="index.html" aria-current="page">Accueil</a></li><li><a href="telechargement.html">Téléchargement</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
+<header class="entete">
+  <a class="logo" href="index.html" aria-label="Flash eSport, accueil"><svg class="logo-eclair" viewBox="0 0 24 36" aria-hidden="true"><path d="M15 0 2 20h9L8 36l14-22h-9z"/></svg><span class="logo-texte">FLASH <span>ESPORT</span></span></a>
+  <nav class="nav" id="navigation" aria-label="Navigation principale">
+    <a href="index.html" aria-current="page">Accueil</a>
+    <a href="faq.html">FAQ</a>
+    <a href="contact.html">Contact</a>
+    <a href="telechargement.html" class="nav-mobile">Télécharger</a>
+    <span class="nav-reseaux"><a href="https://www.instagram.com/flashesport.gg/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://x.com/flashesportfr" target="_blank" rel="noopener noreferrer">X</a></span>
+  </nav>
+  <div class="entete-actions">
+    <a class="btn btn-rouge btn-compact" href="telechargement.html">Télécharger</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="navigation" aria-label="Ouvrir le menu"><span></span><span></span></button>
   </div>
 </header>
+<!-- /gabarit:entete -->
 <main id="contenu">
-
-<section class="hero centre">
+<section class="page-tete">
   <div class="conteneur">
-    <h1 class="titre-xxl hero-entree d1"><span>Tes équipes.</span> <span>Tous leurs matchs.</span></h1>
-    <p class="chapo hero-entree d2">Scores en direct, calendriers et résultats de tes équipes eSport favorites, sur six jeux, réunis dans une seule app.</p>
-    <div class="boutons hero-entree d3">
-      <a class="btn btn-principal" href="telechargement.html">Télécharger l'app</a>
-      <a class="btn btn-neutre" href="#decouvrir">Découvrir</a>
-    </div>
-    <p class="sr-only">Aperçu de l'application : l'écran d'accueil affiche les équipes suivies, un match en direct et les prochains matchs.</p>
-    <div class="hero-scene">
-<div class="telephone hero-entree" aria-hidden="true">
-  <div class="ecran">
-    <div class="app-entete"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 36" aria-hidden="true"><path fill="#B00000" d="M15 0 2 20h9L8 36l14-22h-9z"/></svg><span>FLASH <em>ESPORT</em></span></span><svg class="app-loupe" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 21 21"/></svg></div>
-    <div class="app-titre">MES ÉQUIPES</div>
-    <div class="app-equipes">
-      <div class="app-equipe boite"><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">N</text></svg><b>NOVA</b><small>CS2</small></div>
-      <div class="app-equipe boite"><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">N</text></svg><b>NOVA</b><small>LOL</small></div>
-      <div class="app-equipe boite"><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 37 12v16L20 38 3 28V12z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">O</text></svg><b>ORBIT</b><small>VALORANT</small></div>
-      <div class="app-equipe boite"><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 4h28l-3 22-11 12L9 26z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">K</text></svg><b>KESTREL</b><small>RL</small></div>
-    </div>
-    <div class="app-titre">EN DIRECT</div>
-    <div class="app-match boite">
-      <div class="app-statut live"><strong>LIVE</strong><span>BO3</span></div>
-      <div class="app-affiche">
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">N</text></svg><b>NOVA</b></div>
-        <div class="app-score"><small>Ligue Horizon</small><strong data-score-live>0 - 0</strong><em>Map 2</em></div>
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3a17 17 0 1 1 0 34 17 17 0 0 1 0-34z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">H</text></svg><b>HALCYON</b></div>
-      </div>
-    </div>
-    <div class="app-titre">PROCHAINS MATCHS</div>
-    <div class="app-match boite">
-      <div class="app-statut"><strong>20:00</strong><span>BO3</span></div>
-      <div class="app-affiche">
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 37 12v16L20 38 3 28V12z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">O</text></svg><b>ORBIT</b></div>
-        <div class="app-score"><small>Coupe Aurora</small><strong>VS</strong><em>Ce soir</em></div>
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 4h28l-3 22-11 12L9 26z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">V</text></svg><b>VANTA</b></div>
-      </div>
-    </div>
-    <div class="app-match boite">
-      <div class="app-statut"><strong>17:30</strong><span>BO5</span></div>
-      <div class="app-affiche">
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 4h28l-3 22-11 12L9 26z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">K</text></svg><b>KESTREL</b></div>
-        <div class="app-score"><small>Série Zénith</small><strong>VS</strong><em>Samedi</em></div>
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 37 12v16L20 38 3 28V12z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">A</text></svg><b>ARGO</b></div>
-      </div>
-    </div>
-    <div class="app-titre">RÉSULTATS</div>
-    <div class="app-match boite">
-      <div class="app-statut victoire"><strong>VICTOIRE</strong><span>12/09</span></div>
-      <div class="app-affiche">
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">N</text></svg><b>NOVA</b></div>
-        <div class="app-score"><small>Ligue Horizon</small><strong>2 - 1</strong><em>Terminé</em></div>
-        <div><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 37 12v16L20 38 3 28V12z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">A</text></svg><b>ARGO</b></div>
-      </div>
-    </div>
-    <div class="app-navbar">
-      <span class="actif"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg>Accueil</span>
-      <span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h2v2h6V2h2v2h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3zm12 7H5v10h14zM7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm-8 4h2v2H7zm4 0h2v2h-2z"/></svg>Calendrier</span>
-      <span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6z"/></svg>Profil</span>
-    </div>
-  </div>
-</div></div>
-  </div>
-</section>
-
-<section class="section" id="decouvrir">
-  <div class="conteneur principe">
-    <div class="apparait">
-      <h2 class="titre-xl">Pensée autour de tes équipes.</h2>
-      <p class="chapo">Tu ne suis pas un jeu, tu suis une équipe. Choisis-la une fois : Flash eSport te montre ses prochains matchs, ses scores en direct et ses derniers résultats, sans rien chercher.</p>
-      <p>Une même organisation sur deux jeux ? Chaque équipe se suit séparément, pour ne voir que ce qui t'intéresse.</p>
-    </div>
-    <div class="suivis apparait" aria-label="Exemple d'équipes suivies (équipes fictives)">
-      <div class="suivi boite"><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">N</text></svg><div><b>NOVA</b><small>Counter-Strike 2</small></div><span class="pastille">Suivie</span></div>
-      <div class="suivi boite"><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 8v12c0 9-7 15-16 18C11 35 4 29 4 20V8z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">N</text></svg><div><b>NOVA</b><small>League of Legends</small></div><span class="pastille">Suivie</span></div>
-      <div class="suivi boite"><svg class="blason" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 37 12v16L20 38 3 28V12z" fill="#161616" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><text x="20" y="25.5" text-anchor="middle" font-family="Anton, Impact, sans-serif" font-size="15" fill="#fff">O</text></svg><div><b>ORBIT</b><small>Valorant</small></div><span class="pastille">Suivie</span></div>
+    <p class="surtitre">L'eSport en direct</p>
+    <h1 class="titre titre-hero">Tes équipes.<br><span class="rouge">Sans bruit.</span></h1>
+    <p class="chapo">Scores en direct, résultats, calendrier et tournois de tes équipes eSport. Six jeux, une seule app.</p>
+    <div class="stores stores-page">
+      <a class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></a>
+      <a class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></a>
     </div>
   </div>
 </section>
-
-<section class="section">
-  <div class="conteneur">
-    <h2 class="titre-xl apparait">L'essentiel, sans le bruit.</h2>
-    <div class="fonctions">
-      <article class="fonction fonction-large boite apparait">
-        <h3 class="titre-m">Le direct, en un coup d'œil</h3>
-        <p>Les matchs en cours sont en haut de l'écran, avec le score et le format. Tu sais tout de suite où en est ton équipe.</p>
-        <div class="visuel live-demo" aria-hidden="true"><span class="pastille-live">LIVE</span><strong>2 - 1</strong></div>
-      </article>
-      <article class="fonction fonction-etroite boite apparait">
-        <h3 class="titre-m">Un calendrier jour par jour</h3>
-        <p>Passe d'un jour à l'autre et filtre par équipe ou par compétition.</p>
-        <div class="visuel dates" aria-hidden="true">
-          <div class="date boite">mar<b>15</b></div>
-          <div class="date boite">mer<b>16</b></div>
-          <div class="date boite actif">jeu<b>17</b></div>
-          <div class="date boite">ven<b>18</b></div>
-          <div class="date boite">sam<b>19</b></div>
-        </div>
-      </article>
-      <article class="fonction fonction-pleine boite apparait">
-        <h3 class="titre-m">Six jeux, une seule app</h3>
-        <p>Plus besoin de jongler entre les sites et les réseaux pour suivre toutes tes équipes.</p>
-        <ul class="jeux visuel">
-          <li>Counter-Strike 2</li><li>League of Legends</li><li>Valorant</li>
-          <li>Dota 2</li><li>Rainbow Six Siege</li><li>Rocket League</li>
-        </ul>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="conteneur">
-    <h2 class="titre-l apparait">Simple et transparente.</h2>
-    <div class="engagements apparait">
-      <div class="engagement"><h3 class="titre-m">Gratuite</h3><p>Aucun abonnement, aucun achat intégré.</p></div>
-      <div class="engagement"><h3 class="titre-m">Sans pari</h3><p>Flash eSport informe. Elle ne propose aucun pari et n'y incite jamais.</p></div>
-      <div class="engagement"><h3 class="titre-m">Base de données à Paris</h3><p>La base de données de l'app est hébergée à Paris.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="conteneur">
-    <div class="appel boite apparait">
-      <svg class="eclair-deco" viewBox="0 0 24 36" aria-hidden="true"><path fill="#B00000" d="M15 0 2 20h9L8 36l14-22h-9z"/></svg>
-      <h2 class="titre-xl">Ne rate plus un match.</h2>
-      <p class="chapo">Flash eSport arrive bientôt sur iPhone.</p>
-      <div class="boutons"><a class="btn btn-principal" href="telechargement.html">Télécharger l'app</a></div>
-    </div>
-  </div>
-</section>
-
 </main>
-<footer class="barre-bas">
-  <div class="conteneur">
-    <div class="bas-grille">
-      <div class="bas-marque">
-        <a class="logo" href="index.html" aria-label="Flash eSport, accueil"><svg viewBox="0 0 24 36" aria-hidden="true"><path fill="#B00000" d="M15 0 2 20h9L8 36l14-22h-9z"/></svg><span>FLASH <em>ESPORT</em></span></a>
-        <p>Scores en direct, calendriers et résultats de tes équipes eSport, dans une seule app.</p>
-      </div>
-      <div class="bas-col">
-        <h2>Flash eSport</h2>
-        <ul>
-          <li><a href="index.html">Accueil</a></li>
-          <li><a href="telechargement.html">Téléchargement</a></li>
-        </ul>
-      </div>
-      <div class="bas-col">
-        <h2>Aide</h2>
-        <ul>
-          <li><a href="contact.html">Contact</a></li>
-          <li><a href="contact.html#faq">Questions fréquentes</a></li>
-          <li><a href="mailto:flashesport.app@gmail.com">flashesport.app@gmail.com</a></li>
-        </ul>
-      </div>
-      <div class="bas-col">
-        <h2>Informations légales</h2>
-        <ul>
-          <li><a href="mentions-legales.html">Mentions légales</a></li>
-          <li><a href="privacy.html">Politique de confidentialité</a></li>
-          <li><a href="cgu.html">Conditions d'utilisation</a></li>
-        </ul>
-      </div>
+<!-- gabarit:pied -->
+<footer class="pied">
+  <div class="pied-grille">
+    <div class="pied-marque">
+      <a class="logo" href="index.html" aria-label="Flash eSport, accueil"><svg class="logo-eclair" viewBox="0 0 24 36" aria-hidden="true"><path d="M15 0 2 20h9L8 36l14-22h-9z"/></svg><span class="logo-texte">FLASH <span>ESPORT</span></span></a>
+      <p>Les scores, les résultats et le calendrier de tes équipes eSport.</p>
     </div>
-    <div class="bas-mentions">
-      <p>Les noms d'équipes, de joueurs, de tournois et de jeux, ainsi que leurs logos, appartiennent à leurs détenteurs respectifs. Flash eSport n'est ni affiliée, ni sponsorisée, ni approuvée par ces équipes, organisateurs ou éditeurs.</p>
-      <p>Ce site n'utilise aucun cookie et aucun outil de mesure d'audience.</p>
-      <div class="bas-ligne">
-        <p>© <span data-annee>2026</span> Flash eSport. Tous droits réservés.</p>
-        <p>Conçu en France.</p>
-      </div>
-    </div>
+    <nav aria-label="Pied de page">
+      <ul class="pied-liens">
+        <li><a href="telechargement.html">Téléchargement</a></li>
+        <li><a href="privacy.html">Confidentialité</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="cgu.html">CGU</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="mentions-legales.html">Mentions légales</a></li>
+      </ul>
+    </nav>
+    <ul class="reseaux">
+        <li><a href="https://www.instagram.com/flashesport.gg/" target="_blank" rel="noopener noreferrer"><b>Instagram</b> @flashesport.gg</a></li>
+        <li><a href="https://x.com/flashesportfr" target="_blank" rel="noopener noreferrer"><b>X</b> @flashesportfr</a></li>
+    </ul>
+  </div>
+  <div class="pied-bas">
+    <p>Flash eSport n'est affilié à aucune équipe, ligue ni éditeur de jeu. Les logos et marques appartiennent à leurs propriétaires respectifs.</p>
+    <p>© 2026 Flash eSport</p>
   </div>
 </footer>
-<script src="assets/js/main.js" defer></script>
+<!-- /gabarit:pied -->
+<!-- gabarit:scripts -->
+<script src="assets/js/site.js?v=20261006-0739" defer></script>
+<!-- /gabarit:scripts -->
 </body>
 </html>
