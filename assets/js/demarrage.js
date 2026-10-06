@@ -1,7 +1,8 @@
-/* FLASH ESPORT — accueil : choix du mode d'affichage et préchargeur.
-   Script externe et synchrone (aucun script inline : CSP stricte), placé juste après le préchargeur.
+/* FLASH ESPORT — accueil : choix du mode d'affichage, apparition du hero, indicateur de chargement.
+   Script externe et synchrone (aucun script inline : CSP stricte), placé juste après l'indicateur.
    - mode « 3d »       : scène WebGL pilotée par le scroll (assets/js/app.js)
-   - mode « statique » : image fixe de l'éclair et simples fondus (mouvement réduit, WebGL2 absent, ?statique=1) */
+   - mode « statique » : image fixe de l'éclair et simples fondus (mouvement réduit, WebGL2 absent, ?statique=1)
+   Le texte du hero s'affiche tout de suite ; la scène 3D se charge derrière et apparaît quand elle est prête. */
 (function () {
   "use strict";
   var racine = document.documentElement;
@@ -15,18 +16,36 @@
     reduit: reduit,
     debug: params.get("debug") === "1",
     lite: params.get("lite") === "1",
-    loader: { done: function () {} }
+    loader: { done: function () {}, finish: function () {} }
   };
-  if (statique) { racine.classList.add("mode-statique"); return; }
-  racine.classList.add("mode-3d");
+  racine.classList.add(statique ? "mode-statique" : "mode-3d");
 
-  // ---- Préchargeur : progression simulée pendant la préparation de la scène, puis course à 100 ----
+  // Le hero apparaît dès que la police des titres est prête (au plus tard après 1,2 s).
+  var heroLance = false;
+  function lancerHero() {
+    if (heroLance) return;
+    heroLance = true;
+    requestAnimationFrame(function () {
+      var hero = document.getElementById("accueil");
+      if (hero && window.scrollY < window.innerHeight * 0.5) hero.classList.add("active");
+    });
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('1em "Anton"').then(lancerHero, lancerHero);
+      setTimeout(lancerHero, 1200);
+    } else {
+      lancerHero();
+    }
+  });
+  if (statique) return;
+
+  // ---- Indicateur de chargement de la scène : discret, à l'emplacement de l'éclair, sans bloquer la page ----
   var el = document.getElementById("loader");
   var count = document.getElementById("loader-count");
   var fill = document.getElementById("loader-fill");
   if (!el || !count || !fill) return;
   el.hidden = false;
-  document.body.classList.add("is-loading");
   var start = performance.now(), ready = false, rampAt = 0, shownAtRamp = 0, shown = 0, finished = false;
   var RAMP = 220;
   function finish() {
@@ -35,7 +54,6 @@
     count.textContent = "100";
     fill.style.transform = "scaleX(1)";
     el.classList.add("is-done");
-    document.body.classList.remove("is-loading");
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 900);
   }
   function tick(now) {
@@ -55,7 +73,6 @@
   etat.loader.done = function () { ready = true; };
   etat.loader.finish = finish;
   requestAnimationFrame(tick);
-  // Ne jamais retenir le visiteur : au bout de 12 s le préchargeur se lève quoi qu'il arrive.
-  setTimeout(function () { ready = true; }, 12000);
-  setTimeout(finish, 13500);
+  // Au bout de 15 s l'indicateur s'efface quoi qu'il arrive.
+  setTimeout(finish, 15000);
 })();

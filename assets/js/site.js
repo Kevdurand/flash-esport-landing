@@ -40,16 +40,18 @@
 
   // Boutons des stores : désactivés tant que data-store-url est vide.
   // Pour les activer : renseigner data-store-url="https://…" dans le HTML, rien d'autre.
-  document.querySelectorAll("[data-store-url]").forEach(function (lien) {
-    var url = lien.getAttribute("data-store-url");
+  document.querySelectorAll("[data-store-url]").forEach(function (bouton) {
+    var url = bouton.getAttribute("data-store-url");
     if (!url) return;
-    lien.setAttribute("href", url);
-    lien.setAttribute("target", "_blank");
-    lien.setAttribute("rel", "noopener noreferrer");
-    lien.removeAttribute("aria-disabled");
-    lien.removeAttribute("role");
+    var lien = document.createElement("a");
+    lien.className = bouton.className;
+    lien.href = url;
+    lien.target = "_blank";
+    lien.rel = "noopener noreferrer";
+    while (bouton.firstChild) lien.appendChild(bouton.firstChild);
     var petit = lien.querySelector(".store-petit");
     if (petit) petit.textContent = "Télécharger sur";
+    bouton.parentNode.replaceChild(lien, bouton);
   });
 
   // Sommaire des pages légales : ouvert sur ordinateur, replié sur téléphone

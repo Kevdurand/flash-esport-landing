@@ -115,7 +115,7 @@ body.page main { flex: 1; padding-top: var(--entete-h); }
 .sommaire-page summary::-webkit-details-marker { display: none; }
 .sommaire-page ol { list-style: none; margin-top: 0.5rem; }
 .sommaire-page a {
-  display: block; padding: 0.45rem 0; font-size: var(--t-petit); line-height: 1.4; color: var(--texte-doux); text-decoration: none;
+  display: flex; align-items: center; min-height: 44px; padding: 0.35rem 0; font-size: var(--t-petit); line-height: 1.4; color: var(--texte-doux); text-decoration: none;
   transition: color 0.3s ease;
 }
 .sommaire-page a:hover { color: var(--blanc); }

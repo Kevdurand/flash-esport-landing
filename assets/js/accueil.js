@@ -13,11 +13,12 @@ function modeStatique() {
     statiqueActif = true;
     racine.classList.remove('mode-3d');
     racine.classList.add('mode-statique');
-    document.body.classList.remove('is-loading', 'has-glass-card', 'contact-open', 'cursor-hover', 'cursor-hidden');
+    racine.classList.remove('scene-prete', 'medias');
+    document.body.classList.remove('has-glass-card', 'contact-open', 'cursor-hover', 'cursor-hidden');
     if (etat.loader.finish) etat.loader.finish();
     document.querySelectorAll('img[data-src]').forEach(img => { img.src = img.dataset.src; });
     const sections = document.querySelectorAll('.slide, .final');
-    sections.forEach(section => section.classList.remove('active'));
+    sections.forEach(section => { if (section.id !== 'accueil') section.classList.remove('active'); });
     if (!('IntersectionObserver' in window)) { sections.forEach(section => section.classList.add('active')); return; }
     const observer = new IntersectionObserver(entries => {
         for (const entry of entries) {
@@ -49,7 +50,43 @@ function panneauIncline() {
 
 panneauIncline();
 
-if (etat.mode === '3d') {
+// Données structurées (JSON-LD SoftwareApplication) : lues dans un fichier puis ajoutées à la page,
+// pour garder une CSP sans aucun script inline dans le HTML.
+function donneesStructurees() {
+    fetch(new URL(`../data/application.json${version}`, import.meta.url))
+        .then(reponse => (reponse.ok ? reponse.text() : null))
+        .then(json => {
+            if (!json) return;
+            const bloc = document.createElement('script');
+            bloc.type = 'application/ld+json';
+            bloc.textContent = json;
+            document.head.appendChild(bloc);
+        })
+        .catch(() => {});
+}
+if (document.readyState === 'complete') donneesStructurees();
+else window.addEventListener('load', donneesStructurees, { once: true });
+
+// Un rendu WebGL logiciel (sans carte graphique) ne peut pas animer cette scène : image fixe d'emblée,
+// sans télécharger le moteur. Ignoré avec ?debug=1 (captures automatisées).
+function renduLogiciel() {
+    if (etat.debug) return false;
+    try {
+        const gl = document.createElement('canvas').getContext('webgl2');
+        if (!gl) return true;
+        const info = gl.getExtension('WEBGL_debug_renderer_info');
+        const nom = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+        const perte = gl.getExtension('WEBGL_lose_context');
+        if (perte) perte.loseContext();
+        return /swiftshader|llvmpipe|software|basic render/i.test(nom);
+    } catch (erreur) {
+        return true;
+    }
+}
+
+if (etat.mode === '3d' && renduLogiciel()) {
+    modeStatique();
+} else if (etat.mode === '3d') {
     try {
         const moteur = await import(`./app.js${version}`);
         await moteur.demarrer(etat, modeStatique);

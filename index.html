@@ -14,9 +14,9 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/exo2-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-0828">
-<link rel="stylesheet" href="assets/css/base.css?v=20261006-0828">
-<link rel="stylesheet" href="assets/css/accueil.css?v=20261006-0828">
+<link rel="stylesheet" href="assets/css/tokens.css?v=20261006-0842">
+<link rel="stylesheet" href="assets/css/base.css?v=20261006-0842">
+<link rel="stylesheet" href="assets/css/accueil.css?v=20261006-0842">
 <!-- /gabarit:tete -->
 <title>Flash eSport — Tes équipes eSport, en direct</title>
 <meta name="description" content="Scores en direct, résultats, calendrier et tournois de tes équipes eSport sur CS2, LoL, VALORANT, Dota 2, R6 et Rocket League. Une app française, simple et rapide.">
@@ -40,15 +40,14 @@
 <!-- /gabarit:partage -->
 </head>
 <body class="accueil">
-<div class="loader" id="loader" role="status" aria-live="polite" hidden>
+<div class="loader" id="loader" aria-hidden="true" hidden>
   <div class="loader-inner">
     <svg class="loader-eclair" viewBox="0 0 24 36" aria-hidden="true"><path d="M15 0 2 20h9L8 36l14-22h-9z"/></svg>
     <span class="loader-value"><span id="loader-count">00</span><span class="loader-unit">%</span></span>
     <span class="loader-bar"><span id="loader-fill"></span></span>
-    <span class="loader-hint">Flash eSport</span>
   </div>
 </div>
-<script src="assets/js/demarrage.js?v=20261006-0828"></script>
+<script src="assets/js/demarrage.js?v=20261006-0842"></script>
 <!-- gabarit:entete -->
 <a class="lien-evitement" href="#contenu">Aller au contenu</a>
 <header class="entete">
@@ -81,8 +80,8 @@
       <h1 class="slide-title titre"><span class="line"><span class="line-inner">Tes équipes.</span></span><span class="line rouge"><span class="line-inner">Sans bruit.</span></span></h1>
       <p class="slide-desc revele d2">Scores en direct, résultats, calendrier et tournois de tes équipes eSport. Six jeux, une seule app.</p>
       <div class="stores revele d3">
-        <a class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></a>
-        <a class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></a>
+        <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></span>
+        <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></span>
       </div>
     </div>
     <img class="affiche" data-src="assets/img/eclair-poster.webp" alt="" width="960" height="1200" aria-hidden="true">
@@ -153,8 +152,8 @@
     <h2 class="final-titre titre" id="final-titre"><span class="line"><span class="line-inner">Ne rate plus</span></span><span class="line rouge"><span class="line-inner">aucun match.</span></span></h2>
     <p class="final-texte">Gratuite, sans abonnement ni achat intégré. Utilisable sans compte.</p>
     <div class="stores">
-      <a class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></a>
-      <a class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></a>
+      <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">l'App Store</span></span>
+      <span class="btn btn-store" role="link" aria-disabled="true" data-store-url=""><span class="store-petit">Bientôt sur</span><span class="store-nom">Google Play</span></span>
     </div>
     <ul class="reseaux">
       <li><a href="https://www.instagram.com/flashesport.gg/" target="_blank" rel="noopener noreferrer"><b>Instagram</b> @flashesport.gg</a></li>
@@ -202,8 +201,8 @@
 <div class="cursor-label" aria-hidden="true">000</div>
 <canvas id="webgl" aria-hidden="true"></canvas>
 <!-- gabarit:scripts -->
-<script src="assets/js/site.js?v=20261006-0828" defer></script>
-<script type="module" src="assets/js/accueil.js?v=20261006-0828"></script>
+<script src="assets/js/site.js?v=20261006-0842" defer></script>
+<script type="module" src="assets/js/accueil.js?v=20261006-0842"></script>
 <!-- /gabarit:scripts -->
 </body>
 </html>

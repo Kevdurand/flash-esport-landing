@@ -148,13 +148,16 @@ html:not(.mode-3d) .final-bloc {
    ========================================================================= */
 .mode-3d, .mode-3d body { scrollbar-width: none; -ms-overflow-style: none; }
 .mode-3d ::-webkit-scrollbar { display: none; width: 0; }
-.mode-3d body.is-loading { overflow: hidden; }
 
 .mode-3d #webgl {
   display: block; position: fixed; top: 0; left: 0; z-index: 1;
   width: 100%; height: 100vh; height: 100lvh;
   outline: none; pointer-events: none;
+  opacity: 0; transition: opacity 1.6s ease;   /* la scène apparaît en fondu quand elle est prête */
 }
+.mode-3d.scene-prete #webgl { opacity: 1; }
+/* Captures de l'app : affichées (donc chargées) seulement après le hero. */
+.mode-3d:not(.medias) .tuto, .mode-3d:not(.medias) .panneau { display: none; }
 .mode-3d .scroll-stage { display: block; height: 1100vh; pointer-events: none; }
 .mode-3d .scene { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
 /* Les chapitres inactifs sont transparents (et non masqués) : les lecteurs d'écran lisent tout le contenu. */
@@ -281,23 +284,23 @@ html:not(.mode-3d) .final-bloc {
 }
 @keyframes cursor-spin { to { transform: rotate(360deg); } }
 
-/* ---- Préchargeur ---- */
+/* ---- Indicateur de chargement de la scène : à l'emplacement de l'éclair, sans masquer la page ---- */
 .loader {
-  position: fixed; inset: 0; z-index: 9990; background: var(--noir);
-  display: grid; place-items: center;
-  transition: opacity 0.7s var(--courbe), visibility 0s linear 0.7s;
+  position: fixed; left: 72%; top: 50%; z-index: 12; transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: opacity 0.6s ease, visibility 0s linear 0.6s;
 }
-.loader.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
-.loader-inner { display: grid; justify-items: center; text-align: center; gap: 1.25rem; width: min(320px, 70vw); }
-.loader-eclair { width: 22px; height: 33px; fill: var(--rouge-lumiere); filter: drop-shadow(0 0 14px var(--rouge-halo)); }
+.loader.is-done { opacity: 0; visibility: hidden; }
+.loader-inner { display: grid; justify-items: center; text-align: center; gap: 0.9rem; width: 8.5rem; }
+.loader-eclair { width: 22px; height: 33px; fill: var(--rouge-lumiere); filter: drop-shadow(0 0 14px var(--rouge-halo)); animation: loader-pouls 1.5s ease-in-out infinite; }
+@keyframes loader-pouls { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 .loader-value {
-  font-family: var(--police-titre); font-size: clamp(3.5rem, 8vw, 6rem); line-height: 1; letter-spacing: 0.02em;
+  font-family: var(--police-titre); font-size: 2rem; line-height: 1; letter-spacing: 0.04em;
   color: var(--blanc); font-variant-numeric: tabular-nums;
 }
 .loader-unit { font-size: 0.35em; margin-left: 0.12em; color: var(--texte-faible); }
 .loader-bar { width: 100%; height: 2px; background: var(--trait); overflow: hidden; border-radius: 2px; }
 .loader-bar span { display: block; width: 100%; height: 100%; background: var(--rouge-lumiere); box-shadow: 0 0 12px var(--rouge-halo); transform: scaleX(0); transform-origin: left center; }
-.loader-hint { font-family: var(--police-titre); font-size: var(--t-petit); letter-spacing: 0.3em; text-transform: uppercase; color: var(--texte-faible); }
 
 /* =========================================================================
    Mode 3D — portrait et écrans étroits : composition empilée
@@ -305,6 +308,7 @@ html:not(.mode-3d) .final-bloc {
    ========================================================================= */
 @media (max-width: 900px), (max-aspect-ratio: 4/5) {
   .mode-3d .story-progress, .mode-3d .defiler { display: none; }
+  .loader { left: 50%; top: 73%; }
   .mode-3d .slide-title { font-size: clamp(2.25rem, 11.5vw, 4.5rem); margin: 0.7rem 0 0.9rem; }
   .mode-3d #accueil .slide-title { font-size: clamp(2.75rem, 14.5vw, 6rem); }
   .mode-3d .slide-desc { font-size: 1rem; line-height: 1.55; max-width: 34ch; }

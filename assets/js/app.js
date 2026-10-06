@@ -3,7 +3,7 @@
    recomposition, scroll lissé) : verre rouge, 5 chapitres Flash eSport, éclats en orbite autour du
    téléphone, halo qui suit l'éclair, modes allégé et statique, compatibilité iPhone.
    Three.js r160 hébergé dans le repo (assets/vendor) : aucun appel réseau hors du site. */
-import * as THREE from '../vendor/three.module.js';
+import * as THREE from '../vendor/three.module.min.js';
 import { SVGLoader } from '../vendor/SVGLoader.js';
 
 // ---- Configuration -------------------------------------------------------------
@@ -525,7 +525,6 @@ function shapeFragments(fit, count) {
 
 // ---- Construction de l'éclair en verre -----------------------------------------
 function createGlassLogo() {
-    createGlassEnvironment();
     modelPivot = new THREE.Group();
     modelPivot.position.y = -0.3;
     scene.add(modelPivot);
@@ -715,6 +714,7 @@ function measureZones() {
     const header = box('.entete'), hero = box('#accueil .slide-corps'), games = box('#jeux .slide-corps');
     const phone = box('.tuto-etape .telephone'), live = box('#direct .slide-corps'), panel = box('.panneau');
     if (!header || !hero || !games || !phone || !live || !panel) return;
+    const mediaReady = phone.height > 10 && panel.height > 10;   // téléphone et panneau pas encore affichés : valeurs par défaut
     const finalTop = contactSection ? parseFloat(getComputedStyle(contactSection).paddingTop) || visible * 0.42 : visible * 0.42;
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     // [haut, bas] de la zone libre en px, hauteur de l'objet en unités monde, rayon mini / maxi
@@ -726,6 +726,11 @@ function measureZones() {
         [header.bottom + 14, finalTop - 4, OBJECT_HEIGHT, 8.6, 16]
     ];
     list.forEach(([top, bottom, objectHeight, minRadius, maxRadius], index) => {
+        if (!mediaReady && (index === 2 || index === 3)) {
+            zones.targetFy[index] = zones.fy[index];
+            zones.targetRadius[index] = zones.radius[index];
+            return;
+        }
         const span = Math.max(60, bottom - top);
         zones.targetFy[index] = ((top + bottom) / 2 - span * 0.035) / height;   // la perspective grossit le bas de l'objet
         zones.targetRadius[index] = clamp(objectHeight * height / (span * 0.9 * 2 * tanHalf), minRadius, maxRadius);   // 10 % de marge (perspective)
@@ -1050,6 +1055,7 @@ function stop() {
     cancelAnimationFrame(animationRequest);
     animationRequest = 0;
     document.querySelectorAll('.slide-title, .final-titre').forEach(title => { title.style.fontSize = ''; });
+    document.documentElement.classList.remove('scene-prete');
     try { renderer.dispose(); renderer.forceContextLoss(); } catch (error) { /* contexte déjà perdu */ }
 }
 
@@ -1108,6 +1114,17 @@ function fitTitles() {
     });
 }
 
+// Les captures de l'app (téléphone, panneau) ne sont chargées qu'après le hero : le premier
+// affichage reste léger. Elles arrivent dès que le visiteur commence à défiler, ou après 2,5 s.
+let mediasShown = false, mediasAt = Infinity;
+function showMedias() {
+    mediasShown = true;
+    document.documentElement.classList.add('medias');
+    requestAnimationFrame(measureZones);
+}
+
+const pause = () => new Promise(resolve => setTimeout(resolve, 0));
+
 // ---- Boucle de rendu -----------------------------------------------------------
 let animationRequest = 0;
 let lastFrameAt = 0;
@@ -1134,6 +1151,7 @@ function animate(now = performance.now()) {
     lastFrameAt = now;
     watchPerformance(now, frameDelta, active);
     if (!running) return;
+    if (!mediasShown && (targetScroll > 0.04 || now > mediasAt)) showMedias();
     const deltaTime = Math.min(clock.getDelta(), 0.1);
     const time = clock.getElapsedTime();
     const damping = factor => 1 - Math.pow(1 - factor, deltaTime * 60);
@@ -1255,9 +1273,8 @@ function updateSlides(scroll) {
     });
 
     const now = performance.now();
-    const loading = document.body.classList.contains('is-loading');
     const finalOpen = targetContact > 0.02;
-    const inside = T.slides.map(([start, end]) => !loading && !finalOpen && scroll >= start && scroll <= end);
+    const inside = T.slides.map(([start, end]) => !finalOpen && scroll >= start && scroll <= end);
     const current = inside.indexOf(true);
     const actives = slideState.map((state, index) => {
         if (current === index) {
@@ -1266,7 +1283,7 @@ function updateSlides(scroll) {
             state.left = 0;
             return true;
         }
-        if (state.active && current === -1 && !finalOpen && !loading) {
+        if (state.active && current === -1 && !finalOpen) {
             if (!state.left) state.left = now;
             if (now - state.since < SLIDE_MIN_SHOW || now - state.left < SLIDE_LEAVE_HOLD) return true;
         }
@@ -1342,7 +1359,8 @@ function installDebugHooks() {
     };
 }
 
-function init() {
+// Initialisation découpée en étapes courtes : la page reste réactive pendant que la scène se prépare.
+async function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color('#000000');
     scene.fog = new THREE.FogExp2('#000000', 0.01);
@@ -1374,23 +1392,29 @@ function init() {
     scene.add(fillLight);
 
     createSparks();
+    await pause();
+    createGlassEnvironment();
+    await pause();
     createGlassLogo();
+    await pause();
     createGlassCard();
     tier = initialTier();
     applyTier();
     fitTitles();
     measureZones();
-
-    // Compile aussi le shader de la dalle maintenant, pas à l'arrivée sur le chapitre final.
-    if (glassCard) {
-        glassCard.visible = true;
-        renderer.compile(scene, camera);
-        glassCard.visible = false;
-    }
-
     currentScroll = readScroll();
     currentContact = targetContact;
     snapCamera();
+
+    // Compile tous les shaders maintenant (dalle du chapitre final comprise), sans bloquer la page
+    // quand le navigateur sait compiler en parallèle.
+    if (glassCard) glassCard.visible = true;
+    glassIcon.visible = true;
+    if (renderer.extensions.has('KHR_parallel_shader_compile')) await renderer.compileAsync(scene, camera);
+    else renderer.compile(scene, camera);
+    if (glassCard) glassCard.visible = false;
+    glassIcon.visible = false;
+    await pause();
 
     for (const type of ['scroll', 'pointermove', 'pointerdown', 'keydown', 'resize', 'touchmove']) {
         window.addEventListener(type, () => { lastInputAt = performance.now(); }, { passive: true });
@@ -1425,7 +1449,9 @@ function init() {
 
     running = true;
     perf.graceUntil = performance.now() + 3000;
+    mediasAt = performance.now() + 2500;
     animate();
+    document.documentElement.classList.add('scene-prete');
     prewarmMorph();
 }
 
@@ -1451,7 +1477,7 @@ export async function demarrer(etatInitial, repliStatique) {
     openingSource = sources[0];
     finalSource = SINGLE_SHAPE ? sources[0] : sources[1];
 
-    init();
+    await init();
 
     // Première image rendue, shaders compilés : on lève le préchargeur une fois les polices prêtes.
     const release = () => { if (running) { fitTitles(); measureZones(); } etat.loader.done(); };

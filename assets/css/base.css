@@ -100,7 +100,7 @@ button { font: inherit; color: inherit; }
   font-family: var(--police-titre); font-size: 1.3125rem; line-height: 1;
   letter-spacing: 0.035em; text-transform: uppercase; white-space: nowrap;
 }
-.logo-texte span { color: var(--rouge-lumiere); }
+.logo-texte span { color: var(--rouge-texte); }   /* rouge éclairci : contraste AA à cette taille */
 
 /* ---- En-tête ---- */
 .entete {
