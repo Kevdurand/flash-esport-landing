@@ -6,7 +6,7 @@
 /* =========================================================================
    Éléments communs aux deux modes
    ========================================================================= */
-.slide-title, .final-titre { font-size: clamp(2.75rem, 6.2vw, 6.25rem); line-height: 1; margin: 0.9rem 0 1.4rem; }
+.slide-title, .final-titre { font-size: clamp(2.75rem, 6.2vw, 6.25rem); line-height: 1; margin: 1.15rem 0 1.4rem; }
 #accueil .slide-title { font-size: clamp(3.25rem, 8.4vw, 8.25rem); }
 .slide-title .line, .final-titre .line { display: block; }
 .slide-title .line.rouge, .final-titre .line.rouge { color: var(--rouge); }
@@ -121,7 +121,7 @@ html:not(.mode-3d) body.accueil::before {
     url("../img/fond-lignes.svg") center top / cover no-repeat;
 }
 html:not(.mode-3d) .slide {
-  position: relative; max-width: calc(var(--largeur) + 2 * var(--marge)); margin: 0 auto;
+  position: relative; max-width: calc(var(--largeur) + 2 * var(--marge)); margin: 0;
   padding: clamp(4rem, 10vw, 7.5rem) var(--marge);
 }
 html:not(.mode-3d) #accueil {
@@ -136,7 +136,7 @@ html:not(.mode-3d) .affiche {
 html:not(.mode-3d) .tuto { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--e-4) var(--e-3); margin-top: var(--e-4); }
 html:not(.mode-3d) .tuto-texte h3 { font-size: clamp(1.375rem, 2.2vw, 1.75rem); }
 html:not(.mode-3d) #direct { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--e-5); }
-html:not(.mode-3d) .final { max-width: calc(var(--largeur) + 2 * var(--marge)); margin: 0 auto; }
+html:not(.mode-3d) .final { max-width: calc(var(--largeur) + 2 * var(--marge)); margin: 0; }
 html:not(.mode-3d) .final-bloc {
   margin: 0 auto;                      /* bloc de fin centré : pas de moitié d'écran vide */
   border: 1px solid var(--neutre-contour);
@@ -245,7 +245,7 @@ html:not(.mode-3d) .final-bloc {
 }
 /* Le pied de page en verre monte par-dessus le bloc final et l'éclair. Il reprend la marge de la barre du haut
    et des titres : une seule grille sur toute la page. */
-.mode-3d .pied-grille, .mode-3d .pied-bas { max-width: none; }
+
 .mode-3d .pied { background: var(--verre-menu); }
 
 /* Indicateur : filet de progression sous l'en-tête */
@@ -287,7 +287,7 @@ html:not(.mode-3d) .final-bloc {
 .loader-label { font-size: 0.625rem; font-weight: 600; line-height: 1; letter-spacing: 0.32em; text-transform: uppercase; color: var(--texte-faible); animation: loader-pouls 1.5s ease-in-out infinite; }
 @keyframes loader-pouls { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 .loader-value {
-  position: relative; display: inline-flex; align-items: baseline; justify-content: center; min-width: 3.1em; padding: 0.2em 0.35em 0.12em;
+  position: relative; display: flex; align-items: baseline; justify-content: center; width: 100%; padding: 0.2em 0.35em 0.12em;
   border: 1px solid var(--neutre-contour); border-radius: 6px;
   background: linear-gradient(to bottom, var(--neutre-haut) calc(50% - 0.5px), var(--noir) calc(50% - 0.5px), var(--noir) calc(50% + 0.5px), var(--neutre-bas) calc(50% + 0.5px));
   font-family: var(--police-titre); font-size: 2.5rem; line-height: 1; letter-spacing: 0.04em; color: var(--blanc);

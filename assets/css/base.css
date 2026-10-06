@@ -169,7 +169,7 @@ html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
 }
 .score-case {
   position: relative; display: inline-grid; place-items: center; min-width: 2.1em; height: 1.8em; padding: 0.1em 0.3em 0;
-  overflow: hidden; border: 1px solid var(--neutre-contour); border-radius: 4px;
+  overflow: hidden; border: 1px solid var(--neutre-contour); border-bottom-color: var(--rouge); border-radius: 4px;
   background: linear-gradient(to bottom, var(--neutre-haut) calc(50% - 0.5px), var(--noir) calc(50% - 0.5px), var(--noir) calc(50% + 0.5px), var(--neutre-bas) calc(50% + 0.5px));      /* le pli du tableau de score, derrière le chiffre */
   perspective: 90px;
 }
@@ -183,7 +183,6 @@ html[data-qualite="1"] .pied, html[data-qualite="2"] .pied {
 .surtitre-score::before { display: none; }
 .surtitre-score .score-case {
   font-family: var(--police-titre); font-size: 0.875rem; line-height: 1; letter-spacing: 0.06em; color: var(--blanc);
-  border-bottom-color: var(--rouge);
 }
 
 .menu-btn {
@@ -317,7 +316,6 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
 }
 .pied-grille {
-  max-width: var(--largeur); margin: 0 auto;
   display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) minmax(0, 1fr); gap: var(--e-4);
   align-items: start;
 }
@@ -331,7 +329,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
 .pied-liens a:hover, .pied-liens a[aria-current] { color: var(--blanc); }
 .pied .reseaux { flex-direction: column; gap: 0; }
 .pied-bas {
-  max-width: var(--largeur); margin: var(--e-4) auto 0; padding-top: var(--e-3);
+  margin: var(--e-4) 0 0; padding-top: var(--e-3);
   border-top: 1px solid var(--trait);
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem var(--e-4);
   font-size: var(--t-mini); line-height: 1.7; color: var(--texte-faible);
@@ -339,7 +337,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
 .pied-bas p:first-child { max-width: 72ch; }
 
 /* ---- Mobile ---- */
-@media (max-width: 820px) {
+@media (max-width: 900px) {
   .entete { grid-template-columns: auto 1fr; gap: 0.75rem; }
   .entete-actions { gap: 0.25rem; }
   .menu-btn { display: block; }
@@ -391,7 +389,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   .pied-bas { margin-top: 1.5rem; padding-top: 1.25rem; }
   .pied .reseaux { flex-direction: row; gap: 0 1.75rem; }
 }
-@media (min-width: 821px) {
+@media (min-width: 901px) {
   .nav .nav-reseaux { display: none; }
 }
 @media (max-width: 374px) {

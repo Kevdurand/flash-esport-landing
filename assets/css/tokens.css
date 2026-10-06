@@ -76,6 +76,7 @@
   --grain: 0.03;                                   /* opacité du grain de pellicule */
 }
 
-@media (max-width: 820px) {
-  :root { --entete-h: 62px; }
+@media (max-width: 900px) {
+  :root { --verre-barre: rgba(0, 0, 0, 0.76);   /* téléphone : le contenu passe juste derrière le logo, verre plus couvrant */
+    --entete-h: 62px; }
 }

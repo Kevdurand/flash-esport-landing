@@ -25,7 +25,7 @@
         bouton.focus();
       }
     });
-    window.matchMedia("(min-width: 821px)").addEventListener("change", function (e) {
+    window.matchMedia("(min-width: 901px)").addEventListener("change", function (e) {
       if (e.matches) reglerMenu(false);
     });
   }
