@@ -1,6 +1,6 @@
 # Bibliothèques tierces hébergées dans le repo
 
-Aucune ressource n'est chargée depuis un serveur tiers : tout est servi depuis flashesport.gg.
+Aucune ressource n'est chargée depuis un serveur tiers : tout est servi depuis strikzy.gg.
 
 | Fichier | Bibliothèque | Version | Source | Licence | SHA-256 |
 |---|---|---|---|---|---|
