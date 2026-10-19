@@ -108,12 +108,9 @@ p { text-wrap: pretty; }
   min-height: 44px;
   color: var(--blanc); text-decoration: none;
 }
-.logo-eclair { width: 14px; height: 21px; flex: none; fill: var(--rouge-lumiere); filter: drop-shadow(0 0 8px var(--rouge-halo)); }
-.logo-texte {
-  font-family: var(--police-titre); font-size: 1.3125rem; line-height: 1;
-  letter-spacing: 0.035em; text-transform: uppercase; white-space: nowrap;
-}
-.logo-texte span { color: var(--rouge); }
+.logo-svg { display: block; height: 24px; width: auto; aspect-ratio: 1133 / 180; flex: none; }
+.logo-blanc { fill: var(--blanc); }
+.logo-rouge { fill: var(--rouge); }          /* diagonale du Z et trait incliné : seuls éléments rouges du logo */
 
 /* ---- En-tête ---- */
 .entete {
@@ -332,7 +329,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   margin: var(--e-4) 0 0; padding-top: var(--e-3);
   border-top: 1px solid var(--trait);
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem var(--e-4);
-  font-size: var(--t-mini); line-height: 1.7; color: var(--texte-faible);
+  font-size: var(--t-mini); line-height: 1.7; color: var(--texte-secondaire);
 }
 .pied-bas p:first-child { max-width: 72ch; }
 
@@ -342,7 +339,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   .entete-actions { gap: 0.25rem; }
   .menu-btn { display: block; }
   .score { display: none; }
-  .logo-texte { font-size: 1.1875rem; }
+  .logo-svg { height: 20px; }
 
   /* Menu plein écran sobre */
   .nav {
@@ -394,7 +391,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
 }
 @media (max-width: 374px) {
   .entete .btn-compact { padding: 0 0.75rem; letter-spacing: 0.06em; }
-  .logo-texte { font-size: 1.0625rem; }
+  .logo-svg { height: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
