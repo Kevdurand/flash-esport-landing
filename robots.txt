@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://flashesport.gg/sitemap.xml
+Sitemap: https://strikzy.gg/sitemap.xml
