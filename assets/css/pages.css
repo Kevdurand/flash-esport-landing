@@ -1,4 +1,4 @@
-/* FLASH ESPORT — pages secondaires : FAQ, contact, téléchargement, pages légales, 404 */
+/* STRIKZY — pages secondaires : FAQ, contact, téléchargement, pages légales, 404 */
 
 /* Fond : noir, lueur rouge très discrète, lignes ondulées fines (image fixe, pas de 3D) */
 body.page::before {
@@ -22,9 +22,9 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 .page-tete-duo { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: var(--e-4); align-items: center; }
 .page-corps { padding-bottom: var(--e-6); }
 
-/* Éclair en image fixe */
-.eclair-fixe { position: relative; justify-self: center; width: min(100%, 26rem); }
-.eclair-fixe img {
+/* Z en image fixe */
+.visuel-fixe { position: relative; justify-self: center; width: min(100%, 26rem); }
+.visuel-fixe img {
   width: 100%; height: auto;
   -webkit-mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
   mask-image: radial-gradient(closest-side, var(--noir) 58%, transparent 100%);
@@ -179,7 +179,7 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
   .contact-bloc .carte:first-child { grid-template-columns: 1fr; }
   .contact-bloc .carte:first-child .btn { grid-column: 1; grid-row: auto; margin-top: 1.25rem; }
   .page-tete-duo { gap: var(--e-2); }
-  .page-tete-duo .eclair-fixe { order: -1; width: min(56vw, 15rem); justify-self: center; margin: -1.5rem 0 -1rem; }
+  .page-tete-duo .visuel-fixe { order: -1; width: min(56vw, 15rem); justify-self: center; margin: -1.5rem 0 -1rem; }
   .legal-grille { grid-template-columns: minmax(0, 1fr); gap: var(--e-3); }
   .sommaire-page { position: static; max-height: none; }
 }

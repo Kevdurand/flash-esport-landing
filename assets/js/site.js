@@ -1,4 +1,4 @@
-/* FLASH ESPORT — comportements communs à toutes les pages, sans dépendance */
+/* STRIKZY — comportements communs à toutes les pages, sans dépendance */
 (function () {
   "use strict";
   var racine = document.documentElement;

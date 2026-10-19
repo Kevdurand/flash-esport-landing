@@ -1,17 +1,17 @@
-/* FLASH ESPORT — moteur 3D de l'accueil : l'éclair en verre rouge.
+/* STRIKZY — moteur 3D de l'accueil : le Z en verre rouge.
    Adapté du moteur « Premium 3D Glass » (verre à dispersion, découpage automatique en fragments,
-   recomposition, scroll lissé) : verre rouge, 5 chapitres Flash eSport, éclats en orbite autour du
-   téléphone, halo qui suit l'éclair, modes allégé et statique, compatibilité iPhone.
+   recomposition, scroll lissé) : verre rouge, 5 chapitres StrikZy, éclats en orbite autour du
+   téléphone, halo qui suit le Z, modes allégé et statique, compatibilité iPhone.
    Three.js r160 hébergé dans le repo (assets/vendor) : aucun appel réseau hors du site. */
 import * as THREE from '../vendor/three.module.min.js';
 import { SVGLoader } from '../vendor/SVGLoader.js';
 
 // ---- Configuration -------------------------------------------------------------
-// `shapes` : la silhouette de l'éclair du logo (un seul <path>, viewBox 0 0 1000 1000).
+// `shapes` : la silhouette du Z du logo (un seul <path>, viewBox 0 0 1000 1000).
 // `palette` : une couleur de fond par chapitre, du hero au final. Uniquement des rouges sur noir.
 // `fragments` : 6 éclats, un par jeu couvert.
 const SITE = {
-    shapes: ['../shapes/eclair.svg'],
+    shapes: ['../shapes/z.svg'],
     palette: ['#3a0000', '#B00000', '#960a0a', '#6e0000', '#B00000'],
     fragments: 6
 };
@@ -21,7 +21,7 @@ let openingSource = '', finalSource = '';
 // ---- Chronologie du scroll (0 → 1 sur la scène, puis chapitre final dans le flux) ----
 const T = {
     open: [0.07, 0.085],      // juste avant d'éclater : les biseaux se resserrent (miroir de la fin)
-    burst: [0.085, 0.22],      // l'éclair éclate
+    burst: [0.085, 0.22],      // le Z éclate
     orbit: [0.30, 0.37, 0.61, 0.67],   // les éclats entrent en orbite autour du téléphone, puis en sortent
     join: [0.66, 0.79],       // les éclats reviennent à leur place
     bevel: [0.79, 0.81],      // prisme unique : les biseaux grandissent
@@ -33,14 +33,14 @@ const T = {
     nav: [0, 0.23, 0.40, 0.90],
     chapters: [0.09, 0.335, 0.69]
 };
-// Position de l'éclair à l'écran par chapitre (fraction de la largeur / de la hauteur), puis au final.
+// Position du Z à l'écran par chapitre (fraction de la largeur / de la hauteur), puis au final.
 const FRAME = {
-    landscape: { fx: [0.72, 0.27, 0.675, 0.505], fy: [0.5, 0.5, 0.5, 0.5], final: [0.27, 0.5] },
+    landscape: { fx: [0.72, 0.27, 0.675, 0.48], fy: [0.5, 0.5, 0.5, 0.5], final: [0.27, 0.5] },
     portrait: { fx: [0.5, 0.5, 0.5, 0.5], fy: [0.685, 0.30, 0.46, 0.505], final: [0.5, 0.25] }
 };
 
 // ---- Réglages ------------------------------------------------------------------
-const LOGO_HEIGHT = 3.1;                              // hauteur de l'éclair, unités monde
+const LOGO_HEIGHT = 2.4;                              // hauteur du Z, unités monde (le Z est plus massif que l'ancienne forme)
 const LOGO_DEPTH = 0.44;
 const LOGO_BEVEL = { size: 0.042, thickness: 0.052 };
 // Une seule forme : le prisme recomposé est identique à celui qui a éclaté, biseau compris.
@@ -54,7 +54,7 @@ const canvas = document.querySelector('#webgl');
 let scene, camera, renderer, glass;
 let modelPivot;
 const logoPieces = [];
-let wholeBody;     // l'éclair entier, tant qu'il est assemblé
+let wholeBody;     // le Z entier, tant qu'il est assemblé
 let glassIcon;     // prisme final unique
 let iconOutline = [];
 let iconHoles = [];
@@ -92,8 +92,8 @@ const shaderUniforms = {
     uMouse: { value: new THREE.Vector2(0, 0) },
     uScroll: { value: 0 },
     uVelocity: { value: 0 },
-    uObject: { value: new THREE.Vector2(0, 0) },     // position de l'éclair à l'écran
-    uGlow: { value: 0.0 },                            // intensité du halo derrière l'éclair
+    uObject: { value: new THREE.Vector2(0, 0) },     // position du Z à l'écran
+    uGlow: { value: 0.0 },                            // intensité du halo derrière le Z
     uGlowSpread: { value: 1.0 }
 };
 
@@ -110,7 +110,7 @@ const fireflyUniforms = {
     uFocus: { value: 5 }, uBoost: { value: 1 },
     uTextA: { value: new THREE.Vector4(3, 3, 3, 3) }, uTextB: { value: new THREE.Vector4(3, 3, 3, 3) }
 };
-// Balancement de l'éclair : il suit la souris avec de l'inertie (ressort légèrement sous-amorti).
+// Balancement du Z : il suit la souris avec de l'inertie (ressort légèrement sous-amorti).
 const sway = { x: 0, y: 0, vx: 0, vy: 0 };
 
 const sizes = { width: window.innerWidth, height: window.innerHeight };
@@ -125,8 +125,8 @@ const clamp = THREE.MathUtils.clamp;
 //  - dérive lente sur des trajectoires douces, propres à chaque luciole (sommes de sinusoïdes déphasées, sans
 //    période commune : jamais de boucle visible) ; chacune respire à son rythme ;
 //  - profondeur : les proches sont plus grosses et un peu floues, les lointaines minuscules et nettes ;
-//  - plus denses et plus lumineuses autour de l'éclair ; une gerbe s'échappe des cassures à l'éclatement ;
-//    elles convergent vers l'éclair pendant la recomposition et l'entourent au chapitre final ;
+//  - plus denses et plus lumineuses autour du Z ; une gerbe s'échappe des cassures à l'éclatement ;
+//    elles convergent vers le Z pendant la recomposition et l'entourent au chapitre final ;
 //  - elles s'écartent du curseur, glissent légèrement avec le défilement, et s'effacent derrière les textes.
 // Rouges de la charte, quelques cœurs orangés ; aucun bleu, aucun vert.
 function createFireflies() {
@@ -142,7 +142,7 @@ function createFireflies() {
         if (burst) {
             const r = 0.2 + random() * 0.35;
             x = dx * r; y = -0.3 + dy * r * 1.4; z = dz * r;
-        } else if (random() < 0.52) {                            // autour de l'éclair
+        } else if (random() < 0.52) {                            // autour du Z
             const r = 0.95 + Math.pow(random(), 1.5) * 2.3;
             x = dx * r; y = -0.3 + dy * r * 0.85; z = dz * r;
         } else {                                                 // dans tout l'espace de la scène
@@ -189,12 +189,12 @@ function createFireflies() {
                 float dist = length(away);
                 vec3 dir = away / max(dist, 0.001);
                 float free = 1.0 - burst;
-                // Recomposition : elles convergent vers l'éclair.
+                // Recomposition : elles convergent vers le Z.
                 q -= dir * uGather * min(dist * 0.55, 1.9) * (0.4 + aSeed.z * 0.6) * free;
-                // Chapitre final : elles se rangent en aura autour de l'éclair.
+                // Chapitre final : elles se rangent en aura autour du Z.
                 float ring = 1.25 + aSeed.y * 1.3;
                 q = mix(q, uCenter + dir * ring, uAura * 0.62 * (1.0 - smoothstep(3.2, 5.6, dist)) * free);
-                // Éclatement : la gerbe part du cœur de l'éclair, s'ouvre et retombe légèrement.
+                // Éclatement : la gerbe part du cœur du Z, s'ouvre et retombe légèrement.
                 vec3 own = normalize(position - vec3(0.0, -0.3, 0.0) + vec3(0.0001));
                 vec3 spray = uCenter + own * (0.25 + uBurst * (1.1 + aSeed.x * 2.7)) + wander * 0.14 * uBurst
                     - vec3(0.0, 0.55 * uBurst * uBurst * aSeed.z, 0.0);
@@ -215,7 +215,7 @@ function createFireflies() {
                 gl_Position = clip;
 
                 float depth = max(-mv.z, 0.25);
-                vSoft = 1.0 - smoothstep(0.34 * uFocus, 1.08 * uFocus, depth);       // plus proche que l'éclair : grosse et floue
+                vSoft = 1.0 - smoothstep(0.34 * uFocus, 1.08 * uFocus, depth);       // plus proche que le Z : grosse et floue
                 float size = aLook.x * uBoost * uScale / depth * (1.0 + vSoft * 1.5) * (1.0 + burst * 0.9);
                 gl_PointSize = clamp(size, 1.0, 84.0);
 
@@ -299,8 +299,45 @@ function createGlassEnvironment() {
     pmrem.dispose();
 }
 
-// Verre rouge profond, arêtes blanches et rouges lumineuses.
-function createGlassMaterial() {
+// Diagonale du Z plus lumineuse que ses barres, comme dans le logo (barres blanches, diagonale rouge).
+// Chaque géométrie du Z porte, par sommet, sa hauteur dans le dessin du Z (`glyphY`) : la diagonale est
+// la bande comprise entre les bords intérieurs des deux barres, des lignes horizontales dans z.svg
+// (y = 205,3 et 794,7 sur une hauteur de 932,8). La frontière est nette et lissée par fwidth.
+const Z_DIAGONAL_HALF = (794.7 - 205.3) / 2 / 932.8;   // demi-hauteur de la diagonale, en fraction de la hauteur du Z
+const diagonalUniforms = {
+    uDiagHalf: { value: Z_DIAGONAL_HALF * LOGO_HEIGHT },
+    uDiagBoost: { value: 1.22 },       // lumière transmise par le verre de la diagonale
+    uDiagEmissive: { value: 0.14 }     // lueur intérieure rouge de la diagonale
+};
+function tagGlyph(geometry, offsetY = 0) {
+    const position = geometry.attributes.position;
+    const values = new Float32Array(position.count);
+    for (let i = 0; i < position.count; i++) values[i] = position.getY(i) + offsetY;
+    geometry.setAttribute('glyphY', new THREE.BufferAttribute(values, 1));
+    return geometry;
+}
+function injectDiagonal(shader) {
+    Object.assign(shader.uniforms, diagonalUniforms);
+    shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute float glyphY;\nvarying float vGlyphY;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvGlyphY = glyphY;');
+    shader.fragmentShader = `uniform float uDiagHalf;
+uniform float uDiagBoost;
+uniform float uDiagEmissive;
+varying float vGlyphY;
+float zDiagonal() {
+    float edge = fwidth(vGlyphY) * 1.2 + 0.002;
+    return 1.0 - smoothstep(uDiagHalf - edge, uDiagHalf + edge, abs(vGlyphY));
+}
+` + shader.fragmentShader
+        .replace('#include <emissivemap_fragment>',
+            '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(0.55, 0.0, 0.004) * uDiagEmissive * zDiagonal();')
+        .replace('#include <transmission_fragment>',
+            '#include <transmission_fragment>\n#ifdef USE_TRANSMISSION\ntotalDiffuse *= mix(1.0, uDiagBoost, zDiagonal());\n#endif');
+}
+
+// Verre rouge profond, arêtes blanches et rouges lumineuses. `diagonal` : verre du Z (diagonale plus lumineuse).
+function createGlassMaterial(diagonal = false) {
     const material = new THREE.MeshPhysicalMaterial({
         color: '#ffd6d6',
         metalness: 0.0,
@@ -326,10 +363,12 @@ function createGlassMaterial() {
         side: THREE.DoubleSide
     });
     material.userData.dispersion = true;
+    material.userData.diagonal = diagonal;
     // Three.js r160 n'a pas de paramètre de dispersion : la lumière transmise est échantillonnée
     // avec trois indices de réfraction légèrement différents. En mode allégé (ou si la greffe ne
     // s'applique pas), le verre garde la transmission standard, sans dispersion.
     material.onBeforeCompile = shader => {
+        if (material.userData.diagonal) injectDiagonal(shader);
         if (!material.userData.dispersion) return;
         const pattern = /vec4 transmitted = getIBLVolumeRefraction\([\s\S]*?\);/;
         const chunk = THREE.ShaderChunk.transmission_fragment;
@@ -357,7 +396,8 @@ function createGlassMaterial() {
         );
         shader.fragmentShader = shader.fragmentShader.replace('#include <transmission_fragment>', transmission);
     };
-    material.customProgramCacheKey = () => `flash-verre-rouge-${material.userData.dispersion ? 'dispersion' : 'simple'}`;
+    material.customProgramCacheKey = () =>
+        `verre-rouge-${material.userData.dispersion ? 'dispersion' : 'simple'}-${material.userData.diagonal ? 'z' : 'plat'}`;
     return material;
 }
 
@@ -427,17 +467,18 @@ function makeIconPrism(bevelSize, bevelThickness, holeScale) {
         bevelSegments: bevelSize < 0.016 ? 1 : 6, curveSegments: 24
     });
     geometry.translate(0, 0, -ICON_DEPTH / 2);
-    return geometry;
+    return tagGlyph(geometry);
 }
 
 
-function makePrism(points, depth, bevelSize, bevelThickness) {
+// `glyphY` : hauteur du centre de la pièce dans le dessin du Z (voir tagGlyph).
+function makePrism(points, depth, bevelSize, bevelThickness, glyphY = 0) {
     const geometry = new THREE.ExtrudeGeometry(new THREE.Shape(points), {
         depth, steps: 1, bevelEnabled: true, bevelSize, bevelThickness,
         bevelSegments: bevelSize < 0.016 ? 1 : 6, curveSegments: 24
     });
     geometry.translate(0, 0, -depth / 2);
-    return geometry;
+    return tagGlyph(geometry, glyphY);
 }
 
 // ---- Morph correspondence ----------------------------------------------------
@@ -634,13 +675,13 @@ function shapeFragments(fit, count) {
     return pieces.sort((a, b) => angle(a) - angle(b));
 }
 
-// ---- Construction de l'éclair en verre -----------------------------------------
+// ---- Construction du Z en verre -----------------------------------------
 function createGlassLogo() {
     modelPivot = new THREE.Group();
     modelPivot.position.y = -0.3;
     scene.add(modelPivot);
 
-    glass = createGlassMaterial();
+    glass = createGlassMaterial(true);
     const logo = new THREE.Group();
     logo.rotation.set(-0.08, 0.28, -0.08);
     modelPivot.add(logo);
@@ -650,7 +691,7 @@ function createGlassLogo() {
     iconOutline = final.outline;
     iconHoles = final.holes;
 
-    // Éclair assemblé : un seul prisme étanche, exact avant l'éclatement.
+    // Z assemblé : un seul prisme étanche, exact avant l'éclatement.
     const whole = recentre(opening.outline);
     const wholeShape = new THREE.Shape(whole.contour);
     const wholeOffset = V2(whole.home.x, whole.home.y);
@@ -663,6 +704,7 @@ function createGlassLogo() {
         bevelSegments: 6, curveSegments: 24
     });
     wholeGeometry.translate(0, 0, -LOGO_DEPTH / 2);
+    tagGlyph(wholeGeometry, whole.home.y);
     wholeBody = new THREE.Mesh(wholeGeometry, glass);
     wholeBody.position.copy(whole.home);
     logo.add(wholeBody);
@@ -680,7 +722,7 @@ function createGlassLogo() {
         const isExtra = !!sourceContour.isExtra;
         const source = recentre(sourceContour);
         const target = recentre(targets[Math.min(index, targets.length - 1)]);
-        const geometry = makePrism(source.contour, LOGO_DEPTH, LOGO_BEVEL.size, LOGO_BEVEL.thickness);
+        const geometry = makePrism(source.contour, LOGO_DEPTH, LOGO_BEVEL.size, LOGO_BEVEL.thickness, source.home.y);
         const mesh = new THREE.Mesh(geometry, glass);
         mesh.position.copy(source.home);
         logo.add(mesh);
@@ -700,7 +742,7 @@ function createGlassLogo() {
             targetHome: target.home,
             correspondence: matchMorphContours(source.contour, target.contour, `fragment-${index}`),
             originalGeometry: geometry, morphGeometry: null, isBody: !isExtra,
-            finalGeometry: isExtra ? makePrism(target.contour, ICON_DEPTH, ICON_BEVEL.size, ICON_BEVEL.thickness) : null,
+            finalGeometry: isExtra ? makePrism(target.contour, ICON_DEPTH, ICON_BEVEL.size, ICON_BEVEL.thickness, target.home.y) : null,
             targetContour: isExtra ? target.contour : null, extraBevel: -1
         });
     });
@@ -803,7 +845,7 @@ function getOrbit(scroll) {
 
 // Poids de chaque chapitre (leur somme vaut 1) : sert au cadrage.
 function chapterWeights(scroll) {
-    // Chaque changement de cadrage est centré sur le seuil du chapitre : l'éclair croise la colonne de
+    // Chaque changement de cadrage est centré sur le seuil du chapitre : le Z croise la colonne de
     // texte au moment où l'ancien texte s'efface et avant que le nouveau n'apparaisse.
     const a = layout.portrait ? smoothScrollRange(scroll, 0.08, 0.12) : smoothScrollRange(scroll, 0.075, 0.105);
     const b = smoothScrollRange(scroll, 0.30, 0.37);
@@ -811,13 +853,13 @@ function chapterWeights(scroll) {
     return [1 - a, a - b, b - c, c];
 }
 
-// Cadrage. La caméra orbite autour de l'éclair ; elle vise un point décalé pour placer l'éclair
+// Cadrage. La caméra orbite autour du Z ; elle vise un point décalé pour placer le Z
 // à une fraction donnée de l'écran : à côté du texte sur ordinateur, au-dessus ou en dessous
 // sur téléphone (même alternance que la mise en page empilée du CSS).
-// Composition empilée (téléphone) : l'éclair se loge dans la zone laissée libre par le texte de chaque
+// Composition empilée (téléphone) : le Z se loge dans la zone laissée libre par le texte de chaque
 // chapitre, mesurée dans la page. Il reste entier à l'écran quelle que soit la taille du téléphone,
 // barre d'adresse de Safari visible ou non. Valeurs lissées : aucun saut quand la barre se replie.
-const OBJECT_HEIGHT = 3.3, CLOUD_HEIGHT = 5.5;      // éclair assemblé / nuage d'éclats, unités monde
+const OBJECT_HEIGHT = 2.75, CLOUD_HEIGHT = 5.5;     // Z assemblé (biseau et inclinaison compris) / nuage d'éclats, unités monde
 const zones = { ready: false, fy: [0.7, 0.3, 0.46, 0.5, 0.25], radius: [9, 11, 10.6, 10, 10], targetFy: [], targetRadius: [] };
 function measureZones() {
     if (!layout.portrait) { zones.ready = false; return; }
@@ -827,15 +869,18 @@ function measureZones() {
     const phone = box('.telephone'), live = box('#direct .slide-corps'), panel = box('.panneau');
     if (!header || !hero || !games || !phone || !live || !panel) return;
     const mediaReady = phone.height > 10 && panel.height > 10;   // téléphone et panneau pas encore affichés : valeurs par défaut
-    const finalTop = contactSection ? parseFloat(getComputedStyle(contactSection).paddingTop) || visible * 0.42 : visible * 0.42;
+    // Haut du bloc final une fois la section épinglée (c'est là qu'il s'arrête) : le Z se loge au-dessus.
+    const finalTop = contactSection && contactCardElement
+        ? Math.max(header.bottom + 100, visible - contactSection.offsetHeight + contactCardElement.offsetTop)
+        : visible * 0.42;
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     // [haut, bas] de la zone libre en px, hauteur de l'objet en unités monde, rayon mini / maxi
     const list = [
-        [hero.bottom + 14, visible - 24, OBJECT_HEIGHT, 7.4, 15],
+        [hero.bottom + 14, visible - 24, OBJECT_HEIGHT, 6.4, 15],
         [header.bottom + 10, games.top - 12, CLOUD_HEIGHT, 9.5, 16],
         [phone.top, phone.bottom, 0, 10.6, 10.6],
-        [live.bottom + 4, panel.top + 34, OBJECT_HEIGHT, 8.6, 16],
-        [header.bottom + 14, finalTop - 4, OBJECT_HEIGHT, 8.6, 16]
+        [live.bottom + 4, panel.top + 34, OBJECT_HEIGHT, 7.4, 16],
+        [header.bottom + 14, finalTop - 10, OBJECT_HEIGHT, 7.4, 16]
     ];
     list.forEach(([top, bottom, objectHeight, minRadius, maxRadius], index) => {
         if (!mediaReady && (index === 2 || index === 3)) {
@@ -858,11 +903,11 @@ function smoothZones(amount) {
     }
 }
 
-// Angle de la caméra autour de l'éclair : un tour complet sur tout le défilement. Le tour s'accélère
-// pendant la recomposition (62 → 80 %) pour que l'éclair reformé ne soit jamais vu de profil : la vue
+// Angle de la caméra autour du Z : un tour complet sur tout le défilement. Le tour s'accélère
+// pendant la recomposition (62 → 80 %) pour que le Z reformé ne soit jamais vu de profil : la vue
 // de côté tombe pendant que les éclats sont encore en mouvement.
 function orbitAngle(scroll) {
-    // L'avance atteint 0,2 tour à 78 % : l'éclair reformé est alors vu presque de face (à moins de 8°),
+    // L'avance atteint 0,2 tour à 78 % : le Z reformé est alors vu presque de face (à moins de 8°),
     // l'angle où le verre est rouge profond et non pâle. Elle se résorbe ensuite linéairement jusqu'à la
     // fin : la rotation reste toujours dans le même sens.
     const lead = 0.20 * (scroll <= 0.78 ? smoothScrollRange(scroll, 0.56, 0.78) : 1 - (scroll - 0.78) / 0.22);
@@ -884,7 +929,7 @@ function cameraFrame(scroll, contact = 0) {
     for (let i = 0; i < 4; i++) { fx += weights[i] * frame.fx[i]; fy += weights[i] * frame.fy[i]; }
     fx = lerp(fx, frame.final[0], final);
     fy = lerp(fy, frame.final[1], final);
-    // Entre deux chapitres l'éclair ne glisse pas en ligne droite : il décrit un arc, tantôt par le haut, tantôt par le bas.
+    // Entre deux chapitres le Z ne glisse pas en ligne droite : il décrit un arc, tantôt par le haut, tantôt par le bas.
     if (!portrait) fy += (weights[0] * weights[1] - weights[1] * weights[2] + weights[2] * weights[3]) * 4 * 0.05 * (1 - final);
     if (portrait && zones.ready) {
         fy = 0; radius = 0;
@@ -892,7 +937,7 @@ function cameraFrame(scroll, contact = 0) {
         fy = lerp(fy, zones.fy[4], final);
         radius = lerp(radius, zones.radius[4], final);
         // Pendant la recomposition, la caméra recule : le nuage d'éclats tient dans la zone libre
-        // (il ne passe pas sur le texte), puis elle se rapproche à mesure que l'éclair se reforme.
+        // (il ne passe pas sur le texte), puis elle se rapproche à mesure que le Z se reforme.
         radius *= 1 + 0.6 * separation * weights[3];
     }
     if (debugFrame) { fx = debugFrame.fx; fy = debugFrame.fy; radius = debugFrame.radius || radius; }
@@ -925,7 +970,8 @@ function morphGeometry(piece, geometryMorph) {
         const contour = piece.correspondence.map(({ source, target }) => source.clone().lerp(target, geometryMorph));
         return makePrism(contour, lerp(LOGO_DEPTH, ICON_DEPTH, geometryMorph),
             lerp(LOGO_BEVEL.size, SEAM_BEVEL, geometryMorph),
-            lerp(LOGO_BEVEL.thickness, SEAM_BEVEL, geometryMorph));
+            lerp(LOGO_BEVEL.thickness, SEAM_BEVEL, geometryMorph),
+            lerp(piece.home.y, piece.targetHome.y, geometryMorph));
     });
 }
 
@@ -1008,7 +1054,7 @@ function updateLogoPieces(scroll, time) {
             mesh.geometry = bevel >= 1 ? piece.finalGeometry : cachedGeometry(piece, `extra:${bevel}`,
                 () => makePrism(piece.targetContour, ICON_DEPTH,
                     lerp(SEAM_BEVEL, ICON_BEVEL.size, bevel),
-                    lerp(SEAM_BEVEL, ICON_BEVEL.thickness, bevel)));
+                    lerp(SEAM_BEVEL, ICON_BEVEL.thickness, bevel), piece.targetHome.y));
         } else if (geometryMorph <= 0) {
             mesh.geometry = piece.originalGeometry;
         } else {
@@ -1017,7 +1063,7 @@ function updateLogoPieces(scroll, time) {
     }
 }
 
-// ---- Fond : lignes ondulées fines, rouges sur noir, et halo qui suit l'éclair ----
+// ---- Fond : lignes ondulées fines, rouges sur noir, et halo qui suit le Z ----
 function createBackgroundShader() {
     const vertexShader = `
         varying vec2 vUv;
@@ -1057,7 +1103,7 @@ function createBackgroundShader() {
             vec3 secondary = chapterColor(min(1.22, s + 0.18));
             vec3 color = vec3(0.0);
 
-            // Halo derrière l'éclair : il le suit à l'écran et nourrit la réfraction du verre.
+            // Halo derrière le Z : il le suit à l'écran et nourrit la réfraction du verre.
             vec2 g = (uv - uObject) * vec2(1.30, 0.82) / uGlowSpread;
             float aura = exp(-dot(g, g) * 5.0);
             float core = exp(-dot(g, g) * 22.0);
@@ -1118,7 +1164,7 @@ function createBackgroundShader() {
 // ---- Qualité et taille de rendu ------------------------------------------------
 // ---- Qualité de rendu ----------------------------------------------------------
 // Cinq paliers, du verre complet au verre simplifié. Quel que soit le palier, la scène reste la même :
-// même éclair, même taille, même position, mêmes chapitres. Les performances ne font jamais basculer
+// même Z, même taille, même position, mêmes chapitres. Les performances ne font jamais basculer
 // vers l'image fixe en cours de visite.
 //   5 = verre complet (dispersion)       4 = sans dispersion
 //   3 = résolution × 0,75                2 = résolution × 0,55, dalle du chapitre final en CSS
@@ -1148,12 +1194,15 @@ function initialTier() {
 // Verre simplifié du dernier palier : rubis sombre légèrement translucide, sans réfraction (une seule
 // passe de rendu). Reflets retenus : pas de face blanche, pas d'aplat saturé.
 function createSimpleGlassMaterial() {
-    return new THREE.MeshPhysicalMaterial({
+    const material = new THREE.MeshPhysicalMaterial({
         color: '#4a0000', metalness: 0.0, roughness: 0.22,
         clearcoat: 0.3, clearcoatRoughness: 0.25, specularIntensity: 0.4,
         envMapIntensity: 0.32, emissive: new THREE.Color('#420000'),
         transparent: true, opacity: 0.88, side: THREE.FrontSide
     });
+    material.onBeforeCompile = injectDiagonal;     // diagonale du Z plus lumineuse, ici aussi
+    material.customProgramCacheKey = () => 'verre-rouge-simplifie-z';
+    return material;
 }
 
 function applyTier() {
@@ -1240,7 +1289,7 @@ function stop() {
 
 // Contexte WebGL perdu (pilote graphique, mémoire) : le navigateur le rend en général tout seul.
 // En attendant, la toile est masquée et les chapitres continuent de suivre le scroll. S'il ne revient
-// pas en un peu plus d'une seconde, l'image fixe de l'éclair prend le relais en fondu, au même endroit
+// pas en un peu plus d'une seconde, l'image fixe du Z prend le relais en fondu, au même endroit
 // et à la même taille, une seule fois pour toute la visite (pas d'aller-retour).
 const lost = { active: false, since: 0, poster: null };
 function showPoster() {
@@ -1249,14 +1298,14 @@ function showPoster() {
     poster.className = 'affiche-secours';
     poster.alt = '';
     poster.setAttribute('aria-hidden', 'true');
-    poster.src = new URL('../img/eclair-poster.webp', import.meta.url).href;
+    poster.src = new URL('../img/z-poster.webp', import.meta.url).href;
     document.body.appendChild(poster);
     lost.poster = poster;
     requestAnimationFrame(() => document.documentElement.classList.add('affiche-secours-visible'));
 }
 function updatePoster(frame, separation) {
     if (!lost.poster) return;
-    // L'image fait 960×1200 ; l'éclair en occupe 62,5 % de la hauteur, centré.
+    // L'image fait 960×1200 ; le Z en occupe 62,5 % de la hauteur, centré.
     const visibleHeight = 2 * frame.radius * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const height = (OBJECT_HEIGHT * 0.96 / visibleHeight) * sizes.height / 0.625;
     lost.poster.style.height = `${height.toFixed(1)}px`;
@@ -1327,7 +1376,7 @@ function showMedias() {
 
 const pause = () => new Promise(resolve => setTimeout(resolve, 0));
 // Repères de temps de l'initialisation (visibles dans l'onglet Performance du navigateur).
-const mark = name => { try { performance.mark(`flash:${name}`); } catch (error) { /* sans importance */ } };
+const mark = name => { try { performance.mark(`strikzy:${name}`); } catch (error) { /* sans importance */ } };
 
 // ---- Boucle de rendu -----------------------------------------------------------
 let animationRequest = 0;
@@ -1341,7 +1390,7 @@ function readScroll() {
     const scrollTop = window.scrollY || 0;
     // Le chapitre final ne commence que lorsque son bloc entre réellement à l'écran (et non dès que sa
     // section, plus haute que lui, dépasse le bas de la fenêtre) : le chapitre 4 garde son texte et son
-    // éclair jusque-là, il n'y a jamais d'écran sans texte entre les deux.
+    // Z jusque-là, il n'y a jamais d'écran sans texte entre les deux.
     if (contactSection) {
         const enter = clamp(0.14 + contactCardElement.offsetTop / window.innerHeight, 0, 0.8);
         targetContact = clamp(((scrollTop - maxScroll) / window.innerHeight - enter) / (1 - enter), 0, 1);
@@ -1383,10 +1432,10 @@ function animate(now = performance.now()) {
     const separation = getLogoSeparation(currentScroll);
     const final = smoothScrollRange(currentContact, 0, 0.85);
 
-    // L'éclair suit légèrement la souris, respire doucement, et fait un tour sur lui-même
+    // Le Z suit légèrement la souris, respire doucement, et fait un tour sur lui-même
     // en rejoignant le chapitre final.
     if (modelPivot) {
-        // Ressort : l'éclair se tourne vers la souris, dépasse à peine sa cible puis se pose.
+        // Ressort : le Z se tourne vers la souris, dépasse à peine sa cible puis se pose.
         const step = Math.min(elapsed, 0.05);
         sway.vy += ((targetMouseX * 0.40 - sway.y) * 26 - sway.vy * 6.5) * step;
         sway.vx += ((targetMouseY * 0.22 - sway.x) * 26 - sway.vx * 6.5) * step;
@@ -1399,7 +1448,7 @@ function animate(now = performance.now()) {
         modelPivot.position.x = mouseX * 0.09 * (0.5 + 0.5 * whole);
         modelPivot.position.y = -0.3 + Math.sin(time * 0.5) * 0.045 * whole;
             }
-    // Pendant la recomposition la caméra voit la grande face de l'éclair sous un angle rasant : le studio
+    // Pendant la recomposition la caméra voit la grande face du Z sous un angle rasant : le studio
     // de lumière s'y reflète en nappe pâle. On baisse les reflets sur cette plage (le verre reste rouge
     // profond), puis on les remonte au chapitre final.
     const grazing = smoothScrollRange(currentScroll, 0.64, 0.74) * (1 - smoothScrollRange(currentScroll, 0.90, 0.99));
@@ -1429,19 +1478,19 @@ function animate(now = performance.now()) {
         u.uTextB.value.lerp(fireflyZoneB, damping(0.12));
     }
 
-    // La caméra fait le tour de l'éclair au fil du scroll.
+    // La caméra fait le tour du Z au fil du scroll.
     const frame = cameraFrame(currentScroll, currentContact);
     const phi = orbitAngle(currentScroll);
     const y = 0.35 + Math.sin(currentScroll * Math.PI) * 0.8;
     _target.set(frame.radius * Math.sin(phi), y, frame.radius * Math.cos(phi));
     // Le scroll est déjà lissé : la caméra le suit de près. Un second lissage trop mou la mettait en
-    // retard pendant le défilement (éclair vu de profil, reflets pâles) par rapport aux positions calculées.
+    // retard pendant le défilement (Z vu de profil, reflets pâles) par rapport aux positions calculées.
     camera.position.lerp(_target, damping(0.12));
     camera.lookAt(frame.lookAt);
     camera.updateMatrixWorld();
     updateGlassCard();
 
-    // Fond : couleur du chapitre, halo calé sur l'éclair.
+    // Fond : couleur du chapitre, halo calé sur le Z.
     _projected.set(0, -0.3, 0).project(camera);
     shaderUniforms.uObject.value.set(_projected.x * camera.aspect * 0.5, _projected.y * 0.5);
     shaderUniforms.uGlow.value = 0.27 - separation * 0.13 + final * 0.09;
@@ -1544,7 +1593,7 @@ function updateFinal() {
     if (!contactSection) return;
     document.body.classList.toggle('contact-open', finalOpen);
     contactSection.classList.toggle('active', finalOpen);
-    // Fin de page : le bloc final (et sa dalle de verre) reste en place, l'éclair aussi ; c'est le pied
+    // Fin de page : le bloc final (et sa dalle de verre) reste en place, le Z aussi ; c'est le pied
     // de page qui monte et les recouvre. En remontant, tout se retrouve exactement au même endroit.
     const over = Math.max(0, Math.round(window.scrollY + window.innerHeight - (contactSection.offsetTop + contactSection.offsetHeight)));
     if (over !== finalPinned) {
@@ -1658,7 +1707,7 @@ async function init() {
     mark('environnement');
     await pause();
     createGlassLogo();
-    mark('eclair');
+    mark('z');
     await pause();
     createGlassCard();
     tier = initialTier();

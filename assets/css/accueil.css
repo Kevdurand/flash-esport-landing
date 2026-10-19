@@ -1,5 +1,5 @@
-/* FLASH ESPORT — accueil.
-   Par défaut : page statique (image fixe de l'éclair, simples fondus) — utilisée sans JavaScript,
+/* STRIKZY — accueil.
+   Par défaut : page statique (image fixe du Z, simples fondus) — utilisée sans JavaScript,
    sans WebGL2 ou avec « mouvement réduit ». La classe html.mode-3d (posée par demarrage.js)
    transforme les mêmes sections en chapitres plein écran pilotés par le scroll, par-dessus la scène 3D. */
 
@@ -179,7 +179,7 @@ html:not(.mode-3d) .final-bloc {
 .mode-3d .slide-corps { position: absolute; }
 .mode-3d .affiche { display: none; }
 
-/* Chapitre 1 — hero : texte à gauche, éclair à droite */
+/* Chapitre 1 — hero : texte à gauche, Z à droite */
 .mode-3d #accueil .slide-corps { left: 0; top: 47%; transform: translateY(-50%); width: min(54vw, 52rem); }
 .mode-3d .defiler {
   display: inline-flex; align-items: center; gap: 0.9rem; position: absolute; left: 0; bottom: 2.25rem;
@@ -243,7 +243,7 @@ html:not(.mode-3d) .final-bloc {
   -webkit-mask-composite: xor; mask-composite: exclude;
   background: linear-gradient(135deg, var(--reflet-fort) 0%, var(--neutre-contour) 28%, var(--neutre-contour) 60%, var(--rouge-contour) 100%);
 }
-/* Le pied de page en verre monte par-dessus le bloc final et l'éclair. Il reprend la marge de la barre du haut
+/* Le pied de page en verre monte par-dessus le bloc final et le Z. Il reprend la marge de la barre du haut
    et des titres : une seule grille sur toute la page. */
 
 .mode-3d .pied { background: var(--verre-menu); }
@@ -276,7 +276,7 @@ html:not(.mode-3d) .final-bloc {
   body.cursor-hidden .braise { opacity: 0; }
 }
 
-/* ---- Indicateur de chargement de la scène : à l'emplacement de l'éclair, sans masquer la page ---- */
+/* ---- Indicateur de chargement de la scène : à l'emplacement du Z, sans masquer la page ---- */
 .loader {
   position: fixed; left: 72%; top: 50%; z-index: 12; transform: translate(-50%, -50%);
   pointer-events: none;
@@ -308,7 +308,7 @@ html:not(.mode-3d) .final-bloc {
   .mode-3d .slide-desc { font-size: 1rem; line-height: 1.55; max-width: 34ch; }
   .mode-3d .slide .badges { margin-top: 1.2rem; }
 
-  /* 1 — texte en haut, éclair en bas */
+  /* 1 — texte en haut, Z en bas */
   .mode-3d #accueil .slide-corps { left: 0; right: 0; top: 4%; width: auto; transform: none; }
   /* 2 — éclats en haut, texte en bas */
   .mode-3d #jeux .slide-corps { left: 0; right: 0; top: auto; bottom: 4.5%; transform: none; }
@@ -323,19 +323,19 @@ html:not(.mode-3d) .final-bloc {
   .mode-3d .tuto-texte p { font-size: 0.9375rem; line-height: 1.5; max-width: 36ch; }
   .mode-3d .tuto-points { bottom: auto; top: 76.4%; left: auto; right: 0; }
   .mode-3d .tuto-points span { width: 1.25rem; }
-  /* 4 — texte en haut, éclair au milieu, panneau en bas */
+  /* 4 — texte en haut, Z au milieu, panneau en bas */
   .mode-3d #direct .slide-corps { left: 0; right: 0; top: 4%; width: auto; transform: none; }
   .mode-3d .panneau { left: 0; right: 0; top: auto; bottom: 4%; width: auto; max-width: 24rem; margin: 0 auto; transform: none; }
   .mode-3d .panneau.revele { transform: translateY(16px); }
   .mode-3d .slide.active .panneau.revele { transform: none; }
-  /* 5 — éclair en haut, bloc en dessous */
+  /* 5 — Z en haut, bloc en dessous */
   .mode-3d .final { min-height: 100vh; min-height: 100svh; justify-items: stretch; align-items: end; padding: calc(var(--entete-h) + 1rem) var(--marge) 1.25rem; }
   .mode-3d .final-bloc { width: auto; max-width: none; padding: 1.5rem 1.25rem; }
 }
 @media (max-width: 900px) and (max-height: 700px) {
   .mode-3d #accueil .slide-title { font-size: clamp(2.5rem, 12.5vw, 4.5rem); }
   .mode-3d .slide-desc { font-size: 0.9375rem; }
-  /* Petit écran (barre d'adresse de Safari affichée) : panneau plus étroit pour laisser sa place à l'éclair. */
+  /* Petit écran (barre d'adresse de Safari affichée) : panneau plus étroit pour laisser sa place au Z. */
   .mode-3d .panneau { max-width: 19rem; }
 }
 /* Sur écran tactile : légère inclinaison automatique lente du panneau (pas de gyroscope) */
@@ -348,7 +348,7 @@ html:not(.mode-3d) .final-bloc {
 
 html:not(.mode-3d) .score { display: none; }
 
-/* Image de secours si le contexte WebGL est perdu pour de bon : même place et même taille que l'éclair, en fondu. */
+/* Image de secours si le contexte WebGL est perdu pour de bon : même place et même taille que le Z, en fondu. */
 .affiche-secours {
   position: fixed; top: 0; left: 0; z-index: 1; width: auto; max-width: none; pointer-events: none;
   opacity: 0; transition: opacity 1.2s ease;

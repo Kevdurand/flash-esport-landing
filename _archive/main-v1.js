@@ -1,4 +1,4 @@
-/* FLASH ESPORT — site V1 — comportements simples, sans dépendance */
+/* STRIKZY — site V1 — comportements simples, sans dépendance */
 (function () {
   "use strict";
   document.documentElement.classList.add("js");

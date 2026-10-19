@@ -1,7 +1,7 @@
-/* FLASH ESPORT — accueil : choix du mode d'affichage, apparition du hero, indicateur de chargement.
+/* STRIKZY — accueil : choix du mode d'affichage, apparition du hero, indicateur de chargement.
    Script externe et synchrone (aucun script inline : CSP stricte), placé juste après l'indicateur.
    - mode « 3d »       : scène WebGL pilotée par le scroll (assets/js/app.js)
-   - mode « statique » : image fixe de l'éclair et simples fondus (mouvement réduit, WebGL2 absent, ?statique=1)
+   - mode « statique » : image fixe du Z et simples fondus (mouvement réduit, WebGL2 absent, ?statique=1)
    Le texte du hero s'affiche tout de suite ; la scène 3D se charge derrière et apparaît quand elle est prête. */
 (function () {
   "use strict";
@@ -11,7 +11,7 @@
   var params = new URLSearchParams(window.location.search);
   var reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var statique = reduit || !window.WebGL2RenderingContext || params.get("statique") === "1";
-  var etat = window.__flash = {
+  var etat = window.__strikzy = {
     mode: statique ? "statique" : "3d",
     reduit: reduit,
     debug: params.get("debug") === "1",
@@ -42,7 +42,7 @@
   })();
   if (statique) return;
 
-  // ---- Indicateur de chargement de la scène : discret, à l'emplacement de l'éclair, sans bloquer la page ----
+  // ---- Indicateur de chargement de la scène : discret, à l'emplacement du Z, sans bloquer la page ----
   var el = document.getElementById("loader");
   var count = document.getElementById("loader-count");
   var fill = document.getElementById("loader-fill");

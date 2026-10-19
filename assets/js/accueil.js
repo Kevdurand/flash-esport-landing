@@ -1,12 +1,12 @@
-/* FLASH ESPORT — accueil : point d'entrée.
+/* STRIKZY — accueil : point d'entrée.
    Charge le moteur 3D (Three.js) seulement en mode « 3d ». En mode « statique », ou si le moteur
-   échoue, la page reste une page classique : image fixe de l'éclair et simples fondus. */
+   échoue, la page reste une page classique : image fixe du Z et simples fondus. */
 
-const etat = window.__flash || { mode: 'statique', reduit: false, debug: false, lite: false, loader: { done() {} } };
+const etat = window.__strikzy || { mode: 'statique', reduit: false, debug: false, lite: false, loader: { done() {} } };
 const racine = document.documentElement;
 const version = new URL(import.meta.url).search;
 
-// ---- Mode statique : fondus à l'entrée de chaque section, image fixe de l'éclair ----
+// ---- Mode statique : fondus à l'entrée de chaque section, image fixe du Z ----
 let statiqueActif = false;
 function modeStatique() {
     if (statiqueActif) return;
@@ -96,7 +96,7 @@ if (etat.mode === '3d' && renduLogiciel()) {
         await moteur.demarrer(etat, modeStatique);
     } catch (erreur) {
         // Moteur indisponible (WebGL refusé, vieux navigateur…) : on retombe sur la page statique.
-        if (etat.debug) console.warn('[flash] moteur 3D indisponible, page statique', erreur);
+        if (etat.debug) console.warn('[strikzy] moteur 3D indisponible, page statique', erreur);
         modeStatique();
     }
 } else {
