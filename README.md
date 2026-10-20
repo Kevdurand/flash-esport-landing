@@ -6,7 +6,7 @@ Site statique (HTML, CSS, JavaScript en modules ES natifs), sans framework, sans
 Hébergé sur GitHub Pages, domaine `strikzy.gg`.
 
 ## Pages
-- `index.html` — accueil : le Z du logo en verre rouge (WebGL, Three.js r160 hébergé dans le repo) piloté par le scroll, 5 chapitres
+- `index.html` — accueil : le Z tranché du logo en verre rouge (WebGL, Three.js r160 hébergé dans le repo) piloté par le scroll, 5 chapitres
 - `telechargement.html` — téléchargement
 - `faq.html` — questions fréquentes
 - `contact.html` — contact (sert d'URL d'assistance App Store)
@@ -19,9 +19,9 @@ Hébergé sur GitHub Pages, domaine `strikzy.gg`.
 - `assets/css/accueil.css`, `assets/css/pages.css` — accueil / pages secondaires
 - `assets/js/demarrage.js` — choix du mode d'affichage de l'accueil et préchargeur
 - `assets/js/accueil.js` — point d'entrée de l'accueil (charge le moteur 3D seulement si utile)
-- `assets/js/app.js` — moteur 3D (Z en verre à diagonale lumineuse, éclats, scroll lissé, modes allégé et statique)
+- `assets/js/app.js` — moteur 3D (Z tranché en verre et lame de la frappe, éclats, scroll lissé, modes allégé et statique)
 - `assets/js/site.js` — comportements communs (menu mobile, boutons des stores)
-- `assets/shapes/z.svg` — silhouette du Z (celle du logo)
+- `assets/shapes/z.svg` — le Z tranché du logo : deux morceaux de verre et la lame (`id="lame"`)
 - `assets/app/` — captures de l'app (remplaçables en gardant le même nom de fichier)
 - `assets/vendor/` — Three.js r160 + SVGLoader, versions et empreintes dans `VERSIONS.md`
 
@@ -39,8 +39,8 @@ Renseigner l'adresse dans l'attribut `data-store-url=""` de chaque bouton (accue
 - `assets/fonts/LICENSE-*`, `assets/vendor/licenses/` : licences obligatoires
 
 ## Règles
-- Charte StrikZy : fond #000000, rouge #B00000 en accent seulement (diagonale du Z, traits, pastilles du direct), surfaces #101010, texte secondaire #8A8A8A, rayon 8, Anton + Exo 2.
-- Logo « La Frappe » : STRIKZY en Anton blanc, seule la diagonale du Z en rouge ; en SVG dans l'en-tête et le pied de page.
+- Charte StrikZy : fond #000000, rouge #B00000 en accent seulement (traits, pastilles du direct), lame du Z #E0141A, surfaces #101010, texte secondaire #8A8A8A, rayon 8, Anton + Exo 2.
+- Logo « Z tranché » : STRIKZY en Anton blanc, le Z coupé le long de sa diagonale en deux morceaux écartés, une lame rouge #E0141A dans la coupe ; trait incliné #B00000 avant ESPORT ; en SVG dans l'en-tête et le pied de page.
 - Écriture : « StrikZy » dans le texte, « StrikZy eSport » en nom complet, « STRIKZY » dans les logos. Toujours « en direct ».
 - Identifiants techniques à ne jamais changer : bundle iOS `com.flashesport.mobile`, projet Firebase et URL des Cloud Functions.
 - Aucun cookie, aucun script tiers, aucune ressource chargée depuis un autre domaine.
