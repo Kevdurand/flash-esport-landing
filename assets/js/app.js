@@ -1,4 +1,4 @@
-/* STRIKZY — moteur 3D de l'accueil : le Z en verre rouge.
+/* STRIKZY — moteur 3D de l'accueil : le Z tranché en verre rouge.
    Adapté du moteur « Premium 3D Glass » (verre à dispersion, découpage automatique en fragments,
    recomposition, scroll lissé) : verre rouge, 5 chapitres StrikZy, éclats en orbite autour du
    téléphone, halo qui suit le Z, modes allégé et statique, compatibilité iPhone.
@@ -7,7 +7,8 @@ import * as THREE from '../vendor/three.module.min.js';
 import { SVGLoader } from '../vendor/SVGLoader.js';
 
 // ---- Configuration -------------------------------------------------------------
-// `shapes` : la silhouette du Z du logo (un seul <path>, viewBox 0 0 1000 1000).
+// `shapes` : le Z tranché du logo (viewBox 0 0 1000 1000) : un <path> par morceau de verre, et la lame
+// de la frappe dans un <path id="lame"> à part (elle n'est pas en verre, voir « Lame de la frappe »).
 // `palette` : une couleur de fond par chapitre, du hero au final. Uniquement des rouges sur noir.
 // `fragments` : 6 éclats, un par jeu couvert.
 const SITE = {
@@ -31,7 +32,8 @@ const T = {
     slides: [[-0.10, 0.09], [0.09, 0.335], [0.335, 0.69], [0.69, 1.05]],
     tuto: [0.355, 0.675],     // les 4 étapes du tutoriel se partagent cette plage
     nav: [0, 0.23, 0.40, 0.90],
-    chapters: [0.09, 0.335, 0.69]
+    chapters: [0.09, 0.335, 0.69],
+    blade: [0.066, 0.092, 0.80, 0.855]   // la lame part quand le Z éclate, puis revient frapper le Z reformé
 };
 // Position du Z à l'écran par chapitre (fraction de la largeur / de la hauteur), puis au final.
 const FRAME = {
@@ -42,7 +44,7 @@ const FRAME = {
 // ---- Réglages ------------------------------------------------------------------
 const LOGO_HEIGHT = 2.4;                              // hauteur du Z, unités monde (le Z est plus massif que l'ancienne forme)
 const LOGO_DEPTH = 0.44;
-const LOGO_BEVEL = { size: 0.042, thickness: 0.052 };
+const LOGO_BEVEL = { size: 0.042, thickness: 0.052 };   // z.svg élargit la coupe du Z de deux fois ce biseau : à garder en accord
 // Une seule forme : le prisme recomposé est identique à celui qui a éclaté, biseau compris.
 const ICON_SIZE = SINGLE_SHAPE ? LOGO_HEIGHT : 2.9;
 const ICON_DEPTH = SINGLE_SHAPE ? LOGO_DEPTH : 0.50;
@@ -56,8 +58,7 @@ let modelPivot;
 const logoPieces = [];
 let wholeBody;     // le Z entier, tant qu'il est assemblé
 let glassIcon;     // prisme final unique
-let iconOutline = [];
-let iconHoles = [];
+let iconSolids = [];  // morceaux du prisme final : [{ outline, holes }]
 const clock = new THREE.Clock();
 let currentScroll = 0;
 let currentContact = 0, targetContact = 0;   // 0..1 : progression dans le chapitre final
@@ -299,45 +300,8 @@ function createGlassEnvironment() {
     pmrem.dispose();
 }
 
-// Diagonale du Z plus lumineuse que ses barres, comme dans le logo (barres blanches, diagonale rouge).
-// Chaque géométrie du Z porte, par sommet, sa hauteur dans le dessin du Z (`glyphY`) : la diagonale est
-// la bande comprise entre les bords intérieurs des deux barres, des lignes horizontales dans z.svg
-// (y = 205,3 et 794,7 sur une hauteur de 932,8). La frontière est nette et lissée par fwidth.
-const Z_DIAGONAL_HALF = (794.7 - 205.3) / 2 / 932.8;   // demi-hauteur de la diagonale, en fraction de la hauteur du Z
-const diagonalUniforms = {
-    uDiagHalf: { value: Z_DIAGONAL_HALF * LOGO_HEIGHT },
-    uDiagBoost: { value: 1.22 },       // lumière transmise par le verre de la diagonale
-    uDiagEmissive: { value: 0.14 }     // lueur intérieure rouge de la diagonale
-};
-function tagGlyph(geometry, offsetY = 0) {
-    const position = geometry.attributes.position;
-    const values = new Float32Array(position.count);
-    for (let i = 0; i < position.count; i++) values[i] = position.getY(i) + offsetY;
-    geometry.setAttribute('glyphY', new THREE.BufferAttribute(values, 1));
-    return geometry;
-}
-function injectDiagonal(shader) {
-    Object.assign(shader.uniforms, diagonalUniforms);
-    shader.vertexShader = shader.vertexShader
-        .replace('#include <common>', '#include <common>\nattribute float glyphY;\nvarying float vGlyphY;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvGlyphY = glyphY;');
-    shader.fragmentShader = `uniform float uDiagHalf;
-uniform float uDiagBoost;
-uniform float uDiagEmissive;
-varying float vGlyphY;
-float zDiagonal() {
-    float edge = fwidth(vGlyphY) * 1.2 + 0.002;
-    return 1.0 - smoothstep(uDiagHalf - edge, uDiagHalf + edge, abs(vGlyphY));
-}
-` + shader.fragmentShader
-        .replace('#include <emissivemap_fragment>',
-            '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(0.55, 0.0, 0.004) * uDiagEmissive * zDiagonal();')
-        .replace('#include <transmission_fragment>',
-            '#include <transmission_fragment>\n#ifdef USE_TRANSMISSION\ntotalDiffuse *= mix(1.0, uDiagBoost, zDiagonal());\n#endif');
-}
-
-// Verre rouge profond, arêtes blanches et rouges lumineuses. `diagonal` : verre du Z (diagonale plus lumineuse).
-function createGlassMaterial(diagonal = false) {
+// Verre rouge profond, arêtes blanches et rouges lumineuses.
+function createGlassMaterial() {
     const material = new THREE.MeshPhysicalMaterial({
         color: '#ffd6d6',
         metalness: 0.0,
@@ -363,12 +327,10 @@ function createGlassMaterial(diagonal = false) {
         side: THREE.DoubleSide
     });
     material.userData.dispersion = true;
-    material.userData.diagonal = diagonal;
     // Three.js r160 n'a pas de paramètre de dispersion : la lumière transmise est échantillonnée
     // avec trois indices de réfraction légèrement différents. En mode allégé (ou si la greffe ne
     // s'applique pas), le verre garde la transmission standard, sans dispersion.
     material.onBeforeCompile = shader => {
-        if (material.userData.diagonal) injectDiagonal(shader);
         if (!material.userData.dispersion) return;
         const pattern = /vec4 transmitted = getIBLVolumeRefraction\([\s\S]*?\);/;
         const chunk = THREE.ShaderChunk.transmission_fragment;
@@ -397,7 +359,7 @@ function createGlassMaterial(diagonal = false) {
         shader.fragmentShader = shader.fragmentShader.replace('#include <transmission_fragment>', transmission);
     };
     material.customProgramCacheKey = () =>
-        `verre-rouge-${material.userData.dispersion ? 'dispersion' : 'simple'}-${material.userData.diagonal ? 'z' : 'plat'}`;
+        `verre-rouge-${material.userData.dispersion ? 'dispersion' : 'simple'}`;
     return material;
 }
 
@@ -452,33 +414,35 @@ function recentre(points) {
     };
 }
 
-// Final shape: outline plus its holes, each scaled by holeScale (0 = not punched yet).
+// Final shape: every solid with its holes, each hole scaled by holeScale (0 = not punched yet).
+// One geometry for all the solids: the two pieces of the sliced Z stay a single mesh.
 function makeIconPrism(bevelSize, bevelThickness, holeScale) {
-    const shape = new THREE.Shape(iconOutline);
-    if (holeScale > 0.02) {
-        for (const hole of iconHoles) {
-            const centre = new THREE.Box2().setFromPoints(hole).getCenter(V2());
-            shape.holes.push(new THREE.Path(hole.map(p =>
-                p.clone().sub(centre).multiplyScalar(holeScale).add(centre))));
+    const shapes = iconSolids.map(({ outline, holes }) => {
+        const shape = new THREE.Shape(outline);
+        if (holeScale > 0.02) {
+            for (const hole of holes) {
+                const centre = new THREE.Box2().setFromPoints(hole).getCenter(V2());
+                shape.holes.push(new THREE.Path(hole.map(p =>
+                    p.clone().sub(centre).multiplyScalar(holeScale).add(centre))));
+            }
         }
-    }
-    const geometry = new THREE.ExtrudeGeometry(shape, {
+        return shape;
+    });
+    const geometry = new THREE.ExtrudeGeometry(shapes, {
         depth: ICON_DEPTH, steps: 1, bevelEnabled: true, bevelSize, bevelThickness,
         bevelSegments: bevelSize < 0.016 ? 1 : 6, curveSegments: 24
     });
     geometry.translate(0, 0, -ICON_DEPTH / 2);
-    return tagGlyph(geometry);
+    return geometry;
 }
 
-
-// `glyphY` : hauteur du centre de la pièce dans le dessin du Z (voir tagGlyph).
-function makePrism(points, depth, bevelSize, bevelThickness, glyphY = 0) {
+function makePrism(points, depth, bevelSize, bevelThickness) {
     const geometry = new THREE.ExtrudeGeometry(new THREE.Shape(points), {
         depth, steps: 1, bevelEnabled: true, bevelSize, bevelThickness,
         bevelSegments: bevelSize < 0.016 ? 1 : 6, curveSegments: 24
     });
     geometry.translate(0, 0, -depth / 2);
-    return tagGlyph(geometry, glyphY);
+    return geometry;
 }
 
 // ---- Morph correspondence ----------------------------------------------------
@@ -569,8 +533,9 @@ function matchMorphContours(source, target, name) {
 }
 
 // ---- Reading a shape ---------------------------------------------------------
-// Any SVG works. The largest contour is the outline; contours inside it are holes;
-// anything else is a separate solid (the leaf of an apple, the dot of an i).
+// Any SVG works. Each contour that lies inside another one is a hole of it; every other
+// contour is a solid of its own (the two pieces of the sliced Z, the dot of an i).
+// A <path id="lame"> is not glass: it is read apart, as the blade of the strike.
 function pointInPolygon(point, polygon) {
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -583,29 +548,36 @@ function pointInPolygon(point, polygon) {
 
 function parseShape(svgText) {
     const svg = new SVGLoader().parse(svgText);
-    const contours = svg.paths
-        .flatMap(path => path.subPaths.map(sub => cleanContour(sub.getPoints(6).map(p => V2(p.x, -p.y)))))
-        .filter(contour => contour.length >= 3 && Math.abs(THREE.ShapeUtils.area(contour)) > 1e-9)
-        .sort((a, b) => Math.abs(THREE.ShapeUtils.area(b)) - Math.abs(THREE.ShapeUtils.area(a)));
-    if (!contours.length) throw new Error('This SVG has no closed contour.');
-    const [outline, ...rest] = contours;
-    const holes = [], extras = [];
-    for (const contour of rest) {
-        const centre = new THREE.Box2().setFromPoints(contour).getCenter(V2());
-        (pointInPolygon(centre, outline) ? holes : extras).push(contour);
+    const read = path => path.subPaths.map(sub => cleanContour(sub.getPoints(6).map(p => V2(p.x, -p.y))))
+        .filter(contour => contour.length >= 3 && Math.abs(THREE.ShapeUtils.area(contour)) > 1e-9);
+    let blade = null;
+    const contours = [];
+    for (const path of svg.paths) {
+        const node = path.userData && path.userData.node;
+        if (node && node.getAttribute && node.getAttribute('id') === 'lame') { blade = read(path)[0] || null; continue; }
+        contours.push(...read(path));
     }
-    return { outline, holes, extras };
+    contours.sort((a, b) => Math.abs(THREE.ShapeUtils.area(b)) - Math.abs(THREE.ShapeUtils.area(a)));
+    if (!contours.length) throw new Error('This SVG has no closed contour.');
+    const solids = [];
+    for (const contour of contours) {
+        const owner = solids.find(solid => contour.every(p => pointInPolygon(p, solid.outline)));
+        if (owner) owner.holes.push(contour); else solids.push({ outline: contour, holes: [] });
+    }
+    return { solids, blade };
 }
 
-// Centre a shape on the origin and scale it to `height` world units.
+// Centre a shape on the origin and scale it to `height` world units (the blade follows, it does not count).
 function fitShape(shape, height) {
-    const bounds = new THREE.Box2().setFromPoints(
-        [shape.outline, ...shape.holes, ...shape.extras].flat());
+    const bounds = new THREE.Box2().setFromPoints(shape.solids.flatMap(solid => solid.outline));
     const centre = bounds.getCenter(V2());
     const size = bounds.getSize(V2());
     const scale = height / Math.max(size.x, size.y);
     const fit = contour => contour.map(p => p.clone().sub(centre).multiplyScalar(scale));
-    return { outline: fit(shape.outline), holes: shape.holes.map(fit), extras: shape.extras.map(fit) };
+    return {
+        solids: shape.solids.map(({ outline, holes }) => ({ outline: fit(outline), holes: holes.map(fit) })),
+        blade: shape.blade ? fit(shape.blade) : null
+    };
 }
 
 // Visibility kernel of a polygon: from any point of it the whole contour is visible.
@@ -661,18 +633,141 @@ function partitionContour(outline, count) {
     return best.pieces;
 }
 
-// Fragments of a fitted shape: radial wedges of the outline plus any separate solids,
-// ordered by angle so both shapes are matched fragment to fragment along short paths.
+// Fragments of a fitted shape: radial wedges of each solid, shared out by area (at least one
+// per solid), ordered by angle so both shapes are matched fragment to fragment along short paths.
 function shapeFragments(fit, count) {
-    const wedges = Math.max(1, count - fit.extras.length);
-    // Separate solids are tagged: they stay visible while the outline is assembled.
-    const extras = fit.extras.map(contour => Object.assign(contour.slice(), { isExtra: true }));
-    const pieces = [...partitionContour(fit.outline, wedges), ...extras].slice(0, Math.max(1, count));
+    const areas = fit.solids.map(solid => Math.abs(THREE.ShapeUtils.area(solid.outline)));
+    const total = areas.reduce((sum, area) => sum + area, 0);
+    const shares = areas.map(area => Math.max(1, Math.round(count * area / total)));
+    const pieces = fit.solids.flatMap((solid, index) => partitionContour(solid.outline, shares[index]));
     const angle = contour => {
         const c = new THREE.Box2().setFromPoints(contour).getCenter(V2());
         return (Math.atan2(c.y, c.x) + Math.PI * 2) % (Math.PI * 2);
     };
     return pieces.sort((a, b) => angle(a) - angle(b));
+}
+
+// ---- Lame de la frappe ----------------------------------------------------------
+// La lame du logo, dans la coupe du Z : un fuseau très fin, effilé aux deux bouts, rouge #E0141A sur
+// les bords et cœur clair #FFD6D0, dans une lueur rouge douce, et une petite lumière qui teinte les
+// faces de la coupe. Le fuseau est opaque : le verre le réfracte. La lueur est additive, sur deux plans
+// croisés (lisible sous tous les angles). La lame frappe le Z à l'arrivée, s'en va quand il éclate et
+// revient le frapper quand il se reforme : elle avance d'un bout à l'autre, du haut vers le bas.
+const bladeUniforms = {
+    uIntensity: { value: 1 },
+    uHalf: { value: 1 },        // demi-longueur de la lame (repère local : axe y)
+    uWidth: { value: 0.07 }     // demi-largeur de la lueur au centre
+};
+const blade = { group: null, light: null, centre: V2(), axis: V2(0, 1), length: 0, introAt: 1e9 };
+
+function createBlade(parent, contour) {
+    if (!contour || contour.length < 3) return;
+    // Les deux pointes : les deux sommets les plus éloignés. La lame frappe depuis la pointe du haut.
+    let first = 0, second = 1, far = 0;
+    for (let i = 0; i < contour.length; i++) {
+        for (let j = i + 1; j < contour.length; j++) {
+            const distance = contour[i].distanceToSquared(contour[j]);
+            if (distance > far) { far = distance; first = i; second = j; }
+        }
+    }
+    const [top, bottom] = contour[first].y >= contour[second].y
+        ? [contour[first], contour[second]] : [contour[second], contour[first]];
+    blade.centre.copy(top).add(bottom).multiplyScalar(0.5);
+    blade.axis.copy(bottom).sub(top);
+    blade.length = blade.axis.length();
+    blade.axis.normalize();
+    const across = V2(-blade.axis.y, blade.axis.x);
+    const radius = Math.max(...contour.map(p => Math.abs(p.clone().sub(blade.centre).dot(across))));
+    const half = blade.length / 2;
+    bladeUniforms.uHalf.value = half;
+    bladeUniforms.uWidth.value = Math.max(radius * 4.5, 0.045);
+
+    // Fuseau : profil effilé tourné autour de l'axe y.
+    const profile = [];
+    for (let k = 0; k <= 32; k++) {
+        const s = -1 + 2 * k / 32;
+        profile.push(V2(radius * Math.pow(Math.max(0, 1 - s * s), 0.85), s * half));
+    }
+    const core = new THREE.Mesh(new THREE.LatheGeometry(profile, 10), new THREE.ShaderMaterial({
+        uniforms: bladeUniforms,
+        vertexShader: `
+            varying vec3 vNormal;
+            varying vec3 vView;
+            void main() {
+                vec4 mv = modelViewMatrix * vec4(position, 1.0);
+                vNormal = normalize(normalMatrix * normal);
+                vView = -mv.xyz;
+                gl_Position = projectionMatrix * mv;
+            }`,
+        fragmentShader: `
+            uniform float uIntensity;
+            varying vec3 vNormal;
+            varying vec3 vView;
+            void main() {
+                float facing = abs(dot(normalize(vNormal), normalize(vView)));
+                vec3 color = mix(vec3(0.878, 0.078, 0.102), vec3(1.0, 0.839, 0.816), pow(facing, 2.2));   // #E0141A → #FFD6D0
+                gl_FragColor = vec4(color * min(uIntensity, 1.15), 1.0);
+            }`
+    }));
+
+    // Lueur : deux plans croisés le long de la lame, effilés comme elle.
+    const glowMaterial = new THREE.ShaderMaterial({
+        uniforms: bladeUniforms,
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+        vertexShader: `
+            varying vec2 vPlane;
+            void main() {
+                vPlane = position.xy;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }`,
+        fragmentShader: `
+            uniform float uIntensity, uHalf, uWidth;
+            varying vec2 vPlane;
+            void main() {
+                float s = clamp(abs(vPlane.y) / uHalf, 0.0, 1.0);
+                float taper = 1.0 - s * s;
+                float d = abs(vPlane.x) / (uWidth * pow(taper, 0.6) + 1e-4);
+                float glow = exp(-d * d * 3.2) * taper;
+                gl_FragColor = vec4(1.0, 0.10, 0.08, glow * 0.62 * uIntensity);
+            }`
+    });
+    const glowGeometry = new THREE.PlaneGeometry(bladeUniforms.uWidth.value * 2.6, blade.length);
+    const glowFront = new THREE.Mesh(glowGeometry, glowMaterial);
+    const glowSide = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowSide.rotation.y = Math.PI / 2;
+    for (const glow of [glowFront, glowSide]) glow.renderOrder = 3;
+
+    // Petite lumière rouge au milieu de la lame : les faces de la coupe s'en teintent.
+    blade.light = new THREE.PointLight('#ff2a1e', 0, 1.5, 2);
+
+    blade.group = new THREE.Group();
+    blade.group.add(core, glowFront, glowSide, blade.light);
+    blade.group.rotation.z = Math.atan2(blade.axis.y, blade.axis.x) - Math.PI / 2;
+    blade.group.visible = false;
+    parent.add(blade.group);
+}
+
+// `head` et `tail` : portion visible de la lame, de 0 (pointe du haut) à 1 (pointe du bas).
+function updateBlade(scroll, time) {
+    if (!blade.group) return;
+    const intro = smoothScrollRange(time, blade.introAt, blade.introAt + 0.42);
+    const leave = smoothScrollRange(scroll, T.blade[0], T.blade[1]);
+    const back = smoothScrollRange(scroll, T.blade[2], T.blade[3]);
+    const late = scroll >= (T.blade[1] + T.blade[2]) / 2;
+    const head = late ? back : intro;
+    const tail = late ? 0 : leave;
+    const visible = head - tail;
+    blade.group.visible = visible > 0.002;
+    if (!blade.group.visible) { blade.light.intensity = 0; return; }
+    const middle = (head + tail) / 2 - 0.5;
+    blade.group.position.set(
+        blade.centre.x + blade.axis.x * middle * blade.length,
+        blade.centre.y + blade.axis.y * middle * blade.length, 0);
+    blade.group.scale.set(1, visible, 1);
+    // Éclat bref au passage de la frappe, puis la lame se pose.
+    const flash = Math.sin(Math.PI * (late ? back : intro)) * (late ? 1 : 1 - leave);
+    bladeUniforms.uIntensity.value = 1 + 0.55 * flash;
+    blade.light.intensity = 2.2 * visible * (1 + flash);
 }
 
 // ---- Construction du Z en verre -----------------------------------------
@@ -681,33 +776,32 @@ function createGlassLogo() {
     modelPivot.position.y = -0.3;
     scene.add(modelPivot);
 
-    glass = createGlassMaterial(true);
+    glass = createGlassMaterial();
     const logo = new THREE.Group();
     logo.rotation.set(-0.08, 0.28, -0.08);
     modelPivot.add(logo);
 
     const opening = fitShape(parseShape(openingSource), LOGO_HEIGHT);
     const final = fitShape(parseShape(finalSource), ICON_SIZE);
-    iconOutline = final.outline;
-    iconHoles = final.holes;
+    iconSolids = final.solids;
 
-    // Z assemblé : un seul prisme étanche, exact avant l'éclatement.
-    const whole = recentre(opening.outline);
-    const wholeShape = new THREE.Shape(whole.contour);
-    const wholeOffset = V2(whole.home.x, whole.home.y);
-    for (const hole of opening.holes) {
-        wholeShape.holes.push(new THREE.Path(hole.map(p => p.clone().sub(wholeOffset))));
-    }
-    const wholeGeometry = new THREE.ExtrudeGeometry(wholeShape, {
+    // Z assemblé : les deux morceaux du Z tranché, exacts avant l'éclatement (une seule géométrie).
+    const wholeShapes = opening.solids.map(({ outline, holes }) => {
+        const shape = new THREE.Shape(outline);
+        for (const hole of holes) shape.holes.push(new THREE.Path(hole));
+        return shape;
+    });
+    const wholeGeometry = new THREE.ExtrudeGeometry(wholeShapes, {
         depth: LOGO_DEPTH, steps: 1, bevelEnabled: true,
         bevelSize: LOGO_BEVEL.size, bevelThickness: LOGO_BEVEL.thickness,
         bevelSegments: 6, curveSegments: 24
     });
     wholeGeometry.translate(0, 0, -LOGO_DEPTH / 2);
-    tagGlyph(wholeGeometry, whole.home.y);
     wholeBody = new THREE.Mesh(wholeGeometry, glass);
-    wholeBody.position.copy(whole.home);
     logo.add(wholeBody);
+
+    // Lame de la frappe, dans la coupe.
+    createBlade(logo, opening.blade);
 
     // Prisme final : les biseaux grandissent une fois les éclats fusionnés.
     glassIcon = new THREE.Mesh(makeIconPrism(SEAM_BEVEL, SEAM_BEVEL, 0), glass);
@@ -719,10 +813,9 @@ function createGlassLogo() {
     const targets = shapeFragments(final, sources.length);
     const count = sources.length;
     sources.forEach((sourceContour, index) => {
-        const isExtra = !!sourceContour.isExtra;
         const source = recentre(sourceContour);
         const target = recentre(targets[Math.min(index, targets.length - 1)]);
-        const geometry = makePrism(source.contour, LOGO_DEPTH, LOGO_BEVEL.size, LOGO_BEVEL.thickness, source.home.y);
+        const geometry = makePrism(source.contour, LOGO_DEPTH, LOGO_BEVEL.size, LOGO_BEVEL.thickness);
         const mesh = new THREE.Mesh(geometry, glass);
         mesh.position.copy(source.home);
         logo.add(mesh);
@@ -741,9 +834,7 @@ function createGlassLogo() {
             phase: index * 1.7 + 0.4,
             targetHome: target.home,
             correspondence: matchMorphContours(source.contour, target.contour, `fragment-${index}`),
-            originalGeometry: geometry, morphGeometry: null, isBody: !isExtra,
-            finalGeometry: isExtra ? makePrism(target.contour, ICON_DEPTH, ICON_BEVEL.size, ICON_BEVEL.thickness, target.home.y) : null,
-            targetContour: isExtra ? target.contour : null, extraBevel: -1
+            originalGeometry: geometry
         });
     });
 }
@@ -970,8 +1061,7 @@ function morphGeometry(piece, geometryMorph) {
         const contour = piece.correspondence.map(({ source, target }) => source.clone().lerp(target, geometryMorph));
         return makePrism(contour, lerp(LOGO_DEPTH, ICON_DEPTH, geometryMorph),
             lerp(LOGO_BEVEL.size, SEAM_BEVEL, geometryMorph),
-            lerp(LOGO_BEVEL.thickness, SEAM_BEVEL, geometryMorph),
-            lerp(piece.home.y, piece.targetHome.y, geometryMorph));
+            lerp(LOGO_BEVEL.thickness, SEAM_BEVEL, geometryMorph));
     });
 }
 
@@ -979,7 +1069,6 @@ function morphGeometry(piece, geometryMorph) {
 function prewarmMorph() {
     const jobs = [];
     for (const piece of logoPieces) {
-        if (!piece.isBody) continue;
         for (let step = 1; step <= MORPH_STEPS; step++) jobs.push([piece, step / MORPH_STEPS]);
     }
     const idle = window.requestIdleCallback || (callback => setTimeout(() => callback({ timeRemaining: () => 8 }), 60));
@@ -1031,7 +1120,7 @@ function updateLogoPieces(scroll, time) {
     const ringHeight = layout.portrait ? 3.6 : 3.0;
     for (const piece of logoPieces) {
         const { mesh, home, targetHome, offset, twist, phase } = piece;
-        mesh.visible = piece.isBody ? !complete && !assembled : true;
+        mesh.visible = !complete && !assembled;
         if (!mesh.visible) continue;
         _position.copy(home).lerp(targetHome, morph).addScaledVector(offset, separation);
         // Les éclats flottent doucement tant qu'ils sont séparés.
@@ -1049,13 +1138,7 @@ function updateLogoPieces(scroll, time) {
             twist.x * separation + Math.sin(time * 0.31 + phase) * 0.10 * separation + Math.sin(time * 0.21 + phase) * 0.55 * orbit,
             twist.y * separation + Math.cos(time * 0.27 + phase) * 0.14 * separation + Math.sin(time * 0.17 + phase * 1.9) * 1.1 * orbit,
             twist.z * separation + Math.sin(time * 0.23 + phase * 2.0) * 0.08 * separation);
-        if (!piece.isBody && complete) {
-            const bevel = geometryStep(smoothScrollRange(scroll, T.bevel[0], T.bevel[1]));
-            mesh.geometry = bevel >= 1 ? piece.finalGeometry : cachedGeometry(piece, `extra:${bevel}`,
-                () => makePrism(piece.targetContour, ICON_DEPTH,
-                    lerp(SEAM_BEVEL, ICON_BEVEL.size, bevel),
-                    lerp(SEAM_BEVEL, ICON_BEVEL.thickness, bevel), piece.targetHome.y));
-        } else if (geometryMorph <= 0) {
+        if (geometryMorph <= 0) {
             mesh.geometry = piece.originalGeometry;
         } else {
             mesh.geometry = morphGeometry(piece, geometryMorph);
@@ -1200,8 +1283,7 @@ function createSimpleGlassMaterial() {
         envMapIntensity: 0.32, emissive: new THREE.Color('#420000'),
         transparent: true, opacity: 0.88, side: THREE.FrontSide
     });
-    material.onBeforeCompile = injectDiagonal;     // diagonale du Z plus lumineuse, ici aussi
-    material.customProgramCacheKey = () => 'verre-rouge-simplifie-z';
+    material.customProgramCacheKey = () => 'verre-rouge-simplifie';
     return material;
 }
 
@@ -1501,6 +1583,7 @@ function animate(now = performance.now()) {
     shaderUniforms.uVelocity.value += (Math.min(1, Math.abs(targetScroll - currentScroll) * 14) - shaderUniforms.uVelocity.value) * damping(0.06);
 
     updateLogoPieces(currentScroll, time);
+    updateBlade(currentScroll, time);
     updateSlides(currentScroll);
     updateHeader(currentScroll);
     updateFinal();
@@ -1823,6 +1906,10 @@ export async function demarrer(etatInitial, repliStatique) {
     await init();
 
     // Première image rendue, shaders compilés : on lève le préchargeur une fois les polices prêtes.
-    const release = () => { if (running) { fitTitles(); measureZones(); } etat.loader.done(); };
+    const release = () => {
+        if (running) { fitTitles(); measureZones(); }
+        etat.loader.done();
+        blade.introAt = clock.elapsedTime + 0.6;     // la lame frappe le Z une fois le préchargeur levé
+    };
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(release, release); else release();
 }
