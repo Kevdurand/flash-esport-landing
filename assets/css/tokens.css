@@ -4,6 +4,7 @@
   --noir: #000000;
   --rouge: #B00000;                              /* textes, accents, traits, états actifs, live */
   --rouge-lumiere: #E01818;                      /* lames de lumière, halos, reflets, grands titres */
+  --rouge-lame: #E0141A;                         /* lame du Z tranché (logo, icône, scène 3D) */
   --rouge-sombre: #8C0000;                       /* bas du dégradé très léger des grands titres */
   --rouge-fond: rgba(255, 0, 0, 0.188);          /* #30FF0000 : remplissage boutons / containers rouges */
   --rouge-contour: rgba(255, 0, 0, 0.251);       /* #40FF0000 */

@@ -108,9 +108,10 @@ p { text-wrap: pretty; }
   min-height: 44px;
   color: var(--blanc); text-decoration: none;
 }
-.logo-svg { display: block; height: 24px; width: auto; aspect-ratio: 1133 / 180; flex: none; }
-.logo-blanc { fill: var(--blanc); }
-.logo-rouge { fill: var(--rouge); }          /* diagonale du Z et trait incliné : seuls éléments rouges du logo */
+.logo-svg { display: block; height: 24px; width: auto; aspect-ratio: 1133 / 184; flex: none; }
+.logo-blanc { fill: var(--blanc); }          /* STRIKZY (les deux morceaux du Z tranché compris) et ESPORT */
+.logo-lame { fill: var(--rouge-lame); }      /* lame de la frappe, dans la coupe du Z */
+.logo-rouge { fill: var(--rouge); }          /* trait incliné avant ESPORT */
 
 /* ---- En-tête ---- */
 .entete {
