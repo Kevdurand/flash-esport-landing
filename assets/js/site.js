@@ -44,7 +44,7 @@
   //   App Store   : "https://apps.apple.com/app/id6800447821"
   //   Google Play : "https://play.google.com/store/apps/details?id=com.flashesport.mobile"   [À CONFIRMER : identifiant Android]
   var LIENS_STORES = {
-    "app-store": "",
+    "app-store": "https://apps.apple.com/fr/app/id6800447821",
     "google-play": ""
   };
   document.querySelectorAll(".badge[data-store]").forEach(function (badge) {
