@@ -31,7 +31,8 @@ Hébergé sur GitHub Pages, domaine `strikzy.gg`.
 - `?debug=1` : active les crochets de test (`window.__glassSite`)
 
 ## Activer les boutons des stores
-Renseigner l'adresse dans l'attribut `data-store-url=""` de chaque bouton (accueil et page téléchargement). Rien d'autre à changer.
+App Store : en ligne depuis le 04/11/2026 (https://apps.apple.com/fr/app/id6800447821), badge écrit en dur dans `index.html` et `telechargement.html`.
+Google Play : renseigner son adresse dans `LIENS_STORES` (`assets/js/site.js`), puis retirer sa mention « Bientôt disponible » et mettre à jour la FAQ, la page Téléchargement et `operatingSystem` dans les données structurées de l'accueil.
 
 ## Ne pas supprimer
 - `CNAME` : relie le dépôt au domaine strikzy.gg
