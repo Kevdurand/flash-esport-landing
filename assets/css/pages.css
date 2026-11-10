@@ -74,6 +74,21 @@ main > .page-tete:last-child { padding-bottom: var(--e-6); }
 .page .badges { --badge-h: 52px; --badge-g: 68px; --badge-gm: -8px; }
 @media (max-width: 900px) { .page .badges { --badge-h: 46px; --badge-g: 60px; --badge-gm: -7px; } }
 .note { margin-top: 2rem; font-size: var(--t-petit); color: var(--texte-faible); }
+/* Téléchargement : marche à suivre pour devenir testeur Android (test fermé Google Play) */
+.testeur {
+  margin-top: 2.25rem; padding: 1.5rem 1.5rem 1.6rem; scroll-margin-top: calc(var(--entete-h) + 1.5rem);
+  border: 1px solid var(--trait); border-radius: var(--rayon);
+  background: linear-gradient(0deg, #000000, #101010);
+}
+.testeur-titre { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1.05; margin-bottom: 0.6rem; }
+.testeur > p { color: var(--texte-doux); }
+.testeur-etapes { list-style: none; margin-top: 1.1rem; display: grid; gap: 0.85rem; }
+.testeur-etapes li { display: flex; align-items: baseline; gap: 0.85rem; line-height: 1.5; }
+.testeur-num {
+  flex: none; display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 4px;
+  border: 1px solid var(--rouge-contour); background: var(--rouge-fond);
+  font-family: var(--police-titre); font-size: 1rem; line-height: 1; color: var(--blanc); transform: translateY(0.1rem);
+}
 
 /* ---- FAQ ---- */
 .faq { border-top: 1px solid var(--trait); }
