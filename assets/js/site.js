@@ -39,10 +39,10 @@
   }
 
   // Badges App Store / Google Play.
-  // Tant que le lien d'un store est vide, son badge est affiché non cliquable avec « Bientôt disponible ».
-  // POUR ACTIVER UN STORE SUR TOUT LE SITE : mettre son adresse ici (une seule valeur), rien d'autre.
+  // Depuis le 10/11/2026, Google Play n'affiche plus de badge mais le texte « Bientôt sur Android » (écrit dans le HTML).
+  // À la sortie Android : remettre dans le HTML le badge Google Play avec data-store-url (voir le commentaire près des badges), puis mettre l'adresse ici.
   //   App Store   : "https://apps.apple.com/fr/app/id6800447821"   (en ligne depuis le 04/11/2026, badge aussi écrit en dur dans le HTML)
-  //   Google Play : "https://play.google.com/store/apps/details?id=com.flashesport.mobile"   [À CONFIRMER : identifiant Android]
+  //   Google Play : "https://play.google.com/store/apps/details?id=com.flashesport.mobile"
   var LIENS_STORES = {
     "app-store": "https://apps.apple.com/fr/app/id6800447821",
     "google-play": ""

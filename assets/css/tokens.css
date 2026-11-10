@@ -3,14 +3,14 @@
   /* Couleurs */
   --noir: #000000;
   --rouge: #B00000;                              /* textes, accents, traits, états actifs, live */
-  --rouge-lumiere: #E01818;                      /* lames de lumière, halos, reflets, grands titres */
+  --rouge-lumiere: #C81414;                      /* rouge du logo M1 : lames de lumière, halos, reflets, grands titres */
   --rouge-lame: #E0141A;                         /* lame du Z tranché (logo, icône, scène 3D) */
   --rouge-sombre: #8C0000;                       /* bas du dégradé très léger des grands titres */
   --rouge-fond: rgba(255, 0, 0, 0.188);          /* #30FF0000 : remplissage boutons / containers rouges */
   --rouge-contour: rgba(255, 0, 0, 0.251);       /* #40FF0000 */
   --rouge-fond-fort: rgba(255, 0, 0, 0.30);      /* survol */
-  --rouge-halo: rgba(224, 24, 24, 0.55);         /* lueur de la lame de lumière */
-  --rouge-halo-doux: rgba(224, 24, 24, 0.16);
+  --rouge-halo: rgba(200, 20, 20, 0.55);         /* lueur de la lame de lumière */
+  --rouge-halo-doux: rgba(200, 20, 20, 0.16);
   --rouge-brume: rgba(176, 0, 0, 0.14);          /* dégradés d'ambiance très discrets */
   --neutre-bas: #000000;                         /* containers neutres : dégradé bas → haut */
   --neutre-haut: #101010;
@@ -39,7 +39,7 @@
   --titane-sombre: #2E2B29;
   --titane-ombre: #131211;
   --titane-lisere: #6A645E;
-  --tel-halo: rgba(224, 24, 24, 0.3);              /* lueur rouge derrière le téléphone */
+  --tel-halo: rgba(200, 20, 20, 0.3);              /* lueur rouge derrière le téléphone */
   --ecran-app: #050505;                          /* fond du haut des captures de l'app (zone de la Dynamic Island) */
   --titane-bouton: #2B2826;
   --titane-objectif: #111010;

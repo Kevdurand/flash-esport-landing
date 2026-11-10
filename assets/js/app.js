@@ -1,6 +1,6 @@
 /* STRIKZY — moteur 3D de l'accueil : le Z tranché en verre rouge.
    Adapté du moteur « Premium 3D Glass » (verre à dispersion, découpage automatique en fragments,
-   recomposition, scroll lissé) : verre rouge, 5 chapitres StrikZy, éclats en orbite autour du
+   recomposition, scroll lissé) : verre rouge, 5 chapitres Strikzy, éclats en orbite autour du
    téléphone, halo qui suit le Z, modes allégé et statique, compatibilité iPhone.
    Three.js r160 hébergé dans le repo (assets/vendor) : aucun appel réseau hors du site. */
 import * as THREE from '../vendor/three.module.min.js';

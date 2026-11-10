@@ -8,6 +8,7 @@
    ========================================================================= */
 .slide-title, .final-titre { font-size: clamp(2.75rem, 6.2vw, 6.25rem); line-height: 1; margin: 1.15rem 0 1.4rem; }
 #accueil .slide-title { font-size: clamp(3.25rem, 8.4vw, 8.25rem); }
+#accueil .slide-title.titre-phrase { font-size: clamp(2.75rem, 5.8vw, 6.5rem); }   /* H1 en phrase (10/11/2026) : 3 lignes, la plus longue fait 18 signes */
 .slide-title .line, .final-titre .line { display: block; }
 .slide-title .line.rouge, .final-titre .line.rouge { color: var(--rouge); }
 .slide .badges { margin-top: 1.6rem; }
@@ -21,6 +22,10 @@
   text-transform: uppercase; color: var(--blanc);
 }
 .jeux li span { font-family: var(--police-texte); font-size: var(--t-mini); font-weight: 600; letter-spacing: 0.14em; color: var(--texte-doux); }
+
+/* Chapitre 2 — notifications : vrai message de l'app (capture), en verre sombre */
+.notif-capture { max-width: 30rem; margin: 0.4rem 0 0; }
+.notif-capture img { display: block; width: 100%; height: auto; border-radius: var(--rayon); box-shadow: 0 0 0 1px var(--trait), 0 18px 48px rgba(0, 0, 0, 0.6), 0 0 42px var(--rouge-halo-doux); }
 
 
 
@@ -305,6 +310,7 @@ html:not(.mode-3d) .final-bloc {
   .loader { left: 50%; top: 73%; }
   .mode-3d .slide-title { font-size: clamp(2.25rem, 11.5vw, 4.5rem); margin: 0.7rem 0 0.9rem; }
   .mode-3d #accueil .slide-title { font-size: clamp(2.75rem, 14.5vw, 6rem); }
+  .mode-3d #accueil .slide-title.titre-phrase { font-size: clamp(2rem, 10.4vw, 4.25rem); }
   .mode-3d .slide-desc { font-size: 1rem; line-height: 1.55; max-width: 34ch; }
   .mode-3d .slide .badges { margin-top: 1.2rem; }
 
@@ -334,6 +340,7 @@ html:not(.mode-3d) .final-bloc {
 }
 @media (max-width: 900px) and (max-height: 700px) {
   .mode-3d #accueil .slide-title { font-size: clamp(2.5rem, 12.5vw, 4.5rem); }
+  .mode-3d #accueil .slide-title.titre-phrase { font-size: clamp(1.875rem, 9.6vw, 3.75rem); }
   .mode-3d .slide-desc { font-size: 0.9375rem; }
   /* Petit écran (barre d'adresse de Safari affichée) : panneau plus étroit pour laisser sa place au Z. */
   .mode-3d .panneau { max-width: 19rem; }

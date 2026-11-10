@@ -1,6 +1,6 @@
-# StrikZy eSport — site officiel
+# Strikzy — site officiel
 
-StrikZy s'appelait auparavant Flash eSport. Accroche : « Tous tes matchs eSport en direct. »
+Strikzy s'appelait auparavant Flash eSport. Accroche : « Tous tes matchs esport en direct. »
 
 Site statique (HTML, CSS, JavaScript en modules ES natifs), sans framework, sans bundler, sans étape de build.
 Hébergé sur GitHub Pages, domaine `strikzy.gg`.
@@ -40,9 +40,9 @@ Google Play : renseigner son adresse dans `LIENS_STORES` (`assets/js/site.js`), 
 - `assets/fonts/LICENSE-*`, `assets/vendor/licenses/` : licences obligatoires
 
 ## Règles
-- Charte StrikZy : fond #000000, rouge #B00000 en accent seulement (traits, pastilles du direct), lame du Z #E0141A, surfaces #101010, texte secondaire #8A8A8A, rayon 8, Anton + Exo 2.
+- Charte Strikzy : fond #000000, rouge #B00000 en accent seulement (traits, pastilles du direct), lame du Z #E0141A, surfaces #101010, texte secondaire #8A8A8A, rayon 8, Anton + Exo 2.
 - Logo « Z tranché » : STRIKZY en Anton blanc, le Z coupé le long de sa diagonale en deux morceaux écartés, une lame rouge #E0141A dans la coupe ; trait incliné #B00000 avant ESPORT ; en SVG dans l'en-tête et le pied de page.
-- Écriture : « StrikZy » dans le texte, « StrikZy eSport » en nom complet, « STRIKZY » dans les logos. Toujours « en direct ».
+- Écriture : « Strikzy » dans le texte, « Strikzy » en nom complet, « STRIKZY » dans les logos. Toujours « en direct ».
 - Identifiants techniques à ne jamais changer : bundle iOS `com.flashesport.mobile`, projet Firebase et URL des Cloud Functions.
 - Aucun cookie, aucun script tiers, aucune ressource chargée depuis un autre domaine.
 - CSP stricte sur toutes les pages : aucun script inline, aucun attribut `style=""`, aucun `onclick=""`.

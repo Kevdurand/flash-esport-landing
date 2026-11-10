@@ -108,10 +108,7 @@ p { text-wrap: pretty; }
   min-height: 44px;
   color: var(--blanc); text-decoration: none;
 }
-.logo-svg { display: block; height: 24px; width: auto; aspect-ratio: 1133 / 184; flex: none; }
-.logo-blanc { fill: var(--blanc); }          /* STRIKZY (les deux morceaux du Z tranché compris) et ESPORT */
-.logo-lame { fill: var(--rouge-lame); }      /* lame de la frappe, dans la coupe du Z */
-.logo-rouge { fill: var(--rouge); }          /* trait incliné avant ESPORT */
+.logo-img { display: block; height: 34px; width: auto; aspect-ratio: 515 / 193; flex: none; }  /* logotype officiel STRIKZY au Z M1 (04_MARQUE/logos) */
 
 /* ---- En-tête ---- */
 .entete {
@@ -285,6 +282,21 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
 @media (min-width: 600px) { .badges { column-gap: 1.75rem; } }
 @media (max-width: 359px) { .badges { --badge-h: 40px; --badge-g: 52px; --badge-gm: -6px; gap: 0.75rem; } }
 
+/* Android pas encore publié : simple mention à la hauteur du badge App Store (pas de badge Google Play avant la sortie). */
+.badge-texte {
+  display: inline-flex; align-items: center; gap: 0.6em; height: var(--badge-h); padding: 0 1.1rem;
+  border: 1px solid var(--trait); border-radius: var(--rayon); background: var(--verre);
+  font-size: 0.875rem; font-weight: 600; line-height: 1.2; letter-spacing: 0.01em;
+  color: var(--texte-doux);
+}
+.badge-texte::before { content: ""; width: 1rem; height: 2px; border-radius: 2px; background: var(--rouge); }
+a.badge-texte { color: var(--blanc); text-decoration: none; border-color: var(--rouge-contour); background: var(--rouge-fond); transition: background 0.3s ease, border-color 0.3s ease; }
+a.badge-texte::after { content: "›"; font-size: 1.15em; line-height: 1; margin-left: 0.1em; }
+@media (hover: hover) { a.badge-texte:hover { background: var(--rouge-fond-fort); border-color: var(--rouge-lumiere); } }
+a.badge-texte:focus-visible { outline: 2px solid var(--rouge-lumiere); outline-offset: 3px; }
+@media (max-width: 599px) { .badge-texte { font-size: 0.8125rem; padding: 0 0.8rem; max-width: 13rem; } .final .badges { flex-wrap: wrap; } }
+@media (max-width: 374px) { .badges { flex-wrap: wrap; } }   /* petits téléphones : la mention Android passe sous le badge App Store */
+
 /* ---- Liens de texte ---- */
 .lien {
   color: var(--blanc); text-decoration: underline; text-decoration-color: var(--rouge-lumiere);
@@ -340,7 +352,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
   .entete-actions { gap: 0.25rem; }
   .menu-btn { display: block; }
   .score { display: none; }
-  .logo-svg { height: 20px; }
+  .logo-img { height: 30px; }
 
   /* Menu plein écran sobre */
   .nav {
@@ -392,7 +404,7 @@ a.badge-lien:focus-visible::after { opacity: 1; transform: none; }
 }
 @media (max-width: 374px) {
   .entete .btn-compact { padding: 0 0.75rem; letter-spacing: 0.06em; }
-  .logo-svg { height: 18px; }
+  .logo-img { height: 27px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
